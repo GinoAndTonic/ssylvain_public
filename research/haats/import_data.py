@@ -8,6 +8,7 @@ print(sys.argv)
 import pandas as pd
 from xml.sax import ContentHandler, parse
 import time
+import datetime as DT
 
 
 class ImportData:
@@ -22,6 +23,7 @@ class ImportData:
 
     @staticmethod
     def update_us_data(US_ilbmaturities = None, US_nominalmaturities = None):
+        '''Get Nelson-Siegel-Svensson fitted yield data for TIPS and Nominal bonds from Fed website'''
 
         #########################################################################################################################
         # importing US ILB data
@@ -90,12 +92,15 @@ class ImportData:
         print(nominal_data.columns)
         #########################################################################################################################
 
-        return nominal_data, tips_data
+        return tips_data, nominal_data
 
     @staticmethod
     def importUS_Data(US_ilbmaturities = None, US_nominalmaturities = None, plots=0, save=0):
         '''This is to import US nominal and tips yields from
-        Gurkaynak and Wright (2006;2008)'''
+        Gurkaynak and Wright (2006;2008)
+        http://www.federalreserve.gov/econresdata/researchdata/feds200628.xls
+        https://www.federalreserve.gov/econresdata/researchdata/feds200805.xls
+        '''
 
         #today's date
         edate = np.array(time.strftime("%Y-%m-%d"), dtype=np.datetime64)  # in format : '2015-02-11'
@@ -104,12 +109,12 @@ class ImportData:
 
         #if files were already updated today, do not update again:
         if os.path.exists(tips_f) & os.path.exists(nominal_f) :
-            if np.array(time.strftime("%Y-%m-%d",(time.gmtime(os.path.getmtime(tips_f)))), dtype=np.datetime64) == np.array(time.strftime("%Y-%m-%d",(time.gmtime(os.path.getmtime(nominal_f)))), dtype=np.datetime64) == edate:
-                nominal_data, tips_data = pd.read_csv(nominal_f) , pd.read_csv(tips_f)
+            if np.array(time.strftime("%Y-%m-%d",(time.gmtime(os.path.getmtime(tips_f)))), dtype=np.datetime64) == np.array(time.strftime("%Y-%m-%d",(time.gmtime(os.path.getmtime(nominal_f)))), dtype=np.datetime64) >= edate:
+                tips_data, nominal_data = pd.read_csv(tips_f,index_col=0) , pd.read_csv(nominal_f,index_col=0)
             else:
-                nominal_data, tips_data = ImportData.update_us_data(US_ilbmaturities, US_nominalmaturities)
+                tips_data, nominal_data = ImportData.update_us_data(US_ilbmaturities, US_nominalmaturities)
         else:
-            nominal_data, tips_data = ImportData.update_us_data(US_ilbmaturities, US_nominalmaturities)
+            tips_data, nominal_data = ImportData.update_us_data(US_ilbmaturities, US_nominalmaturities)
 
         if plots == 1:
             #########################################################################################################################
@@ -118,10 +123,11 @@ class ImportData:
             fig, ax = plt.subplots(1)
             figures = {'fig1': fig, 'ax_fig1': ax}
             figures['fig1_name'] = '/nominal_raw_data_US'
-            nominal_data.plot(ax=figures['ax_fig1'])
-            plt.legend(loc='center left',fontsize=6,frameon=0, bbox_to_anchor=(1, 0.5))
-            # use a more precise date string for the x axis locations in the
-            # toolbar
+            figures['ax_fig1'].plot(nominal_data.index.to_datetime().values, nominal_data.values)
+            plt.legend(nominal_data.columns,loc='center left',fontsize=7,frameon=0, bbox_to_anchor=(1, 0.5))
+            # rotate and align the tick labels so they look better
+            figures['fig1'].autofmt_xdate()
+            # use a more precise date string for the x axis locations in the toolbar
             figures['ax_fig1'].xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
             figures['ax_fig1'].set_title('US Nominal Bonds')
             plt.draw()
@@ -131,10 +137,11 @@ class ImportData:
             figures['fig2'] = fig
             figures['ax_fig2'] = ax
             figures['fig2_name'] = '/tips_raw_data_US'
-            tips_data.plot(ax=figures['ax_fig2'])
-            plt.legend(loc='center left',fontsize=6,frameon=0, bbox_to_anchor=(1, 0.5))
-            # use a more precise date string for the x axis locations in the
-            # toolbar
+            figures['ax_fig2'].plot(tips_data.index.to_datetime().values, tips_data.values)
+            plt.legend(tips_data.columns,loc='center left',fontsize=7,frameon=0, bbox_to_anchor=(1, 0.5))
+            # rotate and align the tick labels so they look better
+            figures['fig2'].autofmt_xdate()
+            # use a more precise date string for the x axis locations in the toolbar
             figures['ax_fig2'].xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
             figures['ax_fig2'].set_title('US InfLinkBonds Bonds')
             plt.draw()
@@ -146,9 +153,6 @@ class ImportData:
                 os.makedirs(r""+str.replace(os.getcwd(), '\\', '/')+"/output/figures") #make output directory if it doesn't exist
 
             #########################################################################################################################
-            #saving data
-            nominal_data.to_csv(nominal_f)
-            tips_data.to_csv(tips_f)
 
             # saving figures
             filename = r""+str.replace(os.getcwd(), '\\', '/')+"/output/figures" + \
@@ -159,14 +163,19 @@ class ImportData:
                         str(figures['fig2_name']) + ".png"
             figures['fig2'].savefig(filename, format="png")
             plt.close()
+
+            #saving data
+            nominal_data.to_csv(nominal_f)
+            tips_data.to_csv(tips_f)
+
             #########################################################################################################################
 
-        return nominal_data, tips_data
+        return tips_data, nominal_data
 
     @staticmethod
-    def extract_subset(nominal_data, tips_data, sdate, edate,allow_missing_data=0, estim_freq='daily'):
+    def extract_subset(tips_data, nominal_data, sdate, edate, allow_missing_data=0, estim_freq='daily'):
+        '''Extract relevant dates and save pandas data frames for ILB and Nominal Bonds data in dictionary'''
 
-        #Extract relevant dates and save data in dictionary
         tips_data = tips_data.loc[(tips_data.index >= sdate)&(tips_data.index <= edate),:]
         nominal_data = nominal_data.loc[(nominal_data.index >= sdate)&(nominal_data.index <= edate),:]
 

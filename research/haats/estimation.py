@@ -12,9 +12,7 @@ import matplotlib as mplt
 import pylab as plab
 import sys
 print(sys.argv)
-from xlrd import open_workbook
-import xlwt
-from irp_h import *
+from irp_obj import *
 from kalman import *
 from extract_parameters import *
 from math import exp
@@ -39,10 +37,26 @@ class Estimation:
 
 class Rolling(Estimation):
 
-    def __init__(self, data, dates, US_ilbmaturities, US_nominalmaturities,\
-            dt, US_num_maturities, estim_freq='daily', num_states=4,\
-            fix_Phi=1, setdiag_Kp=1, initV='unconditional', stationarity_assumption='yes'):
+    def __init__(self, data, US_ilbmaturities, US_nominalmaturities, \
+            estim_freq='daily', num_states=4, fix_Phi=1, setdiag_Kp=1, initV='unconditional', stationarity_assumption='yes'):
         Estimation.__init__(self)
+
+        US_num_maturities = len(US_ilbmaturities) + len(US_nominalmaturities)
+
+        # frequency of data for estimation:
+        if estim_freq == 'daily':
+            dt = 1.0/252  # daily increment
+        elif estim_freq == 'weekly':
+            dt = 1.0/52     # weekly increment
+        elif estim_freq == 'monthly':
+            dt = 1.0/12     # monthly increment
+        elif estim_freq == 'quarterly':
+            dt = 1.0/4      # quarterly increment
+
+        if ((initV == 'steady_state') | (initV == 'unconditional')):
+            stationarity_assumption = 'yes'
+        else:
+            stationarity_assumption = 'no'
 
         # creating ILBs and Nominal Bond objects
         USilbs = np.array([InfLinkBonds(m, 'USA') for m in US_ilbmaturities])
@@ -51,15 +65,17 @@ class Rolling(Estimation):
         # storing yields time series in bond objects:
         # in Python, attributes are public: no need for get, set methods
         for m in range(US_ilbmaturities.size):
-            USilbs[m].setZeroYieldsTS(data['US_ILB'][:, m]/100)
-            USilbs[m].setZeroYieldsDates(dates['US_ILB'])
+            USilbs[m].setZeroYieldsTS(data['US_ILB'][[m]]/100)
+            USilbs[m].setZeroYieldsDates(data['US_ILB'].index)
 
         for m in range(US_nominalmaturities.size):
-            USnominals[m].setZeroYieldsTS(data['US_NB'][:, m]/100)
-            USnominals[m].setZeroYieldsDates(dates['US_NB'])
+            USnominals[m].setZeroYieldsTS(data['US_NB'][[m]]/100)
+            USnominals[m].setZeroYieldsDates(data['US_NB'].index)
 
-        Y = np.mat(np.hstack((data['US_NB'], data['US_ILB'])))/100
+        # Stacking yields data:
+        Y = np.mat(np.hstack((data['US_NB'].values, data['US_ILB'].values)))/100
 
+        # See haats_documentation.pdf and haats_documentation.lyx
         # initializing parameters
         # using numbers from Christensen, Diebold, Rudebusch (2010)
         a = 0.677
