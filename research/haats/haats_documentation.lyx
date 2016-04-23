@@ -1,0 +1,3439 @@
+#LyX 2.1 created this file. For more info see http://www.lyx.org/
+\lyxformat 474
+\begin_document
+\begin_header
+\textclass article
+\begin_preamble
+\date{Current Draft: January, 2015\\ First Draft: January, 2015}
+\usepackage[footnotesize]{caption2}
+\usepackage{chngcntr}
+\counterwithout{figure}{section}
+\counterwithout{table}{section}
+\usepackage{color}
+\definecolor{Blue}{rgb}{0,0,1}
+\usepackage{xcolor}
+\usepackage{colortbl}
+\usepackage{amsthm}
+\newtheorem{hypo}{Hypothesis}
+
+
+\usepackage{multirow} 
+
+\usepackage{sectsty} 
+
+\definecolor{lightgray}{gray}{0.88}
+\usepackage{hyperref}
+\end_preamble
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_math auto
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry true
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine basic
+\cite_engine_type default
+\biblio_style plain
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 1
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\leftmargin 1.5cm
+\topmargin 1.5cm
+\rightmargin 1.5cm
+\bottommargin 1.5cm
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+\paragraph_spacing onehalf
+Decomposing Break-even Yields Into Inflation Expectations and Inflation
+ Risk Premia
+\end_layout
+
+\begin_layout Author
+\paragraph_spacing onehalf
+Serginio Sylvain
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+\begin_inset Newpage pagebreak
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+
+\series bold
+\size larger
+Table of Contents
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+makeatletter 
+\backslash
+@starttoc{toc} 
+\backslash
+makeatother
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+\begin_inset Newpage pagebreak
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+\paragraph_spacing onehalf
+Theory
+\begin_inset CommandInset label
+LatexCommand label
+name "sec:Theory"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+\paragraph_spacing onehalf
+Break-even (BE) rate, expected inflation and inflation risk premium (IRP)
+ 
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+The derivation below is based on Christensen, Diebold and Rudebusch (2007).
+ Let 
+\begin_inset Formula $\{P_{t}^{N}(\tau),P^{R}(\tau)\}$
+\end_inset
+
+ denote the date 
+\begin_inset Formula $t$
+\end_inset
+
+ prices of nominal and inflation-linked zero-coupon bonds (respectively)
+ maturing at date 
+\begin_inset Formula $T$
+\end_inset
+
+.
+ we define 
+\begin_inset Formula $\tau\equiv T-t$
+\end_inset
+
+ and 
+\begin_inset Formula $\{M_{t}^{N},M_{t}^{R}\}$
+\end_inset
+
+ denote the nominal and real stochastic discount factors.
+ 
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+\begin_inset Formula 
+\begin{eqnarray*}
+P_{t}^{N}\{\tau\} & = & E_{t}\left[\frac{M_{t+\tau}^{N}}{M_{t}^{N}}\times1\right]\\
+\\
+P_{t}^{R}\{\tau\} & = & E_{t}\left[\frac{M_{t+\tau}^{R}}{M_{t}^{R}}\times1\right]\\
+\\
+y_{t}^{N}\{\tau\} & = & -\frac{1}{\tau}ln\left(P_{t}^{N}\{\tau\}\right)\\
+\\
+y_{t}^{R}\{\tau\} & = & -\frac{1}{\tau}ln\left(P_{t}^{R}\{\tau\}\right)\\
+\\
+y_{t}^{N}\{\tau\}-y_{t}^{R}\{\tau\} & = & \frac{1}{\tau}ln\left(\frac{P_{t}^{R}\{\tau\}}{P_{t}^{N}\{\tau\}}\right)\\
+\\
+\frac{dM_{t}^{R}}{M_{t}^{R}} & = & -r_{t}^{R}dt-\Gamma_{t}\cdot dW_{t}\\
+\\
+\frac{dM_{t}^{N}}{M_{t}^{N}} & = & -r_{t}^{N}dt-\Gamma_{t}\cdot dW_{t}\\
+\\
+\text{Price level} & = & \text{nominal consumption/real consumption}=\Pi_{t}\\
+\Pi_{t} & = & \frac{M_{t}^{R}}{M_{t}^{N}}\\
+\\
+d\Pi_{t} & = & \frac{dM_{t}^{R}}{M_{t}^{N}}-\frac{M_{t}^{R}}{M_{t}^{N}}\left(\frac{dM_{t}^{N}}{M_{t}^{N}}\right)-\frac{dM_{t}^{R}}{M_{t}^{N}}\frac{dM_{t}^{N}}{M_{t}^{N}}+\frac{M_{t}^{R}}{M_{t}^{N}}\left(\frac{dM_{t}^{N}}{M_{t}^{N}}\right)^{2}\\
+\\
+\frac{d\Pi_{t}}{\Pi_{t}} & = & \frac{dM_{t}^{R}}{M_{t}^{R}}-\frac{dM_{t}^{N}}{M_{t}^{N}}-\frac{dM_{t}^{R}}{M_{t}^{N}}\frac{dM_{t}^{N}}{M_{t}^{N}}+\left(\frac{dM_{t}^{N}}{M_{t}^{N}}\right)^{2}\\
+\\
+\frac{d\Pi_{t}}{\Pi_{t}} & = & (r_{t}^{N}-r_{t}^{R})dt\\
+\\
+\Rightarrow dln\left(\Pi_{t}\right) & = & (r_{t}^{N}-r_{t}^{R})dt\\
+\\
+\Rightarrow\Pi_{t} & = & exp\left(\int_{0}^{t}(r_{s}^{N}-r_{s}^{R})ds\right)\\
+\\
+P_{t}^{N}\{\tau\} & = & E_{t}\left[\frac{M_{t+\tau}^{R}}{M_{t}^{R}}\times\frac{\Pi_{t}}{\Pi_{t+\tau}}\right]\\
+ & = & cov_{t}\left[\frac{M_{t+\tau}^{R}}{M_{t}^{R}},\frac{\Pi_{t}}{\Pi_{t+\tau}}\right]+E_{t}\left[\frac{M_{t+\tau}^{R}}{M_{t}^{R}}\right]E_{t}\left[\frac{\Pi_{t}}{\Pi_{t+\tau}}\right]\\
+\\
+\frac{P_{t}^{N}\{\tau\}}{P_{t}^{R}\{\tau\}} & = & \frac{cov_{t}\left[\frac{M_{t+\tau}^{R}}{M_{t}^{R}},\frac{\Pi_{t}}{\Pi_{t+\tau}}\right]}{E_{t}\left[\frac{M_{t+\tau}^{R}}{M_{t}^{R}}\right]}+E_{t}\left[\frac{\Pi_{t}}{\Pi_{t+\tau}}\right]\\
+\\
+\frac{P_{t}^{N}\{\tau\}}{P_{t}^{R}\{\tau\}} & = & E_{t}\left[\frac{\Pi_{t}}{\Pi_{t+\tau}}\right]\left(\frac{cov_{t}\left[\frac{M_{t+\tau}^{R}}{M_{t}^{R}},\frac{\Pi_{t}}{\Pi_{t+\tau}}\right]}{E_{t}\left[\frac{M_{t+\tau}^{R}}{M_{t}^{R}}\right]E_{t}\left[\frac{\Pi_{t}}{\Pi_{t+\tau}}\right]}+1\right)\\
+\\
+-ln\left(\frac{P_{t}^{R}\{\tau\}}{P_{t}^{N}\{\tau\}}\right) & = & ln\left(E_{t}\left[\frac{\Pi_{t}}{\Pi_{t+\tau}}\right]\right)+ln\left(\frac{cov_{t}\left[\frac{M_{t+\tau}^{R}}{M_{t}^{R}},\frac{\Pi_{t}}{\Pi_{t+\tau}}\right]}{E_{t}\left[\frac{M_{t+\tau}^{R}}{M_{t}^{R}}\right]E_{t}\left[\frac{\Pi_{t}}{\Pi_{t+\tau}}\right]}+1\right)\\
+\\
+\Rightarrow\underbrace{y_{t}^{N}\{\tau\}-y_{t}^{R}\{\tau\}}_{\text{break-even rate}} & = & \underbrace{\pi_{t}^{e}\left\{ \tau\right\} }_{\text{expected inflation}}+\underbrace{\varphi_{t}\left\{ \tau\right\} }_{\text{inflation risk premium (IRP)}}\\
+\\
+\pi_{t}^{e}\left\{ \tau\right\}  & = & -\frac{1}{\tau}ln\left(E_{t}\left[\frac{\Pi_{t}}{\Pi_{t+\tau}}\right]\right)=-\frac{1}{\tau}ln\left(E_{t}\left[exp\left(-\int_{t}^{t+\tau}(r_{s}^{N}-r_{s}^{R})ds\right)\right]\right)\\
+\\
+\varphi_{t}\left\{ \tau\right\}  & = & -\frac{1}{\tau}ln\left(\frac{cov_{t}\left[\frac{M_{t+\tau}^{R}}{M_{t}^{R}},\frac{\Pi_{t}}{\Pi_{t+\tau}}\right]}{\underbrace{E_{t}\left[\frac{M_{t+\tau}^{R}}{M_{t}^{R}}\right]}_{(+)}\underbrace{E_{t}\left[\frac{\Pi_{t}}{\Pi_{t+\tau}}\right]}_{(+)}}+1\right)
+\end{eqnarray*}
+
+\end_inset
+
+Notice that
+\end_layout
+
+\begin_layout Quote
+\paragraph_spacing onehalf
+We observe positive inflation risk premiums [IRPs] if the real discount
+ factor tends to be high (i.e., in a structural model, marginal utility is
+ high) at the same time that price inflation is high (i.e., purchasing power
+ is low) -- Christensen, Lopez, Rudebusch (2010)
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+In other words, if future price increases are expected to occur in states
+ of the world where consumers / investors are less wealthy (that is, in
+ states of the world where consumers / investors are hungrier / derive more
+ utility from marginal consumption) then 
+\begin_inset Formula $cov_{t}\left[\frac{M_{t+\tau}^{R}}{M_{t}^{R}},\frac{\Pi_{t}}{\Pi_{t+\tau}}\right]<0$
+\end_inset
+
+ and the IRP is positive.
+ 
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+We have assumed that the ILB and the Nominal bond have the same liquidity.
+ If that is not the case, the IRP will also contain the difference in liquidity
+ premium for Nominal bonds versus ILBs.
+ More specifically if ILBs are less liquid than Nominal bonds, the IRP (
+\begin_inset Formula $\varphi_{t}\left\{ \tau\right\} $
+\end_inset
+
+) will be biased downwards.
+ The market implied expected inflation (
+\begin_inset Formula $\pi_{t}^{e}\left\{ \tau\right\} $
+\end_inset
+
+) may also be biased downwards if the real short rate is pushed up due to
+ the illiquidity premium.
+ To reduce this bias will will follow Christensen, Lopez and Rudebusch (2010)
+ and use US TIPS data starting Jan 01, 2004.
+ For US Nominal bonds we will use data starting Jan 01, 1995.
+\end_layout
+
+\begin_layout Subsection
+\paragraph_spacing onehalf
+Nelson-Siegal arbitrage-free affine term structure (N-SAATS) model 
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+We start with an affine term structure model as presented in Duffie and
+ Kan (1996).
+ Let's fix a probability space (
+\begin_inset Formula $\Omega,\mathcal{F},P$
+\end_inset
+
+) with filtration, 
+\begin_inset Formula $\left\{ \mathcal{F}_{t}\right\} _{t\ge0}$
+\end_inset
+
+, generated by the four-dimensional standard Brownian Motion, 
+\begin_inset Formula $W_{t}$
+\end_inset
+
+.
+ The filtration satisfies the usual conditions.
+ 
+\begin_inset Formula $P$
+\end_inset
+
+ is the physical measure.
+ Let 
+\begin_inset Formula $Q$
+\end_inset
+
+ denote the risk neutral measure, 
+\begin_inset Formula $dW_{t}^{Q}=dW_{t}+\Gamma_{t}dt$
+\end_inset
+
+.
+ Here, 
+\begin_inset Formula $dW_{t}$
+\end_inset
+
+ and 
+\begin_inset Formula $dW_{t}^{Q}$
+\end_inset
+
+ are standard Brownian Motion increments under 
+\begin_inset Formula $P$
+\end_inset
+
+ and 
+\begin_inset Formula $Q$
+\end_inset
+
+, respectively
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+\begin_inset Formula $dW$
+\end_inset
+
+ is a column vector, all other vectors are column vectors as well.
+\end_layout
+
+\end_inset
+
+.
+ Let 
+\begin_inset Formula $X_{t}$
+\end_inset
+
+ denote the vector of state variables.
+ 
+\begin_inset Formula 
+\begin{eqnarray*}
+X_{t} & = & \left(\begin{array}{c}
+L_{t}^{N}\\
+S_{t}\\
+C_{t}\\
+L_{t}^{R}
+\end{array}\right)\\
+\\
+dX_{t} & = & K_{t}^{Q}\left(\theta_{t}^{Q}-X_{t}\right)dt+\Sigma_{t}\left(\begin{array}{ccc}
+\sqrt{\nu_{t}^{(1)}+\beta_{t}^{(1)}\cdot X_{t}} & \cdots & 0\\
+\vdots & \ddots & \vdots\\
+0 & \cdots & \sqrt{\nu_{t}^{(4)}+\beta_{t}^{(4)}\cdot X_{t}}
+\end{array}\right)dW_{t}^{Q}
+\end{eqnarray*}
+
+\end_inset
+
+Following Christensen, Lopez, Rudebusch (2010), we assume that there are
+ 
+\begin_inset Formula $4$
+\end_inset
+
+ state variables.
+ Indeed, there is fair amount of evidence that level, slope and curvature
+ factors work very well in explaining bond yields.
+ In our model, 
+\begin_inset Formula $L^{N}$
+\end_inset
+
+ and 
+\begin_inset Formula $L^{R}$
+\end_inset
+
+ are the level factors from of Nominal and ILB respectively, 
+\begin_inset Formula $S_{t}$
+\end_inset
+
+ and 
+\begin_inset Formula $C_{t}$
+\end_inset
+
+ are slope and curvature factors.
+ These last two are assumed to be common to both Nominal bonds and ILBs;
+ this is again borrowed from Christensen, Lopez, Rudebusch (2010) who show
+ that the slope factor for ILBs is highly correlated to that for the nominal
+ bonds and similarly for the curvature factor).
+ 
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+To simplify the notation, let us suppress the 
+\begin_inset Formula $N$
+\end_inset
+
+ and 
+\begin_inset Formula $R$
+\end_inset
+
+ superscripts
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+\begin_inset Formula 
+\begin{eqnarray}
+P_{t}\{\tau\} & = & E_{t}^{Q}\left[exp\left(-\int_{t}^{t+\tau}r_{s}ds\right)\right]\nonumber \\
+\nonumber \\
+r_{t} & = & \rho_{0}+\rho_{1}\cdot X_{t}\quad\text{[assuming short rates are affine in state variables]}\nonumber \\
+\nonumber \\
+\Rightarrow P_{t}\{\tau\} & = & exp\left(B_{t}\left\{ \tau\right\} \cdot X_{t}+G_{t}\left\{ \tau\right\} \right)\nonumber \\
+ &  & \text{Since }exp\left(-\int_{0}^{t}r_{s}ds\right)P_{t}\left\{ \tau\right\} \text{ is Martingale under }Q\text{, it's drift is zero.}\nonumber \\
+ &  & \text{Thus, we allow for no arbitrage and }\nonumber \\
+ &  & \text{ by using Ito's Lemman and setting }E_{t}^{Q}\left[\frac{dP_{t}\{\tau\}}{P_{t}\{\tau\}}\right]-r_{t}=0\nonumber \\
+ &  & B_{t}\left\{ \tau\right\} \text{ and }G_{t}\left\{ \tau\right\} \text{ solve the ODEs in Section (\ref{sub:Deriving-ODEs-for}) of the Appendix }\nonumber \\
+\nonumber \\
+y_{t}\{\tau\} & = & -\frac{1}{\tau}ln\left(P_{t}\{\tau\}\right)=-\frac{1}{\tau}B_{t}\left\{ \tau\right\} \cdot X_{t}-\frac{1}{\tau}G_{t}\left\{ \tau\right\} \label{eq:af_yld1}
+\end{eqnarray}
+
+\end_inset
+
+Solving for 
+\begin_inset Formula $B_{t}$
+\end_inset
+
+ and 
+\begin_inset Formula $G_{t}$
+\end_inset
+
+ typically requires imposing some parameter values and other restrictions
+ with little motivation.
+ Furthermore, finding the global solution in the estimation of the model
+ parameters give the observed zero-coupon bond yields is often problematic
+ (see Kim and Orphanides; 2005, Duffee; 2008).
+ Instead, following Christensen, Lopez, Rudebusch (2010) we assume a dynamic
+ Nelson-Seigel (1987) model and impose level, slope and curvature restrictions
+ by replacing the Nelson-Seigel (1987) parameters with the level, slope
+ and curvature state variables 
+\begin_inset Formula 
+\begin{eqnarray*}
+y_{t}^{N}\{\tau\} & = & L_{t}^{N}+S_{t}\left(\frac{1-e^{-\lambda\tau}}{\lambda\tau}\right)+C_{t}\left(\frac{1-e^{-\lambda\tau}}{\lambda\tau}-e^{-\lambda\tau}\right)-\frac{G_{t}^{N}\left\{ \tau\right\} }{\tau}\\
+\\
+y_{t}^{R}\{\tau\} & = & L_{t}^{R}+\alpha^{R}S_{t}\left(\frac{1-e^{-\lambda\tau}}{\lambda\tau}\right)+\alpha^{R}C_{t}\left(\frac{1-e^{-\lambda\tau}}{\lambda\tau}-e^{-\lambda\tau}\right)-\frac{G_{t}^{R}\left\{ \tau\right\} }{\tau}
+\end{eqnarray*}
+
+\end_inset
+
+We can motivate the Nelson-Seigel assumption from the fact that it is the
+ workhorse model used in fitting yield curves.
+ Furthermore, we need to use yields for zero-coupon Nominal bonds and ILBs
+ of different maturities.
+ Estimating these yields requires fitting a yield curve; this is again usually
+ done with a Nelson-Seigel model.
+ (
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:af_yld1"
+
+\end_inset
+
+) then implies
+\begin_inset Formula 
+\begin{eqnarray*}
+B_{t}^{N} & = & \left(\begin{array}{c}
+-(T-t)\\
+-\left(\frac{1-e^{-\lambda(T-t)}}{\lambda}\right)\\
+-\left(\frac{1-e^{-\lambda(T-t)}}{\lambda}-e^{-\lambda(T-t)}(T-t)\right)\\
+0
+\end{array}\right)\\
+\\
+B_{t}^{R} & = & \left(\begin{array}{c}
+0\\
+-\alpha^{R}\left(\frac{1-e^{-\lambda(T-t)}}{\lambda}\right)\\
+-\alpha^{R}\left(\frac{1-e^{-\lambda(T-t)}}{\lambda}-e^{-\lambda(T-t)}(T-t)\right)\\
+-(T-t)
+\end{array}\right)\\
+\\
+G_{t}^{N}\left\{ \tau\right\}  & = & -\int_{0}^{t}\rho_{0}+B_{t}^{'}K_{t}^{Q}\theta_{t}^{Q}+\frac{1}{2}\sum_{j=1}^{4}\left(\Sigma_{t}^{'}B_{t}^{N}B_{t}^{N'}\Sigma_{t}\right)_{\{j,j\}}\nu_{t}^{N(j)}\\
+\\
+G_{t}^{R}\left\{ \tau\right\}  & = & -\int_{0}^{t}\rho_{0}+B_{t}^{R'}K_{t}^{Q}\theta_{t}^{Q}+\frac{1}{2}\sum_{j=1}^{4}\left(\Sigma_{t}^{'}B_{t}^{R}B_{t}^{R'}\Sigma_{t}\right)_{\{j,j\}}\nu_{t}^{R(j)}\\
+\\
+P_{T}\{0\}=1 & \Rightarrow & B_{T}\left\{ 0\right\} =G_{T}\left\{ 0\right\} =0
+\end{eqnarray*}
+
+\end_inset
+
+Hence, given the Nelson-Seigel (N-S) restriction,
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ there exists a unique class of Affine Term Structure models
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+As shown in 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+Section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:pmeas-processes"
+
+\end_inset
+
+ of the Appendix, we can set 
+\begin_inset Formula $\theta^{Q}=0$
+\end_inset
+
+ without loss of generality.
+\end_layout
+
+\end_inset
+
+ which satisfies
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+ the ODEs for
+\begin_inset Formula $B_{t}$
+\end_inset
+
+ and 
+\begin_inset Formula $G_{t}$
+\end_inset
+
+ i
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+n Section (
+\begin_inset Formula $\ref{sub:Deriving-ODEs-for}$
+\end_inset
+
+) of the Appendix:
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+\begin_inset Formula 
+\begin{eqnarray*}
+X_{t} & = & \left(\begin{array}{c}
+L_{t}^{N}\\
+S_{t}\\
+C_{t}\\
+L_{t}^{R}
+\end{array}\right)\\
+\\
+dX_{t} & = & -\underbrace{\left(\begin{array}{cccc}
+0 & 0 & 0 & 0\\
+0 & \lambda & -\lambda & 0\\
+0 & 0 & \lambda & 0\\
+0 & 0 & 0 & 0
+\end{array}\right)}_{K^{Q}}X_{t}dt+\Sigma dW_{t}^{Q}\\
+\\
+r_{t}^{N} & = & \underbrace{\left(\begin{array}{c}
+1\\
+1\\
+0\\
+0
+\end{array}\right)}_{\rho^{N}}\cdot X_{t}=L_{t}^{N}+S_{t}\\
+\\
+r_{t}^{R} & = & \underbrace{\left(\begin{array}{c}
+0\\
+\alpha^{R}\\
+0\\
+1
+\end{array}\right)}_{\rho^{R}}\cdot X_{t}=L_{t}^{R}+\alpha^{R}S_{t}\\
+\\
+\left(\begin{array}{c}
+\frac{d}{dt}B_{1,t}^{N}\\
+\frac{d}{dt}B_{2,t}^{N}\\
+\frac{d}{dt}B_{3,t}^{N}\\
+\frac{d}{dt}B_{4,t}^{N}
+\end{array}\right) & = & \left(\begin{array}{c}
+1\\
+e^{-\lambda(T-t)}\\
+\lambda e^{-\lambda(T-t)}(T-t)\\
+0
+\end{array}\right)=\left(\begin{array}{c}
+1\\
+1+B_{2,t}^{N}\lambda\\
+B_{3,t}^{N}\lambda-B_{2,t}^{N}\lambda\\
+0
+\end{array}\right)=\underbrace{\left(\begin{array}{c}
+1\\
+1\\
+0\\
+0
+\end{array}\right)}_{\rho^{N}}+\underbrace{\left(\begin{array}{cccc}
+0 & 0 & 0 & 0\\
+0 & \lambda & 0 & 0\\
+0 & -\lambda & \lambda & 0\\
+0 & 0 & 0 & 0
+\end{array}\right)}_{K^{Q'}}\left(\begin{array}{c}
+B_{1,t}^{N}\\
+B_{2,t}^{N}\\
+B_{3,t}^{N}\\
+B_{4,t}^{N}
+\end{array}\right)\\
+\\
+\frac{d}{dt}G_{t}^{N} & = & -\frac{1}{2}\sum_{j=1}^{4}\left(\Sigma B_{t}^{N}B_{t}^{N'}\Sigma\right)_{\{j,j\}}\\
+\\
+B_{T}^{N} & = & G_{T}^{N}=0\\
+\\
+\frac{d}{dt}B_{t}^{R} & = & \left(\begin{array}{c}
+0\\
+\alpha^{R}e^{-\lambda(T-t)}\\
+\alpha^{R}\lambda e^{-\lambda(T-t)}(T-t)\\
+1
+\end{array}\right)=\left(\begin{array}{c}
+0\\
+B_{2,t}^{R}\lambda\\
+B_{3,t}^{R}\lambda-B_{2,t}^{R}\lambda\\
+1
+\end{array}\right)=\underbrace{\left(\begin{array}{c}
+0\\
+\alpha^{R}\\
+0\\
+1
+\end{array}\right)}_{\rho^{R}}+\underbrace{\left(\begin{array}{cccc}
+0 & 0 & 0 & 0\\
+0 & \lambda & 0 & 0\\
+0 & -\lambda & \lambda & 0\\
+0 & 0 & 0 & 0
+\end{array}\right)}_{K^{Q'}}\left(\begin{array}{c}
+B_{1,t}^{R}\\
+B_{2,t}^{R}\\
+B_{3,t}^{R}\\
+B_{4,t}^{R}
+\end{array}\right)\\
+\\
+\frac{d}{dt}G_{t}^{R} & = & -\frac{1}{2}\sum_{j=1}^{4}\left(\Sigma^{'}B_{t}^{R}B_{t}^{R'}\Sigma\right)_{\{j,j\}}\\
+\\
+B_{T}^{R} & = & G_{T}^{R}=0
+\end{eqnarray*}
+
+\end_inset
+
+Notice that this class of models does away with the square root process
+ for the state variables so technically 
+\begin_inset Formula $X_{t}$
+\end_inset
+
+ can be negative.
+ This is a drawback of the models nonetheless, as shown in Christensen,
+ Lopez and Rudebusch (2010) the estimation is unlikely to yield negative
+ values for 
+\begin_inset Formula $X_{t}$
+\end_inset
+
+.
+ Furthermore, we hope to apply these models European countries as well;
+ and we have observed negative nominal yields for some European government
+ bonds.
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+To bring the model to data we need to switch to the 
+\begin_inset Formula $P$
+\end_inset
+
+ measure
+\begin_inset Formula 
+\begin{eqnarray*}
+dX_{t} & = & K^{P}\left(\theta^{P}-X_{t}\right)dt+\Sigma dW_{t}\\
+\\
+y_{t}^{N} & = & -\frac{1}{T-t}B_{t}^{N}\cdot X_{t}-\frac{1}{T-t}G_{t}^{N}\\
+\\
+y_{t}^{R} & = & -\frac{1}{T-t}B_{t}^{R}\cdot X_{t}-\frac{1}{T-t}G_{t}^{R}
+\end{eqnarray*}
+
+\end_inset
+
+Notice that 
+\begin_inset Formula $K^{P}$
+\end_inset
+
+ and 
+\begin_inset Formula $\theta^{P}$
+\end_inset
+
+ are unrestricted (see Section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:pmeas-processes"
+
+\end_inset
+
+ of the Appendix for the derivation).
+ Thus, the model allows for plenty of flexibility.
+ And, the state variables will be (unconditionally) correlated even if if
+ we impose that 
+\begin_inset Formula $\Sigma$
+\end_inset
+
+ is diagonal.
+ 
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+In the model key equations below, Variations in 
+\begin_inset Formula $dX_{t}$
+\end_inset
+
+ and 
+\begin_inset Formula $X_{t}$
+\end_inset
+
+ allows to identify 
+\begin_inset Formula $K^{P}$
+\end_inset
+
+.
+ Then, the unconditional mean of 
+\begin_inset Formula $X_{t}$
+\end_inset
+
+ provide the four equations needed to identify .
+ Variations in 
+\begin_inset Formula $y_{t}^{N}$
+\end_inset
+
+,
+\begin_inset Formula $X_{t}$
+\end_inset
+
+ and 
+\begin_inset Formula $\tau$
+\end_inset
+
+ allow us to identify 
+\begin_inset Formula $\lambda$
+\end_inset
+
+and then variations in 
+\begin_inset Formula $y_{t}^{R}$
+\end_inset
+
+, 
+\begin_inset Formula $X_{t}$
+\end_inset
+
+ and
+\begin_inset Formula $\tau$
+\end_inset
+
+ allow us to identify 
+\begin_inset Formula $\alpha^{R}$
+\end_inset
+
+.
+ Lastly, variations in 
+\begin_inset Formula $y_{t}^{N}$
+\end_inset
+
+, 
+\begin_inset Formula $y_{t}^{R}$
+\end_inset
+
+ and 
+\begin_inset Formula $\tau$
+\end_inset
+
+ allow us to identify 
+\begin_inset Formula $N(N+1)/2$
+\end_inset
+
+ elements of 
+\begin_inset Formula $\Sigma$
+\end_inset
+
+ as shown in Christensen, Diebold and Rudebusch (2007).
+ For simplicity we assume that 
+\begin_inset Formula $\Sigma$
+\end_inset
+
+ is diagonal.
+ The key equations for the model become
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+\begin_inset Formula 
+\begin{eqnarray}
+\left(\begin{array}{c}
+dL_{t}^{N}\\
+dS_{t}\\
+dC_{t}\\
+dL_{t}^{R}
+\end{array}\right) & = & \left(\begin{array}{cccc}
+K_{11}^{P} & K_{12}^{P} & K_{13}^{P} & K_{14}^{P}\\
+K_{21}^{P} & K_{22}^{P} & K_{23}^{P} & K_{24}^{P}\\
+K_{31}^{P} & K_{32}^{P} & K_{33}^{P} & K_{34}^{P}\\
+K_{41}^{P} & K_{42}^{P} & K_{43}^{P} & K_{44}^{P}
+\end{array}\right)\left(\left(\begin{array}{c}
+\theta_{1}^{P}\\
+\theta_{2}^{P}\\
+\theta_{3}^{P}\\
+\theta_{4}^{P}
+\end{array}\right)-\left(\begin{array}{c}
+L_{t}^{N}\\
+S_{t}\\
+C_{t}\\
+L_{t}^{R}
+\end{array}\right)\right)dt+\left(\begin{array}{cccc}
+\sigma_{11} & 0 & 0 & 0\\
+0 & \sigma_{22} & 0 & 0\\
+0 & 0 & \sigma_{33} & 0\\
+0 & 0 & 0 & \sigma_{44}
+\end{array}\right)dW_{t}\label{eq:key1}\\
+\nonumber \\
+y_{t}^{N} & = & -\frac{1}{T-t}\left(\begin{array}{c}
+-(T-t)\\
+-\left(\frac{1-e^{-\lambda(T-t)}}{\lambda}\right)\\
+-\left(\frac{1-e^{-\lambda(T-t)}}{\lambda}-e^{-\lambda(T-t)}(T-t)\right)\\
+0
+\end{array}\right)^{'}\left(\begin{array}{c}
+L_{t}^{N}\\
+S_{t}\\
+C_{t}\\
+L_{t}^{R}
+\end{array}\right)-\frac{\sigma_{11}^{2}}{2(T-t)}\left(\int_{t}^{T}(T-s)^{2}ds\right)\nonumber \\
+ &  & -\frac{\sigma_{22}^{2}}{2(T-t)}\left(\int_{t}^{T}\left(\frac{1-e^{-\lambda(T-s)}}{\lambda}\right)^{2}ds\right)-\frac{\sigma_{33}^{2}}{2(T-t)}\left(\int_{t}^{T}\left(\frac{1-e^{-\lambda(T-s)}}{\lambda}-e^{-\lambda(T-s)}(T-s)\right)^{2}ds\right)\label{eq:key2}\\
+\nonumber \\
+y_{t}^{R} & = & -\frac{1}{T-t}\left(\begin{array}{c}
+0\\
+-\alpha^{R}\left(\frac{1-e^{-\lambda(T-t)}}{\lambda}\right)\\
+-\alpha^{R}\left(\frac{1-e^{-\lambda(T-t)}}{\lambda}-e^{-\lambda(T-t)}(T-t)\right)\\
+-(T-t)
+\end{array}\right)^{'}\left(\begin{array}{c}
+L_{t}^{N}\\
+S_{t}\\
+C_{t}\\
+L_{t}^{R}
+\end{array}\right)-\frac{\sigma_{22}^{2}}{2(T-t)}(\alpha^{R})^{2}\left(\int_{t}^{T}\left(\frac{1-e^{-\lambda(T-s)}}{\lambda}\right)^{2}ds\right)\nonumber \\
+ &  & -\frac{\sigma_{33}^{2}}{2(T-t)}(\alpha^{R})^{2}\left(\int_{t}^{T}\left(\frac{1-e^{-\lambda(T-s)}}{\lambda}-e^{-\lambda(T-s)}(T-s)\right)^{2}ds\right)-\frac{\sigma_{44}^{2}}{2(T-t)}\left(\int_{t}^{T}(T-s)^{2}ds\right)\label{eq:key3}
+\end{eqnarray}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+\paragraph_spacing onehalf
+Implications
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+In Section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:inflation-moments"
+
+\end_inset
+
+ of the Appendix we derive 
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+\begin_inset Formula 
+\begin{eqnarray*}
+ln\left(\frac{\Pi_{t+\tau}}{\Pi_{t}}\right) & = & \int_{t}^{t+\tau}(\rho^{N}-\rho^{R})^{'}X_{s}ds\\
+\\
+\frac{\partial}{\partial\tau}ln\left(\frac{\Pi_{t+\tau}}{\Pi_{t}}\right) & = & (\rho^{N}-\rho^{R})^{'}X_{t+\tau}\\
+\\
+Z_{t,t+\tau} & \equiv & \left(\begin{array}{c}
+X_{t+\tau}\\
+ln\left(\Pi_{t+\tau}/\Pi_{t}\right)
+\end{array}\right)\qquad\text{the augmented state vector}\\
+\\
+m_{t,t+\tau} & = & E_{t}\left[Z_{t,t+\tau}\right]\\
+\\
+\frac{\partial}{\partial\tau}m_{t,t+\tau} & = & K+\theta m_{t,t+\tau}\\
+\\
+m_{t,t} & = & Z_{t,t}=\left(\begin{array}{c}
+X_{t}\\
+0
+\end{array}\right)\\
+\\
+v\left\{ \tau\right\}  & = & Var_{t}\left[Z_{t,t+\tau}\right]\\
+\\
+\frac{\partial}{\partial\tau}vec\left(v\left\{ \tau\right\} \right) & = & \left(I_{n\times n}\otimes\theta\right)vec\left(v\left\{ \tau\right\} \right)+\left(\theta\otimes I_{n\times n}\right)vec\left(v\left\{ \tau\right\} \right)+\left(I_{n\times n}\otimes\bar{\Sigma}\right)vec\left(\bar{\Sigma}^{'}\right)\\
+\\
+vec\left(v\left\{ 0\right\} \right) & = & 0_{n^{2}\times1}\quad\text{where }n\text{ is the size of the augmented state vector}
+\end{eqnarray*}
+
+\end_inset
+
+We then have
+\begin_inset Formula 
+\begin{eqnarray*}
+\pi_{t}^{e}\left\{ \tau\right\}  & = & -\frac{1}{\tau}ln\left(E_{t}\left[exp\left(-\int_{t}^{t+\tau}(r_{s}^{N}-r_{s}^{R})ds\right)\right]\right)=-\frac{1}{\tau}ln\left(E_{t}\left[exp\left(-(\rho^{N}-\rho^{R})^{'}\int_{t}^{t+\tau}X_{s}ds\right)\right]\right)\\
+\\
+\Rightarrow\pi_{t}^{e}\left\{ \tau\right\}  & = & -\frac{1}{\tau}\left(-m_{t,t+\tau}^{(n)}+\frac{1}{2}v^{(n,n)}\left\{ \tau\right\} \right)\\
+\\
+\pi_{t}^{e}\left\{ 0\right\}  & = & (\rho^{N}-\rho^{R})^{'}X_{t}
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+\paragraph_spacing onehalf
+Probability of deflation
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+Probability that at date 
+\begin_inset Formula $t$
+\end_inset
+
+, inflation over horizon 
+\begin_inset Formula $\tau$
+\end_inset
+
+ is negative
+\begin_inset Formula 
+\begin{eqnarray*}
+Prob_{t}\left(ln\left(\frac{\Pi_{t+\tau}}{\Pi_{t}}\right)\le0\right) & = & Prob_{t}\left(\int_{t}^{t+\tau}(\rho^{N}-\rho^{R})^{'}X_{s}ds\le0\right)\\
+\\
+Prob_{t}\left(ln\left(\frac{\Pi_{t+\tau}}{\Pi_{t}}\right)\le0\right) & = & Prob_{t}\left(\frac{\int_{t}^{t+\tau}(\rho^{N}-\rho^{R})^{'}X_{s}ds-m_{t,t+\tau}^{(n)}}{\sqrt{v^{(n,n)}\left\{ \tau\right\} }}\le\frac{-m_{t,t+\tau}^{(n)}}{\sqrt{v^{(n,n)}\left\{ \tau\right\} }}\right)\\
+\\
+Prob_{t}\left(ln\left(\frac{\Pi_{t+\tau}}{\Pi_{t}}\right)\le0\right) & = & CDF\left\{ \frac{-m_{t,t+\tau}^{(n)}}{\sqrt{v^{(n,n)}\left\{ \tau\right\} }}\right\} 
+\end{eqnarray*}
+
+\end_inset
+
+We should not that this is also the probability that at date 
+\begin_inset Formula $t$
+\end_inset
+
+, average inflation over horizon 
+\begin_inset Formula $\tau$
+\end_inset
+
+ is negative
+\begin_inset Formula 
+\begin{eqnarray*}
+Prob_{t}\left(\frac{1}{\tau}ln\left(\frac{\Pi_{t+\tau}}{\Pi_{t}}\right)\le0\right) & = & Prob_{t}\left(ln\left(\frac{\Pi_{t+\tau}}{\Pi_{t}}\right)\le0\right)=CDF\left\{ \frac{-m_{t,t+\tau}^{(n)}}{\sqrt{v^{(n,n)}\left\{ \tau\right\} }}\right\} 
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+\paragraph_spacing onehalf
+Extending the number of states
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+The model with four state variables struggles to fit the short maturity
+ bonds.
+ To make it a bit more flexible we would need to introduce one more maturity
+ parameter 
+\begin_inset Formula $\lambda_{2}$
+\end_inset
+
+.
+ This would require introducing two new stat variables 
+\begin_inset Formula $S_{2,t}$
+\end_inset
+
+and 
+\begin_inset Formula $C_{2,t}$
+\end_inset
+
+.
+\begin_inset Formula 
+\begin{eqnarray*}
+y_{t}^{N}\{\tau\} & = & L_{t}^{N}+S_{t}\left(\frac{1-e^{-\lambda\tau}}{\lambda\tau}\right)+S_{2,t}\left(\frac{1-e^{-\lambda_{2}\tau}}{\lambda_{2}\tau}\right)+C_{t}\left(\frac{1-e^{-\lambda\tau}}{\lambda\tau}-e^{-\lambda\tau}\right)+C_{2,t}\left(\frac{1-e^{-\lambda_{2}\tau}}{\lambda_{2}\tau}-e^{-\lambda_{2}\tau}\right)-\frac{G_{t}^{N}\left\{ \tau\right\} }{\tau}\\
+\\
+y_{t}^{R}\{\tau\} & = & L_{t}^{R}+\alpha^{R}S_{t}\left(\frac{1-e^{-\lambda\tau}}{\lambda\tau}\right)+\alpha^{R}S_{2,t}\left(\frac{1-e^{-\lambda_{2}\tau}}{\lambda_{2}\tau}\right)+\alpha^{R}C_{t}\left(\frac{1-e^{-\lambda\tau}}{\lambda\tau}-e^{-\lambda\tau}\right)+\alpha^{R}C_{2,t}\left(\frac{1-e^{-\lambda_{2}\tau}}{\lambda_{2}\tau}-e^{-\lambda_{2}\tau}\right)-\frac{G_{t}^{R}\left\{ \tau\right\} }{\tau}
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+\paragraph_spacing onehalf
+Estimation Method
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+From the key equations (
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:key1"
+
+\end_inset
+
+)-(
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:key3"
+
+\end_inset
+
+) we need to estimate 
+\begin_inset Formula $26+$
+\end_inset
+
+ parameters (depending on the number of bond maturities included).
+ We want to run the model using data at a daily frequency.
+ Notice that we can assume that 
+\begin_inset Formula $X_{t}$
+\end_inset
+
+ is observed (or can be estimated) from PCA and then it is straight-forward
+ to estimate the model parameters via MLE.
+ To allow for the most flexibility we can assume that 
+\begin_inset Formula $X_{t}$
+\end_inset
+
+ is not observed and then we can use a filtering method to estimate both
+ 
+\begin_inset Formula $X_{t}$
+\end_inset
+
+ and the parameters.
+ This is the approached used in Christensen, Diebold and Rudebusch (2007)
+ and Christensen, Lopez and Rudebusch (2010).
+ 
+\end_layout
+
+\begin_layout Subsection
+\paragraph_spacing onehalf
+Kalman filter
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+Here the state variables are assumed to be hidden.
+ 
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+When using daily data we may have asynchronous data releases
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+Indeed since each yield at each maturity has its own iid error, we can simply
+ drop the rows/columns corresponding to the missing data.
+\end_layout
+
+\end_inset
+
+.
+ That is more so the case if we include macro-economic variables as additional
+ state variables.
+ A Kalman filter approach would be appropriate in that case.
+ Recall that since the all the shocks are Gaussian, Kalman-filtering is
+ an efficient and consistent estimator.
+ 
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+From Section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Kalman-filter-details"
+
+\end_inset
+
+ of the Appendix, the discretized state equation is
+\begin_inset Formula 
+\begin{eqnarray*}
+X_{i} & = & \left(I-exp\left(-K^{p}\Delta t_{i}\right)\right)\theta^{P}+exp\left(-K^{p}\Delta t_{i}\right)X_{t_{i}}+\eta_{i}\\
+ &  & \text{where}\\
+\Delta & = & t_{i}-t_{i-1}=\frac{1}{252}\quad\text{for daily data}\\
+\\
+\eta_{i} & \sim & N(0,Q)\\
+\\
+Q & = & \int_{0}^{\Delta}exp\left(-K^{p}s\right)\Sigma\Sigma^{'}exp\left(-K^{p}s\right)^{'}ds
+\end{eqnarray*}
+
+\end_inset
+
+The measurement equation is obtained from equations (
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:key2"
+
+\end_inset
+
+)-(
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:key3"
+
+\end_inset
+
+) where 
+\begin_inset Formula $A_{0}$
+\end_inset
+
+and 
+\begin_inset Formula $A_{1}$
+\end_inset
+
+are appropriately defined and 
+\begin_inset Formula $\Phi$
+\end_inset
+
+ is diagonal.
+ We will use several maturities of up to 
+\begin_inset Formula $M$
+\end_inset
+
+ years (
+\begin_inset Formula $T\in\{T_{1},...,T_{M}\}$
+\end_inset
+
+ with 
+\begin_inset Formula $T_{n}=\frac{n}{\Delta}$
+\end_inset
+
+; hence 
+\begin_inset Formula $\tau\in\{\tau_{1},...,\tau_{M}\}$
+\end_inset
+
+ with 
+\begin_inset Formula $\tau_{n}=T_{n}-t$
+\end_inset
+
+).
+ 
+\begin_inset Formula 
+\begin{eqnarray*}
+y_{t} & = & A_{0}+A_{1}X_{t}+\epsilon_{t}\\
+\\
+\epsilon_{t} & \sim & N(0,\Phi)
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+\paragraph_spacing onehalf
+Algorithm
+\end_layout
+
+\begin_layout Enumerate
+\paragraph_spacing onehalf
+Initialization: we will initialize using the unconditional mean and variance
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+In our implementation we use, 
+\begin_inset Formula $V_{0}=\int_{0}^{1000}exp\left(K^{p}s\right)\Sigma\Sigma^{'}exp\left(K^{p}s\right)^{'}ds$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+ 
+\begin_inset Formula 
+\begin{eqnarray*}
+\hat{V}_{0|0} & = & \int_{0}^{\infty}exp\left(-K^{p}s\right)\Sigma\Sigma^{'}exp\left(-K^{p}s\right)^{'}ds\\
+\\
+\hat{X}_{0|0} & = & \theta^{P}
+\end{eqnarray*}
+
+\end_inset
+
+For stationarity (
+\begin_inset Formula $V_{0}^{(i,j)}<\infty,\forall\{i,j\}$
+\end_inset
+
+) we require that the real component of the eigenvalues of 
+\begin_inset Formula $K^{p}$
+\end_inset
+
+ are positive.
+\end_layout
+
+\begin_layout Enumerate
+\paragraph_spacing onehalf
+Predicted states and error variance
+\begin_inset Formula 
+\begin{eqnarray*}
+\hat{X}_{k|k-1} & = & \left(I-exp\left(-K^{p}\Delta\right)\right)\theta^{P}+exp\left(-K^{p}\Delta\right)\hat{X}_{k-1|k-1}\\
+\\
+\hat{V}_{k|k-1} & = & exp\left(-K^{p}\Delta\right)\hat{V}_{k-1|k-1}exp\left(-K^{p}\Delta\right)^{'}+Q
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+\paragraph_spacing onehalf
+Update
+\begin_inset Formula 
+\begin{eqnarray*}
+\varepsilon_{k} & = & y_{k}-A_{0}-A_{1}\hat{X}_{k|k-1}\qquad\text{innovation}\\
+\\
+S_{k} & = & \Phi+A_{1}\hat{V}_{k|k-1}A_{1}^{'}\qquad\text{innovation variance}\\
+\\
+G_{k} & = & \hat{V}_{k|k-1}A_{1}^{'}(S_{k})^{-1}\qquad\text{Kalman gains (see Appendix for derivation)}\\
+\\
+\hat{X}_{k|k} & = & \hat{X}_{k|k-1}+G_{k}\varepsilon_{k}\\
+\\
+\hat{V}_{k|k} & = & \hat{V}_{k|k-1}-G_{k}A_{1}\hat{V}_{k|k-1}
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+\paragraph_spacing onehalf
+Likelihood increment
+\begin_inset Formula 
+\begin{eqnarray*}
+ &  & \forall k\in\{1,...,T\}\\
+L_{k}\left\{ \mho\right\}  & = & \left(\frac{1}{2\pi}\right)^{\left(2\sum_{i}\tau_{i}\right)/2}\frac{1}{\sqrt{|S_{k}|}}exp\left(-\frac{1}{2}\left(y_{k}-A_{0}-A_{1}\hat{X}_{k|k-1}\right)^{'}(S_{k})^{-1}\left(y_{k}-A_{0}-A_{1}\hat{X}_{k|k-1}\right)\right)\\
+\mathcal{L}_{k}\left\{ \mho\right\}  & = & -\left(\frac{\left(y_{k}-A_{0}-A_{1}\hat{X}_{k|k-1}\right)^{'}(S_{k})^{-1}\left(y_{k}-A_{0}-A_{1}\hat{X}_{k|k-1}\right)}{2}+\frac{\left(2\sum_{i}\tau_{i}\right)}{2}ln\left(2\pi\right)+\frac{1}{2}ln\left(|S_{k}|\right)\right)\\
+\mathcal{L}_{0}\left\{ \mho\right\}  & = & -\left(\frac{\left(X_{0}-X_{0,T}\right)^{'}(V_{0,T})^{-1}\left(X_{0}-X_{0,T}\right)}{2}+\frac{4}{2}ln\left(2\pi\right)+\frac{1}{2}ln\left(|V_{0,T}|\right)\right)\\
+ &  & \text{where }X_{0,T}\text{ and }V_{0,T}\text{ are from the Kalman Smoother}
+\end{eqnarray*}
+
+\end_inset
+
+where 
+\begin_inset Formula $\mho$
+\end_inset
+
+ is a vector containing the parameter set
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+MLE:
+\begin_inset Formula 
+\begin{eqnarray*}
+\max_{\mho} &  & \sum_{k=0}^{K}\mathcal{L}_{k}\left\{ \mho\right\} 
+\end{eqnarray*}
+
+\end_inset
+
+We impose the non-linear constraints that the real component of each eigenvalues
+ of 
+\begin_inset Formula $K^{p}$
+\end_inset
+
+ positive (so 
+\begin_inset Formula $K^{p}$
+\end_inset
+
+ is positive definite).
+ 
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+\paragraph_spacing onehalf
+We can instead initialize the filter at the steady-state error variance
+ 
+\begin_inset Formula $\hat{V}_{0|0}=V$
+\end_inset
+
+ and drop the prediction and updating equations for 
+\begin_inset Formula $\hat{V}_{\cdot|\cdot}$
+\end_inset
+
+ .
+ However, to be consistent with the approach in by Christensen et al.
+ we initialize using
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+\paragraph_spacing onehalf
+Data
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+Ideally we would like to use raw zero-coupon yields.
+ These can be obtained from the Fama and Bliss (1987)
+\end_layout
+
+\begin_layout Quote
+\paragraph_spacing onehalf
+who construct yields not from an estimated discount curve, but rather from
+ estimated forward rates at the observed maturities.
+ Their method sequentially constructs the forward rates necessary to price
+ successively longer- maturity bonds.
+ Those forward rates are often called “unsmoothed Fama-Bliss” forward rates,
+ and they are transformed to unsmoothed Fama-Bliss yields by appropriate
+ averaging
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+The zero-coupon yield is the equal-weighted mean of the forward rates.
+ Hence, it prices all bonds of lesser or equal maturities.
+\end_layout
+
+\end_inset
+
+ -- 
+\begin_inset Quotes eld
+\end_inset
+
+Facts, Factors, and Questions
+\begin_inset Quotes erd
+\end_inset
+
+ (Diebold and Rudebusch; 2013)
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+Unfortunately, the Fama and Bliss (1987) data is only available monthly
+ and for maturities of up to five years.
+ Furthermore it does not contain the yields for ILBs.
+ Consequently, we will instead use the smoothed zero-coupon yields provided
+ Gurkaynak, Sack and Wright (2006) for Nominal Bonds and Gurkaynak, Sack
+ and Wright (2008) for ILBs
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+This data is available publicly, is of daily frequency and is updated regularly.
+ 
+\end_layout
+
+\end_inset
+
+.
+ This does introduce some error because in their construction Gurkaynak,
+ Sack and Wright (2006, 2008) exclude the on-the-run bonds.
+ Hence the Nominal Bond yields and ILB yields are biased upwards.
+ However, since we are interested in studying the Break-Even rate this is
+ not problematic so long as the on-the-run premium is roughly the same in
+ Nominal Bonds and ILBs.
+ If that is not the case, part of the IRP will reflect this difference.
+ What is more worrisome however is that Gurkaynak, Sack and Wright (2006,
+ 2008) use an Nelson-Seigal approach to smooth the yield curve.
+ Thus if the yield curve were to remain constant (over time), our estimation
+ procedure would simply recover the parameters of Gurkaynak, Sack and Wright
+ (2006, 2008).
+ To mitigate this issue we will only use maturies for which their were/are
+ outstanding Treasury securities that were/are used by Gurkaynak, Sack and
+ Wright (2006, 2008) to fit the yield curve at any point in time.
+ Hence, these smoothed yields are close to the observed yields.
+ Lastly to test whether our estimation method is robust we can fix the Gurkaynak
+, Sack and Wright (2006, 2008) parameters (hold the yield curve constant
+ overtime) and verify that our procedure does recover the Gurkaynak, Sack
+ and Wright (2006, 2008) parameters.
+\end_layout
+
+\begin_layout Subsection
+\paragraph_spacing onehalf
+Robustness check with GMM
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+Having estimated the model's parameters, we will use the time series of
+ Nominal bond and ILB returns and verify whether the model implied SDF's
+ price these bonds.
+ In particular, we will use the moment conditions from the Euler Equations
+ 
+\begin_inset Formula 
+\begin{eqnarray*}
+E_{t}\left[\frac{M_{t+k}^{N}}{M_{t}^{N}}R_{t,t+k}^{N}\left\{ \tau\right\} \right] & = & 1\\
+\\
+E_{t}\left[\frac{M_{t+k}^{R}}{M_{t}^{R}}R_{t,t+k}^{R}\left\{ \tau\right\} \right] & = & 1
+\end{eqnarray*}
+
+\end_inset
+
+and use the J-test to verify if the model can price these bonds.
+ Since we have estimated 
+\begin_inset Formula $l\sim30$
+\end_inset
+
+ parameters we need 
+\begin_inset Formula $m>l$
+\end_inset
+
+ moment conditions for the J-Test.
+ Thus we need to use many different maturities for Nominal bonds and ILBs
+\begin_inset Formula 
+\begin{eqnarray*}
+J & = & \left(\begin{array}{c}
+\frac{1}{K}\sum_{t}^{K}\left(\frac{M_{t+k}^{N}}{M_{t}^{N}}R_{t,t+k}^{N}\right)\\
+\vdots\\
+\frac{1}{K}\sum_{t}^{K}\left(\frac{M_{t+k}^{R}}{M_{t}^{R}}R_{t,t+k}^{R}\right)
+\end{array}\right)^{'}\left(\begin{array}{c}
+\frac{1}{K}\sum_{t}^{K}\left(\frac{M_{t+k}^{N}}{M_{t}^{N}}R_{t,t+k}^{N}\right)\\
+\vdots\\
+\frac{1}{K}\sum_{t}^{K}\left(\frac{M_{t+k}^{R}}{M_{t}^{R}}R_{t,t+k}^{R}\right)
+\end{array}\right)\sim\chi_{m-l}^{2}
+\end{eqnarray*}
+
+\end_inset
+
+We can also include total returns for TIPS ETF, Nominal Bond ETFs, realized
+ total returns for active Treasuries of maturities 
+\begin_inset Formula $1-3Y$
+\end_inset
+
+, 
+\begin_inset Formula $5-7Y$
+\end_inset
+
+, 
+\begin_inset Formula $7-10Y$
+\end_inset
+
+, 
+\begin_inset Formula $10Y+$
+\end_inset
+
+, realized total returns for active TIPS of maturities 
+\begin_inset Formula $1-3Y$
+\end_inset
+
+, 
+\begin_inset Formula $5-7Y$
+\end_inset
+
+, 
+\begin_inset Formula $7-10Y$
+\end_inset
+
+, 
+\begin_inset Formula $10Y+$
+\end_inset
+
+, for horizons 
+\begin_inset Formula $k\in\{1D,1W,1M\}$
+\end_inset
+
+ (this should yield a total of more than 
+\begin_inset Formula $30$
+\end_inset
+
+ test assets).
+\end_layout
+
+\begin_layout Subsection
+\paragraph_spacing onehalf
+Signal construction
+\end_layout
+
+\begin_layout Subsection
+\paragraph_spacing onehalf
+Extensions
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+Extension to other countries/regions
+\end_layout
+
+\begin_layout Subsection
+\paragraph_spacing onehalf
+Alternative approach
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+If we instead assume 
+\begin_inset Formula $X_{t}$
+\end_inset
+
+ is observed (estimated from PCA), we can first stack 
+\begin_inset Formula $X_{t}$
+\end_inset
+
+ and 
+\begin_inset Formula $y_{t}$
+\end_inset
+
+ 
+\begin_inset Formula 
+\begin{eqnarray*}
+Y_{t} & = & \left(\begin{array}{c}
+X_{t}\\
+y_{t}
+\end{array}\right)\\
+\\
+Y_{t} & = & B_{0}+B_{1}Y_{t-1}+\mu_{t}\\
+\\
+\mu_{t} & \sim & N\left(0,\left(\begin{array}{cc}
+V & 0\\
+0 & \Phi
+\end{array}\right)\right)
+\end{eqnarray*}
+
+\end_inset
+
+we could then use MLE.
+ The standard errors may need to be corrected for errors coming from the
+ PCA.
+ This can be done using a Bootstrap approach but would be very time consuming.
+\end_layout
+
+\begin_layout Section
+\paragraph_spacing onehalf
+Collaboration with broader MAS
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+We would welcome collaboration with MP&S, Market Advantage and EM Allocation
+ for the following reasons
+\end_layout
+
+\begin_layout Itemize
+\paragraph_spacing onehalf
+These groups have in the past used term-structure models (MP&S) and have
+ interest in understanding inflation risk-premia (Market Advantage, EM Al)
+\end_layout
+
+\begin_layout Itemize
+\paragraph_spacing onehalf
+They may assist us in obtaining raw (un-smoothed) zero-coupon yields for
+ Nominal Bonds and ILBs
+\end_layout
+
+\begin_layout Itemize
+\paragraph_spacing onehalf
+As well as data DM-ex-US (Market Advantage, MP&S) and EM (EM Al.)
+\end_layout
+
+\begin_layout Itemize
+\paragraph_spacing onehalf
+Lastly we can collaborate with said teams to construct signals and fully
+ automate every step of the process
+\end_layout
+
+\begin_layout Section
+\paragraph_spacing onehalf
+Appendix
+\end_layout
+
+\begin_layout Subsection
+\paragraph_spacing onehalf
+Deriving ODEs for 
+\begin_inset Formula $B_{t}$
+\end_inset
+
+ and 
+\begin_inset Formula $G_{t}$
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:Deriving-ODEs-for"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+\begin_inset Formula 
+\begin{eqnarray}
+exp\left(-\int_{0}^{t}r_{s}ds\right)P_{t}\{\tau\} & = & exp\left(B_{t}^{'}\left\{ \tau\right\} X_{t}+G_{t}\left\{ \tau\right\} -\int_{0}^{t}r_{s}ds\right)\nonumber \\
+\nonumber \\
+E_{t}^{Q}\left[\frac{dP_{t}\{\tau\}}{P_{t}\{\tau\}}\right]-r_{t} & = & -\rho_{0}-\rho_{1}\cdot X_{t}+X_{t}\cdot\frac{\partial}{\partial t}B_{t}\left\{ \tau\right\} dt+\frac{\partial}{\partial t}G_{t}\left\{ \tau\right\} dt+B_{t}^{'}\left\{ \tau\right\} E_{t}^{Q}\left[dX_{t}\right]\nonumber \\
+ &  & +\frac{1}{2}\left(B_{t}\left\{ \tau\right\} ^{'}(dX_{t}dX_{t}^{'})B_{t}\left\{ \tau\right\} \right)\nonumber \\
+\nonumber \\
+E_{t}^{Q}\left[\frac{dP_{t}\{\tau\}}{P_{t}\{\tau\}}\right]-r_{t} & = & 0\nonumber \\
+\nonumber \\
+\Rightarrow0 & = & -\rho_{0}-\rho_{1}\cdot X_{t}+X_{t}\cdot\frac{d}{dt}B_{t}\left\{ \tau\right\} dt+\frac{d}{dt}G_{t}\left\{ \tau\right\} dt+B_{t}\left\{ \tau\right\} ^{'}K_{t}^{P}\left(\theta_{t}^{P}-X_{t}\right)dt\nonumber \\
+ &  & +\frac{1}{2}\sum_{j=1}^{4}\left(\Sigma_{t}^{'}B_{t}\left\{ \tau\right\} B_{t}\left\{ \tau\right\} ^{'}\Sigma_{t}\right)_{\{j,j\}}\left(\nu_{t}^{(j)}+\beta_{t}^{(j)}\cdot X_{t}\right)dt\nonumber \\
+\nonumber \\
+\Rightarrow\frac{d}{dt}B_{t}\left\{ \tau\right\}  & = & \rho_{1}+K_{t}^{P'}B_{t}\left\{ \tau\right\} -\frac{1}{2}\sum_{j=1}^{4}\left(\Sigma_{t}^{'}B_{t}\left\{ \tau\right\} B_{t}\left\{ \tau\right\} ^{'}\Sigma_{t}\right)_{\{j,j\}}\left(\beta_{t}^{(j)}\right)\label{eq:ODE_B}\\
+\nonumber \\
+\Rightarrow\frac{d}{dt}G_{t}\left\{ \tau\right\}  & = & \rho_{0}-B_{t}\left\{ \tau\right\} ^{'}K_{t}^{P}\theta_{t}^{P}-\frac{1}{2}\sum_{j=1}^{4}\left(\Sigma_{t}^{'}B_{t}\left\{ \tau\right\} B_{t}\left\{ \tau\right\} ^{'}\Sigma_{t}\right)_{\{j,j\}}\nu_{t}^{(j)}\label{eq:ODE_C}\\
+\nonumber \\
+P_{t}\{0\}=1 & \Rightarrow & B_{t}\left\{ 0\right\} =G_{t}\left\{ 0\right\} =0\label{eq:BCs}
+\end{eqnarray}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+\paragraph_spacing onehalf
+Original Nelson-Seigel (1987) model
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:Original-Nelson-Seigel-(1987)"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+Recall the original Nelson-Seigel (1987) model
+\begin_inset Formula 
+\begin{eqnarray*}
+y_{t}\{\tau\} & = & \underbrace{a_{0}}_{\text{long term}}+\underbrace{a_{1}\left(\frac{1-e^{-\lambda\tau}}{\lambda\tau}\right)}_{\text{short term}}+\underbrace{a_{2}\left(\frac{1-e^{-\lambda\tau}}{\lambda\tau}-e^{-\lambda\tau}\right)}_{\text{medium term}}
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+Assuming 
+\begin_inset Formula $\lambda=0.5$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+\begin_inset Float figure
+placement h
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename ../../../../Dropbox/blackrock/InflationRiskPremia/ns_pic1.eps
+	scale 40
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+\paragraph_spacing onehalf
+Unique solution for 
+\begin_inset Formula $B_{t}$
+\end_inset
+
+ and 
+\begin_inset Formula $G_{t}$
+\end_inset
+
+ from Nelson-Seigal assumption
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+\begin_inset Formula 
+\begin{eqnarray}
+y_{t}\{\tau\} & = & -\frac{1}{\tau}B_{t}\left\{ \tau\right\} \cdot X_{t}-\frac{1}{\tau}G_{t}\left\{ \tau\right\} \label{eq:af_yld2}\\
+\nonumber \\
+y_{t}^{N}\{\tau\} & = & L_{t}^{N}+S_{t}\left(\frac{1-e^{-\lambda\tau}}{\lambda\tau}\right)+C_{t}\left(\frac{1-e^{-\lambda\tau}}{\lambda\tau}-e^{-\lambda\tau}\right)-\frac{1}{\tau}G_{t}^{N}\left\{ \tau\right\} \nonumber \\
+\nonumber \\
+y_{t}^{R}\{\tau\} & = & L_{t}^{N}+\alpha^{R}S_{t}\left(\frac{1-e^{-\lambda\tau}}{\lambda\tau}\right)+\alpha^{R}C_{t}\left(\frac{1-e^{-\lambda\tau}}{\lambda\tau}-e^{-\lambda\tau}\right)-\frac{1}{\tau}G_{t}^{R}\left\{ \tau\right\} \nonumber 
+\end{eqnarray}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+(
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:af_yld2"
+
+\end_inset
+
+) then implies 
+\begin_inset Formula 
+\begin{eqnarray*}
+B_{1,t}^{N}\left\{ \tau\right\}  & = & B_{4,t}^{R}\left\{ \tau\right\} =-\tau\\
+\\
+B_{2,t}^{N}\left\{ \tau\right\}  & = & -\left(\frac{1-e^{-\lambda\tau}}{\lambda}\right)\\
+\\
+B_{2,t}^{R}\left\{ \tau\right\}  & = & -\alpha^{R}\left(\frac{1-e^{-\lambda\tau}}{\lambda}\right)\\
+\\
+B_{3,t}^{N}\left\{ \tau\right\}  & = & -\left(\frac{1-e^{-\lambda\tau}}{\lambda}-e^{-\lambda\tau}\tau\right)\\
+\\
+B_{3,t}^{R}\left\{ \tau\right\}  & = & -\alpha^{R}\left(\frac{1-e^{-\lambda\tau}}{\lambda}-e^{-\lambda\tau}\tau\right)\\
+\\
+B_{1,t}^{R}\left\{ \tau\right\}  & = & B_{4,t}^{N}\left\{ \tau\right\} =0\\
+\\
+G_{t}^{N}\left\{ 0\right\} -G_{t}^{N}\left\{ \tau\right\}  & = & \int_{t}^{t+\tau}\left(\rho_{0}-B_{s}^{'}K_{s}^{Q}\theta_{s}^{Q}-\frac{1}{2}\sum_{j=1}^{4}\left(\Sigma_{s}^{'}B_{s}^{N}B_{s}^{N'}\Sigma_{s}\right)_{\{j,j\}}\nu_{s}^{N(j)}\right)ds\\
+G_{t}^{N}\left\{ \tau\right\}  & = & \int_{t}^{t+\tau}\left(-\rho_{0}+B_{s}^{'}K_{s}^{Q}\theta_{s}^{Q}+\frac{1}{2}\sum_{j=1}^{4}\left(\Sigma_{s}^{'}B_{s}^{N}B_{s}^{N'}\Sigma_{s}\right)_{\{j,j\}}\nu_{s}^{N(j)}\right)ds\\
+\\
+G_{t}^{R}\left\{ 0\right\} -G_{t}^{R}\left\{ \tau\right\}  & = & \int_{t}^{t+\tau}\left(\rho_{0}-B_{s}^{R'}K_{s}^{Q}\theta_{s}^{Q}-\frac{1}{2}\sum_{j=1}^{4}\left(\Sigma_{s}^{'}B_{s}^{R}B_{s}^{R'}\Sigma_{s}\right)_{\{j,j\}}\nu_{s}^{R(j)}\right)ds\\
+G_{t}^{R}\left\{ \tau\right\}  & = & \int_{t}^{t+\tau}\left(-\rho_{0}+B_{s}^{R'}K_{s}^{Q}\theta_{s}^{Q}+\frac{1}{2}\sum_{j=1}^{4}\left(\Sigma_{s}^{'}B_{s}^{R}B_{s}^{R'}\Sigma_{s}\right)_{\{j,j\}}\nu_{s}^{R(j)}\right)ds\\
+\\
+P_{t}\{0\}=1 & \Rightarrow & B_{t}\left\{ 0\right\} =G_{t}\left\{ 0\right\} =0
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+\paragraph_spacing onehalf
+Deriving the processes under the 
+\begin_inset Formula $P$
+\end_inset
+
+ measure
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:pmeas-processes"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+Without loss of generality we can set 
+\begin_inset Formula $\theta^{Q}=0$
+\end_inset
+
+ because once we as we show below 
+\begin_inset Formula $X_{t}$
+\end_inset
+
+ still follows a mean-reverting process under the physical probability measure,
+ 
+\begin_inset Formula $P$
+\end_inset
+
+.
+\begin_inset Formula 
+\begin{eqnarray*}
+dX_{t} & = & -K^{Q}X_{t}dt+\Sigma dW_{t}^{Q}\\
+\\
+dX_{t} & = & -K^{Q}X_{t}dt+\Sigma dW_{t}+\Sigma\Gamma dt\\
+\\
+ &  & \text{To mantain the affined structure, we require}\\
+\Gamma_{t} & = & \underbrace{\left(\begin{array}{c}
+\gamma_{0}^{(1)}\\
+\gamma_{0}^{(2)}\\
+\gamma_{0}^{(3)}\\
+\gamma_{0}^{(4)}
+\end{array}\right)}_{\gamma_{0}}+\underbrace{\left(\begin{array}{c}
+\gamma_{1}^{(1)}\\
+\gamma_{1}^{(2)}\\
+\gamma_{1}^{(3)}\\
+\gamma_{1}^{(4)}
+\end{array}\right)}_{\gamma_{1}}X_{t}\\
+\\
+\Rightarrow dX_{t} & = & -K^{Q}X_{t}dt+\Sigma dW_{t}+\Sigma\Gamma_{t}\\
+\\
+dX_{t} & = & \Sigma\gamma_{0}-(K^{Q}-\Sigma\gamma_{1})X_{t}dt+\Sigma dW_{t}\\
+\\
+\Rightarrow dX_{t} & = & \underbrace{(K^{Q}-\Sigma\gamma_{1})}_{K^{P}}\left(\underbrace{(K^{Q}-\Sigma\gamma_{1})^{-1}\Sigma\gamma_{0}}_{\theta^{P}}-X_{t}\right)dt+\Sigma dW_{t}
+\end{eqnarray*}
+
+\end_inset
+
+Notice that 
+\begin_inset Formula $K^{P}$
+\end_inset
+
+ and 
+\begin_inset Formula $\theta^{P}$
+\end_inset
+
+ are unrestricted.
+ Thus the model allows for plenty of flexibility.
+ We then have
+\begin_inset Formula 
+\begin{eqnarray*}
+B_{t}^{N} & = & \left(\begin{array}{c}
+-(T-t)\\
+-\left(\frac{1-e^{-\lambda(T-t)}}{\lambda}\right)\\
+-\left(\frac{1-e^{-\lambda(T-t)}}{\lambda}-e^{-\lambda(T-t)}(T-t)\right)\\
+0
+\end{array}\right)\\
+\\
+B_{t}^{R} & = & \left(\begin{array}{c}
+0\\
+-\alpha^{R}\left(\frac{1-e^{-\lambda(T-t)}}{\lambda}\right)\\
+-\alpha^{R}\left(\frac{1-e^{-\lambda(T-t)}}{\lambda}-e^{-\lambda(T-t)}(T-t)\right)\\
+-(T-t)
+\end{array}\right)\\
+\\
+\frac{d}{dt}G_{t}^{N} & = & -\frac{1}{2}\sum_{j=1}^{4}\left(\Sigma B_{t}^{N}B_{t}^{N'}\Sigma\right)_{\{j,j\}}\\
+\\
+0-G_{t}^{N} & = & -\frac{1}{2}\int_{t}^{T}\left[\sum_{j=1}^{4}\left(\Sigma B_{s}^{N}B_{s}^{N'}\Sigma\right)_{\{j,j\}}\right]ds\\
+G_{t}^{N} & = & \frac{1}{2}\int_{t}^{T}\left[\sum_{j=1}^{4}\left(\Sigma B_{s}^{N}B_{s}^{N'}\Sigma\right)_{\{j,j\}}\right]ds\\
+\\
+\frac{d}{dt}G_{t}^{R} & = & -\frac{1}{2}\sum_{j=1}^{4}\left(\Sigma B_{t}^{R}B_{t}^{R'}\Sigma\right)_{\{j,j\}}\\
+\\
+0-G_{t}^{R} & = & -\frac{1}{2}\int_{t}^{T}\left[\sum_{j=1}^{4}\left(\Sigma B_{s}^{R}B_{s}^{R'}\Sigma\right)_{\{j,j\}}\right]ds\\
+G_{t}^{R} & = & \frac{1}{2}\int_{t}^{T}\left[\sum_{j=1}^{4}\left(\Sigma B_{s}^{R}B_{s}^{R'}\Sigma\right)_{\{j,j\}}\right]ds
+\end{eqnarray*}
+
+\end_inset
+
+
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
+\paragraph_spacing onehalf
+\begin_inset Formula 
+\begin{eqnarray*}
+\frac{d}{dt}G_{t}^{N} & = & -\frac{1}{2}\sum_{j=1}^{4}\left(\Sigma\left(\begin{array}{cccc}
+(T-t)^{2} & (T-t)\left(\frac{1-e^{-\lambda(T-t)}}{\lambda}\right) & (T-t)\left(\frac{1-e^{-\lambda(T-t)}}{\lambda}-e^{-\lambda(T-t)}(T-t)\right) & 0\\
+(T-t)\left(\frac{1-e^{-\lambda(T-t)}}{\lambda}\right) & \left(\frac{1-e^{-\lambda(T-t)}}{\lambda}\right)^{2} & \left(\frac{1-e^{-\lambda(T-t)}}{\lambda}\right)\left(\frac{1-e^{-\lambda(T-t)}}{\lambda}-e^{-\lambda(T-t)}(T-t)\right) & 0\\
+(T-t)\left(\frac{1-e^{-\lambda(T-t)}}{\lambda}-e^{-\lambda(T-t)}(T-t)\right) & \left(\frac{1-e^{-\lambda(T-t)}}{\lambda}\right)\left(\frac{1-e^{-\lambda(T-t)}}{\lambda}-e^{-\lambda(T-t)}(T-t)\right) & \left(\frac{1-e^{-\lambda(T-t)}}{\lambda}-e^{-\lambda(T-t)}(T-t)\right)^{2} & 0\\
+0 & 0 & 0 & 0
+\end{array}\right)\Sigma\right)_{\{j,j\}}\\
+\\
+G_{t}^{N} & = & \frac{1}{2}\int_{t}^{T}\left[\sum_{j=1}^{4}\left(\Sigma\left(\begin{array}{cccc}
+(T-t)^{2} & (T-t)\left(\frac{1-e^{-\lambda(T-t)}}{\lambda}\right) & (T-t)\left(\frac{1-e^{-\lambda(T-t)}}{\lambda}-e^{-\lambda(T-t)}(T-t)\right) & 0\\
+(T-t)\left(\frac{1-e^{-\lambda(T-t)}}{\lambda}\right) & \left(\frac{1-e^{-\lambda(T-t)}}{\lambda}\right)^{2} & \left(\frac{1-e^{-\lambda(T-t)}}{\lambda}\right)\left(\frac{1-e^{-\lambda(T-t)}}{\lambda}-e^{-\lambda(T-t)}(T-t)\right) & 0\\
+(T-t)\left(\frac{1-e^{-\lambda(T-t)}}{\lambda}-e^{-\lambda(T-t)}(T-t)\right) & \left(\frac{1-e^{-\lambda(T-t)}}{\lambda}\right)\left(\frac{1-e^{-\lambda(T-t)}}{\lambda}-e^{-\lambda(T-t)}(T-t)\right) & \left(\frac{1-e^{-\lambda(T-t)}}{\lambda}-e^{-\lambda(T-t)}(T-t)\right)^{2} & 0\\
+0 & 0 & 0 & 0
+\end{array}\right)\Sigma\right)_{\{j,j\}}\right]ds\\
+\\
+\frac{d}{dt}G_{t}^{R} & = & -\frac{1}{2}\sum_{j=1}^{4}\left(\Sigma\left(\begin{array}{cccc}
+0 & 0 & 0 & 0\\
+0 & \left(\alpha^{R}\frac{1-e^{-\lambda(T-t)}}{\lambda}\right)^{2} & \left(\alpha^{R}\frac{1-e^{-\lambda(T-t)}}{\lambda}\right)\alpha^{R}\left(\frac{1-e^{-\lambda(T-t)}}{\lambda}-e^{-\lambda(T-t)}(T-t)\right) & \alpha^{R}\left(\frac{1-e^{-\lambda(T-t)}}{\lambda}\right)(T-t)\\
+0 & \alpha^{R}\left(\alpha^{R}\frac{1-e^{-\lambda(T-t)}}{\lambda}\right)\left(\frac{1-e^{-\lambda(T-t)}}{\lambda}-e^{-\lambda(T-t)}(T-t)\right) & (\alpha^{R})^{2}\left(\frac{1-e^{-\lambda(T-t)}}{\lambda}-e^{-\lambda(T-t)}(T-t)\right)^{2} & \alpha^{R}\left(\frac{1-e^{-\lambda(T-t)}}{\lambda}-e^{-\lambda(T-t)}(T-t)\right)(T-t)\\
+0 & \alpha^{R}\left(\frac{1-e^{-\lambda(T-t)}}{\lambda}\right)(T-t) & \alpha^{R}\left(\frac{1-e^{-\lambda(T-t)}}{\lambda}-e^{-\lambda(T-t)}(T-t)\right)(T-t) & (T-t)^{2}
+\end{array}\right)\Sigma\right)_{\{j,j\}}\\
+\\
+G_{t}^{R} & = & \frac{1}{2}\int_{t}^{T}\left[\sum_{j=1}^{4}\left(\Sigma\left(\begin{array}{cccc}
+0 & 0 & 0 & 0\\
+0 & \left(\alpha^{R}\frac{1-e^{-\lambda(T-t)}}{\lambda}\right)^{2} & \left(\alpha^{R}\frac{1-e^{-\lambda(T-t)}}{\lambda}\right)\alpha^{R}\left(\frac{1-e^{-\lambda(T-t)}}{\lambda}-e^{-\lambda(T-t)}(T-t)\right) & \alpha^{R}\left(\frac{1-e^{-\lambda(T-t)}}{\lambda}\right)(T-t)\\
+0 & \alpha^{R}\left(\alpha^{R}\frac{1-e^{-\lambda(T-t)}}{\lambda}\right)\left(\frac{1-e^{-\lambda(T-t)}}{\lambda}-e^{-\lambda(T-t)}(T-t)\right) & (\alpha^{R})^{2}\left(\frac{1-e^{-\lambda(T-t)}}{\lambda}-e^{-\lambda(T-t)}(T-t)\right)^{2} & \alpha^{R}\left(\frac{1-e^{-\lambda(T-t)}}{\lambda}-e^{-\lambda(T-t)}(T-t)\right)(T-t)\\
+0 & \alpha^{R}\left(\frac{1-e^{-\lambda(T-t)}}{\lambda}\right)(T-t) & \alpha^{R}\left(\frac{1-e^{-\lambda(T-t)}}{\lambda}-e^{-\lambda(T-t)}(T-t)\right)(T-t) & (T-t)^{2}
+\end{array}\right)\Sigma\right)_{\{j,j\}}\right]ds
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+As show in Section 2.3 of Christensen, Diebold and Rudebusch (2007) we need
+ that 
+\begin_inset Formula $\Sigma$
+\end_inset
+
+ is upper or lower-triangular for identification.
+ Christensen, Diebold and Rudebusch (2007) also provide evidence that the
+ out of sample forecasts are stronger when 
+\begin_inset Formula $\Sigma$
+\end_inset
+
+ and 
+\begin_inset Formula $K^{P}$
+\end_inset
+
+ are diagonal and (even though the in-sample fit is worse).
+ It is unclear however whether the improvement in out-of-sample forecasts
+ come from assuming that
+\begin_inset Formula $\Sigma$
+\end_inset
+
+ is diagonal or from instead that assuming 
+\begin_inset Formula $K^{P}$
+\end_inset
+
+ is diagonal or both.
+ Notice however that although a diagonal 
+\begin_inset Formula $\Sigma$
+\end_inset
+
+ implies that the state variables are conditionally independent, the state
+ variables will be correlated (unconditionally) if 
+\begin_inset Formula $K^{P}$
+\end_inset
+
+ is kept unrestricted (as done in Christensen, Lopez and Rudebusch; 2007).
+ We would need to compare the out-of-sample predictions of all four possible
+ models (
+\begin_inset Formula $\Sigma$
+\end_inset
+
+ and 
+\begin_inset Formula $K^{P}$
+\end_inset
+
+ diagonal, 
+\begin_inset Formula $\Sigma$
+\end_inset
+
+ only diagonal, 
+\begin_inset Formula $\Sigma$
+\end_inset
+
+ only unrestricted, 
+\begin_inset Formula $\Sigma$
+\end_inset
+
+ and 
+\begin_inset Formula $K^{P}$
+\end_inset
+
+ unrestricted) to really know which is best.
+ 
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+For now, in order to reduce some of the model's complexity, we will assume
+ that 
+\begin_inset Formula $\Sigma$
+\end_inset
+
+ is diagonal while keeping 
+\begin_inset Formula $K^{P}$
+\end_inset
+
+ unrestricted.
+ We then have
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+\begin_inset Formula 
+\begin{eqnarray*}
+G_{t}^{N} & = & \frac{\sigma_{11}^{2}}{2}\left(\int_{t}^{T}(T-s)^{2}ds\right)+\frac{\sigma_{22}^{2}}{2}\left(\int_{t}^{T}\left(\frac{1-e^{-\lambda(T-s)}}{\lambda}\right)^{2}ds\right)\\
+ &  & +\frac{\sigma_{33}^{2}}{2}\left(\int_{t}^{T}\left(\frac{1-e^{-\lambda(T-s)}}{\lambda}-e^{-\lambda(T-s)}(T-s)\right)^{2}ds\right)\\
+\\
+G_{t}^{R} & = & \frac{\sigma_{22}^{2}}{2}(\alpha^{R})^{2}\left(\int_{t}^{T}\left(\frac{1-e^{-\lambda(T-s)}}{\lambda}\right)^{2}ds\right)+\frac{\sigma_{33}^{2}}{2}(\alpha^{R})^{2}\left(\int_{t}^{T}\left(\frac{1-e^{-\lambda(T-s)}}{\lambda}-e^{-\lambda(T-s)}(T-s)\right)^{2}ds\right)\\
+ &  & +\frac{\sigma_{44}^{2}}{2}\left(\int_{t}^{T}(T-s)^{2}ds\right)
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+\paragraph_spacing onehalf
+Kalman filter details
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:Kalman-filter-details"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+\begin_inset Formula 
+\begin{eqnarray*}
+dX_{t} & = & K^{p}\left(\theta^{P}-X_{t}\right)dt+\Sigma dW_{t}\\
+\\
+dX_{t}+K^{p}X_{t} & = & K^{p}\theta^{P}dt+\Sigma dW_{t}\\
+\\
+exp\left(K^{p}(t-t_{0})\right)dX_{t}+exp\left(K^{p}(t-t_{0})\right)K^{p}X_{t} & = & exp\left(K^{p}(t-t_{0})\right)\left(K^{p}\theta^{P}dt+\Sigma dW_{t}\right)\\
+\\
+d\left(exp\left(K^{p}(t-t_{0})\right)X_{t}\right) & = & exp\left(K^{p}(t-t_{0})\right)\left(K^{p}\theta^{P}dt+\Sigma dW_{t}\right)\\
+\\
+X_{t} & = & exp\left(-K^{p}(t-t_{0})\right)(K^{p})^{-1}exp\left(K^{p}(t-t_{0})\right)K^{p}\theta^{P}\\
+ &  & +exp\left(-K^{p}(t-t_{0})\right)\int_{t_{0}}^{t}exp\left(K^{p}(s-t_{0})\right)\Sigma dW_{s}\\
+ &  & +exp\left(-K^{p}(t-t_{0})\right)Const\\
+ &  & \text{So that at }t=t_{0}\quad\text{we have }X_{t}=X_{t_{0}}\text{ we need}\\
+X_{t_{0}} & = & \theta^{P}+Const\\
+\Rightarrow Const & = & X_{t_{0}}-\theta^{P}\\
+ &  & \text{Hence,}\\
+\\
+X_{t} & = & exp\left(-K^{p}(t-t_{0})\right)\left((K^{p})^{-1}exp\left(K^{p}(t-t_{0})\right)K^{p}\theta^{P}-\theta^{P}\right)\\
+ &  & +exp\left(-K^{p}(t-t_{0})\right)\int_{t_{0}}^{t}exp\left(K^{p}(s-t_{0})\right)\Sigma dW_{s}\\
+ &  & +exp\left(-K^{p}(t-t_{0})\right)X_{t_{0}}\\
+\\
+X_{t} & = & exp\left(-K^{p}(t-t_{0})\right)\left((K^{p})^{-1}exp\left(K^{p}(t-t_{0})\right)K^{p}-I\right)\theta^{P}\\
+ &  & +exp\left(-K^{p}(t-t_{0})\right)\int_{t_{0}}^{t}exp\left(K^{p}(s-t_{0})\right)\Sigma dW_{s}\\
+ &  & +exp\left(-K^{p}(t-t_{0})\right)X_{t_{0}}\\
+\\
+E^{P}\left[X_{t}|\mathcal{F}_{t_{0}}\right] & = & \left(I-exp\left(-K^{p}(t-t_{0})\right)\right)\theta^{P}+exp\left(-K^{p}(t-t_{0})\right)X_{t_{0}}\\
+\\
+Var^{P}\left[X_{t}|\mathcal{F}_{t_{0}}\right] & = & \int_{t_{0}}^{t}exp\left(-K^{p}(t-s)\right)\Sigma\Sigma^{'}exp\left(-K^{p}(t-s)\right)^{'}ds\\
+ &  & \text{let }u=t-s\\
+Var^{P}\left[X_{t}|\mathcal{F}_{t_{0}}\right] & = & -\int_{t-t_{0}}^{0}exp\left(-K^{p}u\right)\Sigma\Sigma^{'}exp\left(-K^{p}u\right)^{'}du\\
+Var^{P}\left[X_{t}|\mathcal{F}_{t_{0}}\right] & = & \int_{0}^{t-t_{0}}exp\left(-K^{p}u\right)\Sigma\Sigma^{'}exp\left(-K^{p}u\right)^{'}du
+\end{eqnarray*}
+
+\end_inset
+
+The discretized state equation is thus
+\begin_inset Formula 
+\begin{eqnarray*}
+X_{i} & = & \left(I-exp\left(-K^{p}\Delta t_{i}\right)\right)\theta^{P}+exp\left(-K^{p}\Delta t_{i}\right)X_{t_{i}}+\eta_{i}\\
+ &  & \text{where}\\
+\Delta t_{i} & = & \Delta t_{i}-t_{i-1}=\frac{1}{252}\quad\text{for daily data}\\
+\\
+\eta_{i} & \sim & N(0,Q)\\
+\\
+Q & = & \int_{0}^{\Delta t_{i}}exp\left(-K^{p}u\right)\Sigma\Sigma^{'}exp\left(-K^{p}u\right)^{'}du
+\end{eqnarray*}
+
+\end_inset
+
+The measurement equations are 
+\begin_inset Formula 
+\begin{eqnarray*}
+y_{t}^{N}\left\{ \tau\right\}  & = & A_{0}^{N}\left\{ \tau\right\} +A_{1}^{R}\left\{ \tau\right\} ^{'}X_{t}+\epsilon_{t}^{N}\\
+\\
+y_{t}^{R}\left\{ \tau\right\}  & = & A_{0}^{R}\left\{ \tau\right\} +A_{1}^{R}\left\{ \tau\right\} ^{'}X_{t}+\epsilon_{t}^{R}\\
+ &  & \text{where}\\
+\epsilon_{t}^{N} & \sim & N(0,\phi_{N}^{2}\left\{ \tau\right\} )\qquad\text{iid across }\tau\\
+\epsilon_{t}^{R} & \sim & N(0,\phi_{R}^{2}\left\{ \tau\right\} )\qquad\text{iid across }\tau\\
+\\
+\\
+A_{1}^{N}\left\{ \tau\right\}  & = & -\frac{1}{\tau}\left(\begin{array}{c}
+-\tau\\
+-\left(\frac{1-e^{-\lambda\tau}}{\lambda}\right)\\
+-\left(\frac{1-e^{-\lambda\tau}}{\lambda}-e^{-\lambda\tau}\tau\right)\\
+0
+\end{array}\right)\\
+A_{0}^{N}\left\{ \tau\right\}  & = & -\frac{\sigma_{11}^{2}}{2\tau}\left(\int_{t}^{t+\tau}(t+\tau-s)^{2}ds\right)-\frac{\sigma_{22}^{2}}{2\tau}\left(\int_{t}^{t+\tau}\left(\frac{1-e^{-\lambda(t+\tau-s)}}{\lambda}\right)^{2}ds\right)\\
+ &  & -\frac{\sigma_{33}^{2}}{2\tau}\left(\int_{t}^{t+\tau}\left(\frac{1-e^{-\lambda(t+\tau-s)}}{\lambda}-e^{-\lambda(t+\tau-s)}(t+\tau-s)\right)^{2}ds\right)\\
+\\
+A_{1}^{R}\left\{ \tau\right\}  & = & -\frac{1}{\tau}\left(\begin{array}{c}
+0\\
+-\alpha^{R}\left(\frac{1-e^{-\lambda\tau}}{\lambda}\right)\\
+-\alpha^{R}\left(\frac{1-e^{-\lambda\tau}}{\lambda}-e^{-\lambda\tau}\tau\right)\\
+-\tau
+\end{array}\right)\\
+\\
+A_{0}^{R}\left\{ \tau\right\}  & = & -\frac{\sigma_{22}^{2}}{2\tau}(\alpha^{R})^{2}\left(\int_{t}^{t+\tau}\left(\frac{1-e^{-\lambda(t+\tau-s)}}{\lambda}\right)^{2}ds\right)\\
+ &  & -\frac{\sigma_{33}^{2}}{2\tau}(\alpha^{R})^{2}\left(\int_{t}^{t+\tau}\left(\frac{1-e^{-\lambda(t+\tau-s)}}{\lambda}-e^{-\lambda(t+\tau-s)}(t+\tau-s)\right)^{2}ds\right)\\
+ &  & -\frac{\sigma_{44}^{2}}{2\tau}\left(\int_{t}^{t+\tau}(t+\tau-s)^{2}ds\right)
+\end{eqnarray*}
+
+\end_inset
+
+We will use several maturities (
+\begin_inset Formula $T\in\{T_{1},\dots,T_{M}\}$
+\end_inset
+
+ with 
+\begin_inset Formula $T_{n}=\frac{n}{\Delta_{i}}$
+\end_inset
+
+; hence 
+\begin_inset Formula $\tau\in\{\tau_{1},\dots,\tau_{M}\}$
+\end_inset
+
+ with 
+\begin_inset Formula $\tau_{n}=T_{n}-t$
+\end_inset
+
+).
+ We can stack the measurement equations
+\begin_inset Formula 
+\begin{eqnarray*}
+y_{t} & = & A_{0}+A_{1}X_{t}+\epsilon_{t}\\
+\\
+\epsilon_{t}^{N} & \sim & N(0,\Phi)\\
+\\
+A_{1} & = & \left(\begin{array}{c}
+A_{1}^{N}\\
+A_{1}^{R}
+\end{array}\right),\quad\quad A_{0}=\left(\begin{array}{c}
+A_{0}^{N}\\
+A_{0}^{R}
+\end{array}\right)\\
+\Phi & = & \left(\begin{array}{cc}
+\phi_{N}^{2} & 0\\
+0 & \phi_{R}^{2}
+\end{array}\right)\\
+\\
+A_{0}^{N} & = & \left(\begin{array}{c}
+A_{0}^{N}\left\{ \tau_{1}\right\} \\
+\vdots\\
+A_{0}^{N}\left\{ \tau_{M}\right\} 
+\end{array}\right),\quad\quad A_{0}^{R}=\left(\begin{array}{c}
+A_{0}^{R}\left\{ \tau_{1}\right\} \\
+\vdots\\
+A_{0}^{R}\left\{ \tau_{M}\right\} 
+\end{array}\right)\\
+\\
+A_{1}^{N} & = & \left(\begin{array}{c}
+A_{1}^{N}\left\{ \tau_{1}\right\} ^{'}\\
+\vdots\\
+A_{1}^{N}\left\{ \tau_{M}\right\} ^{'}
+\end{array}\right),\quad\quad A_{1}^{R}=\left(\begin{array}{c}
+A_{1}^{R}\left\{ \tau_{1}\right\} ^{'}\\
+\vdots\\
+A_{1}^{R}\left\{ \tau_{M}\right\} ^{'}
+\end{array}\right)\\
+\\
+\phi_{N}^{2} & = & \left(\begin{array}{ccc}
+\phi_{N}^{2}\left\{ \tau_{1}\right\}  & 0 & 0\\
+0 & \ddots & 0\\
+0 & 0 & \phi_{N}^{2}\left\{ \tau_{M}\right\} 
+\end{array}\right),\quad\quad\phi_{R}^{2}=\left(\begin{array}{ccc}
+\phi_{R}^{2}\left\{ \tau_{1}\right\}  & 0 & 0\\
+0 & \ddots & 0\\
+0 & 0 & \phi_{R}^{2}\left\{ \tau_{M}\right\} 
+\end{array}\right)
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+\paragraph_spacing onehalf
+Kalman gain
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+Let us first derive the prediction step
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+\begin_inset Formula 
+\begin{eqnarray*}
+\hat{X}_{k|k-1} & = & \left(I-exp\left(-K^{p}\Delta\right)\right)\theta^{P}+exp\left(-K^{p}\Delta\right)\hat{X}_{k-1|k-1}\\
+\\
+X_{k}-\hat{X}_{k|k-1} & = & exp\left(-K^{p}\Delta\right)\left(X_{k-1}-\hat{X}_{k-1|k-1}\right)+\eta_{k}\\
+\\
+\Rightarrow\hat{V}_{k|k-1} & = & exp\left(-K^{p}\Delta\right)\hat{V}_{k-1|k-1}exp\left(-K^{p}\Delta\right)^{'}+Q_{k}
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+The update steps are derived below.
+ 
+\begin_inset Formula $G_{k}$
+\end_inset
+
+ minimizes the mean square posteriori error (
+\begin_inset Formula $E\left[||X_{k}-\hat{X}_{k|k}||^{2}\right]$
+\end_inset
+
+) given
+\begin_inset Formula $\hat{X}_{k|k}=\hat{X}_{k|k-1}-G_{k}\varepsilon_{k}$
+\end_inset
+
+.
+ Let 
+\begin_inset Formula $\hat{V}_{k|k}=cov\left(X_{k}-\hat{X}_{k|k}\right)$
+\end_inset
+
+ and 
+\begin_inset Formula $\hat{V}_{k|k-1}=cov\left(X_{k}-\hat{X}_{k|k-1}\right)$
+\end_inset
+
+ 
+\begin_inset Formula 
+\begin{eqnarray*}
+\hat{V}_{k|k} & = & cov\left(X_{k}-\hat{X}_{k|k}\right)\\
+\\
+ & = & cov\left(X_{k}-\left(\hat{X}_{k|k-1}-G_{k}\varepsilon_{k}\right)\right)\\
+\\
+ & = & cov\left(X_{k}-\left(\hat{X}_{k|k-1}-G_{k}\left(y_{k}-A_{0}-A_{1}\hat{X}_{k|k-1}\right)\right)\right)\\
+\\
+ & = & cov\left(X_{k}-\left(\hat{X}_{k|k-1}-G_{k}\left(A_{0}+A_{1}X_{k}+\epsilon_{t}-A_{0}-A_{1}\hat{X}_{k|k-1}\right)\right)\right)\\
+\\
+ & = & cov\left(\left(I-G_{k}A_{1}\right)\left(X_{k}-\hat{X}_{k|k-1}\right)-G_{k}\epsilon_{t}\right)\\
+\\
+ & = & \left(I-G_{k}A_{1}\right)cov\left(X_{k}-\hat{X}_{k|k-1}\right)\left(I-G_{k}A_{1}\right)^{'}+G_{k}cov\left(\epsilon_{t}\right)G_{k}^{'}\\
+\\
+\hat{V}_{k|k} & = & \left(I-G_{k}A_{1}\right)\hat{V}_{k|k-1}\left(I-G_{k}A_{1}\right)^{'}+G_{k}\Phi G_{k}^{'}\\
+\\
+\hat{V}_{k|k} & = & \left(\hat{V}_{k|k-1}-G_{k}A_{1}\hat{V}_{k|k-1}\right)\left(I-G_{k}A_{1}\right)^{'}+G_{k}\Phi G_{k}^{'}\\
+\\
+\hat{V}_{k|k} & = & \hat{V}_{k|k-1}\left(I-G_{k}A_{1}\right)^{'}-G_{k}A_{1}\hat{V}_{k|k-1}+G_{k}S_{k}G_{k}^{'}
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+\begin_inset Formula 
+\begin{eqnarray*}
+E\left[||\hat{X}_{k}-\hat{X}_{k|k}||^{2}\right] & = & tr\left(\hat{V}_{k|k}\right)\\
+\\
+ &  & \text{FOC wrt }G_{k}:\\
+0 & = & -\hat{V}_{k|k-1}\left(A_{1}\right)^{'}-\left(A_{1}\hat{V}_{k|k-1}\right)^{'}+2G_{k}S_{k}\\
+ &  & \text{since }\hat{V}_{k|k-1}\text{ is symmetric}\\
+0 & = & 2G_{k}S_{k}-2(\hat{V}_{k|k-1})^{'}A_{1}^{'}\\
+\\
+\Rightarrow G_{k} & = & (\hat{V}_{k|k-1})^{'}A_{1}^{'}(S_{k})^{-1}=\hat{V}_{k|k-1}A_{1}^{'}(S_{k})^{-1}\\
+\\
+\hat{V}_{k|k} & = & \hat{V}_{k|k-1}\left(I-\hat{V}_{k|k-1}A_{1}^{'}(S_{k})^{-1}A_{1}\right)^{'}-\hat{V}_{k|k-1}A_{1}^{'}(S_{k})^{-1}A_{1}\hat{V}_{k|k-1}\\
+ &  & +\hat{V}_{k|k-1}A_{1}^{'}(S_{k})^{-1}S_{k}\left(\hat{V}_{k|k-1}A_{1}^{'}(S_{k})^{-1}\right)^{'}\\
+\\
+\hat{V}_{k|k} & = & \hat{V}_{k|k-1}-2\hat{V}_{k|k-1}A_{1}^{'}(S_{k})^{-1}A_{1}\hat{V}_{k|k-1}+\hat{V}_{k|k-1}A_{1}^{'}\left(\hat{V}_{k|k-1}A_{1}^{'}(S_{k})^{-1}\right)^{'}\\
+\\
+\hat{V}_{k|k} & = & \hat{V}_{k|k-1}-2\hat{V}_{k|k-1}A_{1}^{'}(S_{k})^{-1}A_{1}\hat{V}_{k|k-1}+\hat{V}_{k|k-1}A_{1}^{'}\left((S_{k})^{-1}\right)^{'}A_{1}\hat{V}_{k|k-1}^{'}\\
+\\
+\hat{V}_{k|k} & = & \hat{V}_{k|k-1}-\hat{V}_{k|k-1}A_{1}^{'}(S_{k})^{-1}A_{1}\hat{V}_{k|k-1}\\
+\\
+\Rightarrow\hat{V}_{k|k} & = & \hat{V}_{k|k-1}-G_{k}A_{1}\hat{V}_{k|k-1}
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+\begin_inset Formula 
+\begin{eqnarray*}
+\varepsilon_{k} & = & y_{k}-A_{0}-A_{1}\hat{X}_{k|k-1}\qquad\text{innovation}\\
+\\
+\varepsilon_{k} & = & \epsilon_{k}+A_{1}\left(X_{k}-\hat{X}_{k|k-1}\right)\\
+\\
+S_{k}=cov(\varepsilon_{k}) & = & \Phi+A_{1}\hat{V}_{k|k-1}A_{1}
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+
+\end_layout
+
+\begin_layout Subsubsection
+\paragraph_spacing onehalf
+Initializing error variance
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+We can set 
+\begin_inset Formula $\hat{V}_{0|0}$
+\end_inset
+
+ to the stationary error variance or the unconditional error variance.
+ Below we derive the stationary error variance 
+\begin_inset Formula 
+\begin{eqnarray*}
+\hat{V}_{k|k} & = & \hat{V}_{k|k-1}-G_{k}A_{1}\hat{V}_{k|k-1}\\
+\\
+\hat{V}_{k|k-1} & = & exp\left(-K^{p}\Delta\right)\hat{V}_{k-1|k-1}exp\left(-K^{p}\Delta\right)^{'}+Q\\
+\\
+ &  & \text{Combining the prediction and updating equtions:}\\
+\\
+\hat{V}_{k|k-1} & = & exp\left(-K^{p}\Delta\right)\left(\hat{V}_{k-1|k-2}-G_{k-1}A_{1}\hat{V}_{k-1|k-2}\right)exp\left(-K^{p}\Delta\right)^{'}+Q\\
+\\
+\hat{V}_{k|k-1} & = & exp\left(-K^{p}\Delta\right)\left(\hat{V}_{k-1|k-2}-\left(\hat{V}_{k-1|k-2}A_{1}^{'}(S_{k-1})^{-1}\right)A_{1}\hat{V}_{k-1|k-2}\right)exp\left(-K^{p}\Delta\right)^{'}+Q\\
+\\
+\hat{V}_{k|k-1} & = & exp\left(-K^{p}\Delta\right)\left(\hat{V}_{k-1|k-2}-\left(\hat{V}_{k-1|k-2}A_{1}^{'}\left(\Phi+A_{1}\hat{V}_{k-1|k-2}A_{1}^{'}\right)^{-1}\right)A_{1}\hat{V}_{k-1|k-2}\right)exp\left(-K^{p}\Delta\right)^{'}+Q\\
+\\
+\hat{V}_{k|k-1} & = & exp\left(-K^{p}\Delta\right)\hat{V}_{k-1|k-2}exp\left(-K^{p}\Delta\right)^{'}\\
+ &  & -exp\left(-K^{p}\Delta\right)\hat{V}_{k-1|k-2}A_{1}^{'}\left(\Phi+A_{1}\hat{V}_{k-1|k-2}A_{1}^{'}\right)^{-1}A_{1}\hat{V}_{k-1|k-2}exp\left(-K^{p}\Delta\right)^{'}+Q\\
+\\
+ &  & \text{The stationary error variance solve the following Riccati equation:}\\
+V & = & exp\left(-K^{p}\Delta\right)Vexp\left(-K^{p}\Delta\right)^{'}\\
+ &  & -exp\left(-K^{p}\Delta\right)VA_{1}^{'}\left(\Phi+A_{1}VA_{1}^{'}\right)^{-1}A_{1}Vexp\left(-K^{p}\Delta\right)^{'}+Q
+\end{eqnarray*}
+
+\end_inset
+
+Below we derive the unconditional error variance
+\begin_inset Formula 
+\begin{eqnarray*}
+\hat{V}_{k|k-1} & = & exp\left(-K^{p}\Delta\right)\hat{V}_{k-1|k-1}exp\left(-K^{p}\Delta\right)^{'}+Q\\
+\\
+ &  & \text{The unconditional variance solves the Lyapunov equation below}\\
+V & = & exp\left(-K^{p}\Delta\right)Vexp\left(-K^{p}\Delta\right)^{'}+Q\\
+\\
+V & = & \left(\sum_{n=0}^{\infty}exp\left(-K^{p}\Delta n\right)Qexp\left(-K^{p}\Delta n\right)^{'}\right)\Delta\\
+\\
+\Rightarrow V & = & \int_{0}^{\infty}exp\left(K^{p}s\right)\Sigma\Sigma^{'}exp\left(K^{p}s\right)^{'}ds\\
+\\
+ &  & \text{Equivalently we can write:}\\
+vec\left(V\right) & = & \left(exp\left(-K^{p}\Delta\right)\otimes exp\left(-K^{p}\Delta\right)^{'}\right)vec\left(V\right)+vec\left(Q\right)\\
+\\
+\Rightarrow vec\left(V\right) & = & \left(I-exp\left(-K^{p}\Delta\right)\otimes exp\left(-K^{p}\Delta\right)^{'}\right)^{-1}vec\left(Q\right)
+\end{eqnarray*}
+
+\end_inset
+
+equivalently we can write
+\begin_inset Formula 
+\begin{eqnarray*}
+\hat{V}_{k|k-1} & = & exp\left(-K^{p}\Delta\right)\hat{V}_{k-1|k-1}exp\left(-K^{p}\Delta\right)^{'}+Q\\
+\\
+ &  & \text{The unconditional variance solves the Lyapunov equation below}\\
+V & = & exp\left(-K^{p}\Delta\right)Vexp\left(-K^{p}\Delta\right)^{'}+Q\\
+\\
+vec\left(V\right) & = & \left(exp\left(-K^{p}\Delta\right)\otimes exp\left(-K^{p}\Delta\right)^{'}\right)vec\left(V\right)+vec\left(Q\right)\\
+\\
+\Rightarrow vec\left(V\right) & = & \left(I-exp\left(-K^{p}\Delta\right)\otimes exp\left(-K^{p}\Delta\right)^{'}\right)^{-1}vec\left(Q\right)
+\end{eqnarray*}
+
+\end_inset
+
+Christensen, Lopez and Rudebusch (2010) initialize the error variance using
+ the unconditional error variance.
+\end_layout
+
+\begin_layout Subsubsection
+\paragraph_spacing onehalf
+Kalman Smoother and EM algorithm
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+This derivation is partly obtained from the 
+\begin_inset Quotes eld
+\end_inset
+
+Time Series
+\begin_inset Quotes erd
+\end_inset
+
+ lecture notes of Francis Diebold
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+http://www.ssc.upenn.edu/~fdiebold/Teaching706/TimeSeriesSlides.pdf
+\end_layout
+
+\end_inset
+
+.
+ After running the Kalman Filter an storing 
+\begin_inset Formula $X_{t,t}$
+\end_inset
+
+, 
+\begin_inset Formula $V_{t,t}$
+\end_inset
+
+, 
+\begin_inset Formula $V_{t+1,t}$
+\end_inset
+
+, 
+\begin_inset Formula $G$
+\end_inset
+
+ (the Kalman gain) we then proceed as follows.
+ 
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+\begin_inset Formula 
+\begin{eqnarray*}
+X_{T,T} & = & X_{T}\\
+\\
+V_{T,T} & = & V_{T}
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+The smoothed states are
+\begin_inset Formula 
+\begin{eqnarray*}
+X_{t,T} & = & X_{t,t}+J_{t}\left(X_{t+1,T}-X_{t+1,t}\right)\\
+\\
+V_{t,T} & = & V_{t,t}+J_{t}\left(V_{t+1,T}-V_{t+1,t}\right)J_{t}^{'}\\
+\\
+\text{where}\\
+J_{t} & = & V_{t,t}U_{1}^{'}\left(V_{t+1,t}\right)^{-1}\\
+J_{0} & = & V_{0}U_{1}^{'}\left(V_{1,0}\right)^{-1}\\
+X_{0,T} & = & X_{0}+J_{0}\left(X_{1,T}-X_{1,0}\right)\\
+\\
+E\left[X_{t,t}X_{t,t}^{'}\bigg|X^{(T)}\right] & = & Cov\left[X_{t,t},X_{t,t}\bigg|X^{(T)}\right]+X_{t,T}X_{t,T}^{'}=V_{t,T}+X_{t,T}X_{t,T}^{'}\\
+\\
+E\left[X_{t,t}X_{t-1,t-1}^{'}\bigg|X^{(T)}\right] & = & Cov\left[X_{t,t},X_{t-1,t-1}\bigg|X^{(T)}\right]+X_{t,T}X_{t-1,T}^{'}=V_{(t,t-1),T}+X_{t,T}X_{t-1,T}^{'}\\
+\\
+ &  & \text{to find the smoothed predictive cov. matrix, }V_{(t,t-1),T}\text{, we use}\\
+V_{(T,T-1),T} & = & (I-G_{T}A_{1})U_{1}V_{T-1,T-1}\\
+\\
+V_{(t-1,t-2),T} & = & V_{t-1,t-1}J_{t-2}^{'}+J_{t-1}\left(V_{(t,t-1),T}-U_{1}V_{t-1,t-1}\right)J_{t-2}^{'}
+\end{eqnarray*}
+
+\end_inset
+
+
+\begin_inset Formula $\mho$
+\end_inset
+
+ is a vector containing the parameter set.
+ The complete data likelihood is 
+\begin_inset Formula $p\left(X^{(T)}Y^{(T)}|\mho\right)=p\left(X_{0}\right)\left(\prod_{t=1}^{T}p\left(Y_{t}|X_{t},\mho\right)\right)\left(\prod_{t=1}^{T}p\left(X_{t}|X_{t-1},\mho\right)\right)$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Quote
+\paragraph_spacing onehalf
+Because we include more observations in the estimation of the state, the
+ results will be less noisy as compared to the Kalman filter results [it
+ also reduces the lag typically observed in filtered values], hence the
+ name smoother.
+ - Welling, Max 
+\begin_inset Quotes eld
+\end_inset
+
+The Kalman Filter
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+Expectation (E) Step:
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+Let 
+\begin_inset Formula $U_{0}=\left(I-exp\left(-K^{p}\Delta\right)\right)\theta^{P}$
+\end_inset
+
+ and 
+\begin_inset Formula $U_{1}=exp\left(-K^{p}\Delta\right)$
+\end_inset
+
+.The expectation (over the posterior state density) of the complete data
+ log-likelihood is
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+http://en.wikipedia.org/wiki/Trace_(linear_algebra)
+\end_layout
+
+\end_inset
+
+
+\begin_inset Formula 
+\begin{eqnarray*}
+\mathcal{L}\left\{ \mho\right\}  & = & E\left[ln\left(p\left(X_{0}\right)\left(\prod_{t=1}^{T}p\left(Y_{t}|X_{t},\mho\right)\right)\left(\prod_{t=1}^{T}p\left(X_{t}|X_{t-1},\mho\right)\right)\right)\bigg|X^{(T)}\right]\\
+\\
+ &  & \text{the increment is}\\
+\mathcal{L}_{0}\left\{ \mho\right\}  & = & -\left(\frac{E_{X^{(T)}}\left[\begin{array}{c}
+\left(X_{0}-\mu_{0}\right)^{'}\Sigma_{0}^{-1}\left(X_{0}\right)+\\
+\left(X_{0}-\mu_{0}\right)^{'}\Sigma_{0}^{-1}\left(-\mu_{0}\right)+
+\end{array}\right]}{2}+\frac{4}{2}ln\left(2\pi\right)+\frac{1}{2}ln\left(|\Sigma_{0}|\right)\right)\\
+ &  & \text{and }\forall k\{1,...,T\}\text{ we have:}\\
+\mathcal{L}_{k}\left\{ \mho\right\}  & = & -\left(\frac{E_{X^{(T)}}\left[\left(y_{k}-A_{0}-A_{1}X_{k,k}\right)^{'}\Phi^{-1}\left(y_{k}-A_{0}-A_{1}X_{k,k}\right)\right]}{2}+\frac{\left(2\sum_{i}\tau_{i}\right)}{2}ln\left(2\pi\right)+\frac{1}{2}ln\left(|\Phi|\right)\right)\\
+ &  & -\left(\frac{E_{X^{(T)}}\left[\left(X_{k,k}-U_{0}-U_{1}X_{k-1,k-1}\right)^{'}Q^{-1}\left(X_{k,k}-U_{0}-U_{1}X_{k-1,k-1}\right)\right]}{2}+\frac{4}{2}ln\left(2\pi\right)+\frac{1}{2}ln\left(|Q|\right)\right)\\
+\\
+\\
+\mathcal{L}_{k}\left\{ \mho\right\}  & = & -\left(\frac{\begin{array}{c}
+\left(y_{k}-A_{0}-A_{1}X_{k,T}\right)^{'}\Phi^{-1}\left(y_{k}-A_{0}\right)\\
++\left(y_{k}-A_{0}\right)^{'}\Phi^{-1}\left(-A_{1}X_{k,T}\right)\\
++E_{X^{(T)}}\left[X_{k,k}^{'}A_{1}^{'}\Phi^{-1}A_{1}X_{k,k}\right]
+\end{array}}{2}\right)\\
+ &  & -\left(\frac{E_{X^{(T)}}\left[\begin{array}{c}
+\left(X_{k,k}-U_{0}-U_{1}X_{k-1,k-1}\right)^{'}Q^{-1}\left(X_{k,k}\right)+\\
+\left(X_{k,T}-U_{0}-U_{1}X_{k-1,T}\right)^{'}Q^{-1}\left(-U_{0}\right)+\\
+\left(X_{k,k}-U_{0}-U_{1}X_{k-1,k-1}\right)^{'}Q^{-1}\left(-U_{1}X_{k-1,k-1}\right)
+\end{array}\right]}{2}\right)\\
+ &  & -\left(\frac{\left(2\sum_{i}\tau_{i}\right)}{2}ln\left(2\pi\right)+\frac{1}{2}ln\left(|\Phi|\right)+\frac{4}{2}ln\left(2\pi\right)+\frac{1}{2}ln\left(|Q|\right)\right)\\
+ &  & \text{since a scalar is equal to the trace of a scalar and trace is invariant}\\
+ &  & \text{to cyclic permutations:}\\
+\mathcal{L}_{k}\left\{ \mho\right\}  & = & -\left(\frac{\begin{array}{c}
+\left(y_{k}-A_{0}-A_{1}X_{k,T}\right)^{'}\Phi^{-1}\left(y_{k}-A_{0}\right)\\
++\left(y_{k}-A_{0}\right)^{'}\Phi^{-1}\left(-A_{1}X_{k,T}\right)\\
++E_{X^{(T)}}\left[tr\left(X_{k,k}X_{k,k}^{'}A_{1}^{'}\Phi^{-1}A_{1}\right)\right]
+\end{array}}{2}\right)\\
+ &  & -\left(\frac{\begin{array}{c}
+E_{X^{(T)}}\left[tr\left(Q^{-1}X_{k,k}X_{k,k}^{'}\right)\right]+\left(-U_{0}\right)^{'}Q^{-1}\left(X_{k,T}\right)-E_{X^{(T)}}\left[tr\left(Q^{-1}X_{k,k}X_{k-1,k-1}^{'}U_{1}^{'}\right)\right]+\\
+\left(X_{k,T}-U_{0}-U_{1}X_{k-1,T}\right)^{'}Q^{-1}\left(-U_{0}\right)+\\
+E_{X^{(T)}}\left[-tr\left(Q^{-1}U_{1}X_{k-1,k-1}X_{k,k}^{'}\right)\right]+\left(U_{0}\right)^{'}Q^{-1}\left(U_{1}X_{k-1,T}\right)+E_{X^{(T)}}\left[tr\left(Q^{-1}\left(U_{1}X_{k-1,k-1}\right)X_{k-1,k-1}^{'}U_{1}^{'}\right)\right]
+\end{array}}{2}\right)\\
+ &  & -\left(\frac{\left(2\sum_{i}\tau_{i}\right)}{2}ln\left(2\pi\right)+\frac{1}{2}ln\left(|\Phi|\right)+\frac{4}{2}ln\left(2\pi\right)+\frac{1}{2}ln\left(|Q|\right)\right)\\
+\\
+\mathcal{L}_{k}\left\{ \mho\right\}  & = & -\left(\frac{\begin{array}{c}
+\left(y_{k}-A_{0}-A_{1}X_{k,T}\right)^{'}\Phi^{-1}\left(y_{k}-A_{0}\right)\\
++\left(y_{k}-A_{0}\right)^{'}\Phi^{-1}\left(-A_{1}X_{k,T}\right)\\
++tr\left(\left(V_{k,T}+X_{k,T}X_{k,T}^{'}\right)A_{1}^{'}\Phi^{-1}A_{1}\right)
+\end{array}}{2}\right)\\
+ &  & -\left(\frac{\begin{array}{c}
+tr\left(Q^{-1}\left(V_{k,T}+X_{k,T}X_{k,T}^{'}\right)\right)+\left(-U_{0}\right)^{'}Q^{-1}\left(X_{k,T}\right)-tr\left(Q^{-1}\left(V_{(k,k-1),T}+X_{k,T}X_{k-1,T}^{'}\right)U_{1}^{'}\right)+\\
+\left(X_{k,T}-U_{0}-U_{1}X_{k-1,T}\right)^{'}Q^{-1}\left(-U_{0}\right)+\\
+-tr\left(Q^{-1}U_{1}\left(V_{(k,k-1),T}+X_{k,T}X_{k-1,T}^{'}\right)^{'}\right)+\left(U_{0}\right)^{'}Q^{-1}\left(U_{1}X_{k-1,T}\right)+tr\left(Q^{-1}U_{1}\left(V_{k-1,T}+X_{k-1,T}X_{k-1,T}^{'}\right)U_{1}^{'}\right)
+\end{array}}{2}\right)\\
+ &  & -\left(\frac{\left(2\sum_{i}\tau_{i}\right)}{2}ln\left(2\pi\right)+\frac{1}{2}ln\left(|\Phi|\right)+\frac{4}{2}ln\left(2\pi\right)+\frac{1}{2}ln\left(|Q|\right)\right)\\
+\\
+\mathcal{L}_{0}\left\{ \mho\right\}  & = & -\left(\frac{\begin{array}{c}
+tr\left(\Sigma_{0}^{-1}\left(V_{0,T}+X_{0,T}X_{0,T}^{'}\right)\right)+\\
+\left(-\mu_{0}\right)^{'}\Sigma_{0}^{-1}\left(X_{0,T}\right)+\\
+\left(X_{0,T}-\mu_{0}\right)^{'}\Sigma_{0}^{-1}\left(-\mu_{0}\right)+
+\end{array}}{2}+\frac{4}{2}ln\left(2\pi\right)+\frac{1}{2}ln\left(|\Sigma_{0}|\right)\right)\\
+\\
+\mathcal{L}_{0}\left\{ \mho\right\}  & = & -\left(\frac{\begin{array}{c}
+tr\left(\Sigma_{0}^{-1}\left(V_{0,T}+X_{0,T}X_{0,T}^{'}\right)\right)+\\
+-2X_{0,T}^{'}\Sigma_{0}^{-1}\mu_{0}+\left(\mu_{0}\right)^{'}\Sigma_{0}^{-1}\left(\mu_{0}\right)+
+\end{array}}{2}+\frac{4}{2}ln\left(2\pi\right)+\frac{1}{2}ln\left(|\Sigma_{0}|\right)\right)
+\end{eqnarray*}
+
+\end_inset
+
+Maximization (M) Step:
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+Now we need only maximize 
+\begin_inset Formula 
+\begin{eqnarray*}
+\max_{\mho} &  & \sum_{k=0}^{K}\mathcal{L}_{k}\left\{ \mho\right\} 
+\end{eqnarray*}
+
+\end_inset
+
+Notice that because of linearity we could simply take first order conditions
+ and obtain analytical solutions 
+\begin_inset Formula $\mho$
+\end_inset
+
+ given 
+\begin_inset Formula $X^{T}$
+\end_inset
+
+ and then we can simply iterate between E-step and M-step until convergence.
+ The FOCs are akin to thos from OLS
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+Notice that 
+\begin_inset Formula $det(exp(A))=exp(tr(A))\Rightarrow\frac{1}{2}ln\left(|\Sigma_{0}|\right)=\frac{1}{2}tr\left(ln\left(\Sigma_{0}\right)\right)$
+\end_inset
+
+.
+ Recall also that 
+\begin_inset Formula $\frac{\partial}{\partial A}tr(AB)=B^{'}$
+\end_inset
+
+ (http://www.cs.berkeley.edu/~jduchi/projects/matrix_prop.pdf) 
+\end_layout
+
+\end_inset
+
+
+\begin_inset Formula 
+\begin{eqnarray*}
+[\mu_{0}]:\\
+-\Sigma_{0}^{-1}\left(X_{0,T}\right)+\Sigma_{0}^{-1}\mu_{0} & = & 0\\
+\Rightarrow\hat{\mu}_{0} & = & X_{0,T}\\
+\\
+{}[\Sigma_{0}]:\\
+0 & = & -\frac{\partial}{\partial\Sigma_{0}^{-1}}tr\left(\Sigma_{0}^{-1}\left(V_{0,T}+X_{0,T}X_{0,T}^{'}\right)-2X_{0,T}^{'}\Sigma_{0}^{-1}\mu_{0}+\Sigma_{0}^{-1}\left(\mu_{0}\right)\left(\mu_{0}\right)^{'}\right)+\frac{1}{2}\frac{\partial}{\partial\Sigma_{0}^{-1}}tr\left(ln\left(\Sigma_{0}^{-1}\right)\right)\\
+0 & = & \Sigma_{0}-\left(V_{0,T}+X_{0,T}X_{0,T}^{'}\right)+\left(\mu_{0}\right)\left(\mu_{0}\right)^{'}\\
+\Rightarrow\hat{\Sigma}_{0} & = & \left(V_{0,T}+X_{0,T}X_{0,T}^{'}\right)-\mu_{0}\mu_{0}^{'}=V_{0,T}\\
+\\
+\mathcal{L}_{0}\left\{ \mho\right\}  & = & -\left(\frac{\begin{array}{c}
+tr\left(V_{0,T}^{-1}\left(V_{0,T}+X_{0,T}X_{0,T}^{'}\right)\right)+\\
+-2X_{0,T}^{'}V_{0,T}^{-1}\mu_{0}+\left(\mu_{0}\right)^{'}\Sigma_{0}^{-1}\left(\mu_{0}\right)+
+\end{array}}{2}+\frac{4}{2}ln\left(2\pi\right)+\frac{1}{2}ln\left(|\Sigma_{0}|\right)\right)\\
+\\
+\mathcal{L}_{0}\left\{ \mho\right\}  & = & -\left(\frac{\begin{array}{c}
+tr\left(I+V_{0,T}^{-1}X_{0,T}X_{0,T}^{'}\right)-X_{0,T}^{'}V_{0,T}^{-1}X_{0,T}\end{array}}{2}+\frac{4}{2}ln\left(2\pi\right)+\frac{1}{2}ln\left(|V_{0,T}|\right)\right)\\
+\\
+\Rightarrow\mathcal{L}_{0}\left\{ \mho\right\}  & = & -\left(\frac{\begin{array}{c}
+4\end{array}}{2}+\frac{4}{2}ln\left(2\pi\right)+\frac{1}{2}ln\left(|V_{0,T}|\right)\right)
+\end{eqnarray*}
+
+\end_inset
+
+Recall that the parameters of 
+\begin_inset Formula $\Sigma$
+\end_inset
+
+ appear also in 
+\begin_inset Formula $A_{0}$
+\end_inset
+
+ and 
+\begin_inset Formula $Q$
+\end_inset
+
+ so simply taking FOCs and solving for the optimal parameters analytically
+ is not possible.
+ Hence we could use a non-linear optimizer to maximize 
+\begin_inset Formula 
+\begin{eqnarray*}
+\max_{\mho} &  & \sum_{k=0}^{T}\mathcal{L}_{k}\left\{ \mho\right\} \\
+ &  & \text{with}\\
+\mathcal{L}_{0}\left\{ \mho\right\}  & = & -\left(\frac{\begin{array}{c}
+4\end{array}}{2}+\frac{4}{2}ln\left(2\pi\right)+\frac{1}{2}ln\left(|V_{0,T}|\right)\right)\\
+ &  & \text{and for }k\in\left\{ 1,...,T\right\} :\\
+\mathcal{L}_{k}\left\{ \mho\right\}  & = & -\left(\frac{\begin{array}{c}
+\left(y_{k}-A_{0}-A_{1}X_{k,T}\right)^{'}\Phi^{-1}\left(y_{k}-A_{0}\right)\\
++\left(y_{k}-A_{0}\right)^{'}\Phi^{-1}\left(-A_{1}X_{k,T}\right)\\
++tr\left(\left(V_{k,T}+X_{k,T}X_{k,T}^{'}\right)A_{1}^{'}\Phi^{-1}A_{1}\right)
+\end{array}}{2}\right)\\
+ &  & -\left(\frac{\begin{array}{c}
+tr\left(Q^{-1}\left(V_{k,T}+X_{k,T}X_{k,T}^{'}\right)\right)+\left(-U_{0}\right)^{'}Q^{-1}\left(X_{k,T}\right)-tr\left(Q^{-1}\left(V_{(k,k-1),T}+X_{k,T}X_{k-1,T}^{'}\right)U_{1}^{'}\right)+\\
+\left(X_{k,T}-U_{0}-U_{1}X_{k-1,T}\right)^{'}Q^{-1}\left(-U_{0}\right)+\\
+tr\left(Q^{-1}U_{1}\left(V_{(k,k-1),T}+X_{k,T}X_{k-1,T}^{'}\right)^{'}\right)+\left(-U_{0}\right)^{'}Q^{-1}\left(U_{1}X_{k-1,T}\right)-tr\left(Q^{-1}U_{1}\left(V_{k-1,T}+X_{k-1,T}X_{k-1,T}^{'}\right)U_{1}^{'}\right)
+\end{array}}{2}\right)\\
+ &  & -\left(\frac{\left(2\sum_{i}\tau_{i}\right)}{2}ln\left(2\pi\right)+\frac{1}{2}ln\left(|\Phi|\right)+\frac{4}{2}ln\left(2\pi\right)+\frac{1}{2}ln\left(|Q|\right)\right)
+\end{eqnarray*}
+
+\end_inset
+
+rather than use the usual iteration between the E-Step and M-step.
+ 
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+\begin_inset Formula 
+\begin{eqnarray*}
+[\mu_{0}]:\\
+-\Sigma_{0}^{-1}\left(X_{0,T}\right)+\Sigma_{0}^{-1}\mu_{0} & = & 0\\
+\Rightarrow\hat{\mu}_{0} & = & X_{0,T}\\
+\\
+{}[\Sigma_{0}]:\\
+0 & = & -\frac{\partial}{\partial\Sigma_{0}^{-1}}tr\left(\Sigma_{0}^{-1}\left(V_{0,T}+X_{0,T}X_{0,T}^{'}\right)-2X_{0,T}^{'}\Sigma_{0}^{-1}\mu_{0}+\Sigma_{0}^{-1}\left(\mu_{0}\right)\left(\mu_{0}\right)^{'}\right)+\frac{1}{2}\frac{\partial}{\partial\Sigma_{0}^{-1}}tr\left(ln\left(\Sigma_{0}^{-1}\right)\right)\\
+0 & = & \Sigma_{0}-\left(V_{0,T}+X_{0,T}X_{0,T}^{'}\right)+\left(\mu_{0}\right)\left(\mu_{0}\right)^{'}\\
+\Rightarrow\hat{\Sigma}_{0} & = & \left(V_{0,T}+X_{0,T}X_{0,T}^{'}\right)-\mu_{0}\mu_{0}^{'}=V_{0,T}\\
+\\
+ &  & \text{Similarly we can find}\\
+{}[A_{0}]:\\
+0 & = & \sum_{k=1}^{T}\left(-1\right)^{'}\Phi^{-1}\left(y_{k}-A_{0}\right)+\left(\left(y_{k}-A_{0}-A_{1}X_{k,T}\right)^{'}\Phi^{-1}\left(-1\right)\right)^{'}+\left(-1\right)^{'}\Phi^{-1}\left(-A_{1}X_{k,T}\right)\\
+\\
+\sum_{k=1}^{T}\left(2\Phi^{-1}\right)A_{0} & = & \sum_{k=1}^{T}\Phi^{-1}y_{k}+\Phi^{-1}\left(y_{k}-A_{1}X_{k,T}\right)+\left(-1\right)^{'}\Phi^{-1}\left(-A_{1}X_{k,T}\right)\\
+\\
+T\left(2\Phi^{-1}\right)A_{0} & = & \sum_{k=1}^{T}\Phi^{-1}y_{k}+\Phi^{-1}y_{k}\\
+\\
+\Rightarrow\hat{A}_{0} & = & \frac{1}{T}\sum_{k=1}^{T}y_{k}\Rightarrow\hat{\lambda}=\\
+\\
+{}[A_{1}]: &  & \left(\begin{array}{c}
+\left(y_{k}-A_{0}-A_{1}X_{k,T}\right)^{'}\Phi^{-1}\left(y_{k}-A_{0}\right)\\
++\left(y_{k}-A_{0}\right)^{'}\Phi^{-1}\left(-A_{1}X_{k,T}\right)\\
++tr\left(\left(V_{k,T}+X_{k,T}X_{k,T}^{'}\right)A_{1}^{'}\Phi^{-1}A_{1}\right)
+\end{array}\right)=tr\left(\begin{array}{c}
+\Phi^{-1}\left(y_{k}-A_{0}\right)\left(y_{k}-A_{0}-A_{1}X_{k,T}\right)^{'}\\
++\Phi^{-1}\left(-A_{1}X_{k,T}\right)\left(y_{k}-A_{0}\right)^{'}\\
++\Phi^{-1}A_{1}\left(V_{k,T}+X_{k,T}X_{k,T}^{'}\right)A_{1}^{'}
+\end{array}\right)\\
+0 & = & \sum_{k=1}^{T}\left(\Phi^{-1}\left(y_{k}-A_{0}\right)\left(-X_{k,T}\right)^{'}\right)^{'}\\
+ &  & +\sum_{k=1}^{T}\left(\Phi^{-1}\left(-X_{k,T}\right)\left(y_{k}-A_{0}\right)^{'}\right)^{'}\\
+ &  & +2\sum_{k=1}^{T}\left(\left(\Phi^{-1}A_{1}\left(V_{k,T}+X_{k,T}X_{k,T}^{'}\right)\right)^{'}\right)\\
+\\
+\Rightarrow\hat{A}_{1} & = & \left(\sum_{k=1}^{T}\left(y_{k}-\hat{A}_{0}\right)\left(X_{k,T}\right)^{'}\right)\left(\sum_{k=1}^{T}\left(V_{k,T}+X_{k,T}X_{k,T}^{'}\right)\right)^{-1}\\
+\\
+\hat{\Phi} & = & \frac{1}{T}\sum_{k=1}^{T}diag\left(E_{X^{(T)}}\left[\left(y_{k}-\hat{A}_{0}-\hat{A}_{1}X_{k,k}\right)\left(y_{k}-\hat{A}_{0}-\hat{A}_{1}X_{k,k}\right)^{'}\right]\right)\\
+\\
+\Rightarrow\hat{\Phi} & = & diag\left(\frac{1}{T}\sum_{k=1}^{T}\left(y_{k}-A_{0}-A_{1}X_{k,T}\right)\left(y_{k}-A_{0}\right)^{'}+\left(y_{k}-A_{0}\right)\left(-A_{1}X_{k,T}\right)^{'}\right)\\
+ &  & +diag\left(\frac{1}{T}\sum_{k=1}^{T}A_{1}\left(V_{k,T}+X_{k,T}X_{k,T}^{'}\right)A_{1}^{'}\right)\\
+\\
+\Rightarrow\hat{U}_{0} & = & \frac{1}{T}\sum_{k=1}^{T}X_{k,T}\\
+\\
+\hat{U}_{1} & = & \left(\sum_{k=1}^{T}E_{X^{(T)}}\left[\left(X_{k,k}-U_{0}\right)X_{k-1,k-1}^{'}\right]\right)\left(\sum_{k=1}^{T}E_{X^{(T)}}\left[X_{k-1,k-1}X_{k-1,k-1}^{'}\right]\right)^{-1}\\
+\\
+\Rightarrow\hat{U}_{1} & = & \left(\sum_{k=1}^{T}\left(V_{(k,k-1),T}+X_{k,T}X_{k-1,T}^{'}\right)+\sum_{k=1}^{T}\left(-U_{0}\right)\left(X_{k-1,T}\right)^{'}\right)\left(\sum_{k=1}^{T}\left(V_{k-1,T}+X_{k-1,T}X_{k-1,T}^{'}\right)\right)^{-1}\\
+\\
+\hat{Q} & = & \frac{1}{T}\sum_{k=1}^{T}E_{X^{(T)}}\left[\left(X_{k,k}-\hat{U}_{0}-\hat{U}_{1}X_{k-1,k-1}\right)\left(X_{k,k}-\hat{U}_{0}-\hat{U}_{1}X_{k-1,k-1}\right)^{'}\right]\\
+\\
+\Rightarrow\hat{Q} & = & \frac{1}{T}\sum_{k=1}^{T}\left(\left(V_{k,T}+X_{k,T}X_{k,T}^{'}\right)-\hat{U}_{0}X_{k,T}^{'}-\hat{U}_{1}\left(V_{(k,k-1),T}+X_{k,T}X_{k-1,T}^{'}\right)\right)\\
+ &  & +\frac{1}{T}\sum_{k=1}^{T}\left(X_{k,T}-U_{0}-U_{1}X_{k-1,T}\right)\left(-\hat{U}_{0}\right)^{'}+\\
+ &  & +\frac{1}{T}\sum_{k=1}^{T}\left(-\left(V_{(k,k-1),T}+X_{k,T}X_{k-1,T}^{'}\right)\hat{U}_{1}^{'}+\hat{U}_{0}X_{k-1,T}^{'}\hat{U}_{1}^{'}\right)\\
+ &  & +\frac{1}{T}\sum_{k=1}^{T}\left(\hat{U}_{1}\left(V_{k-1,T}+X_{k-1,T}X_{k-1,T}^{'}\right)\hat{U}_{1}^{'}\right)
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+
+\end_layout
+
+\begin_layout Subsection
+\paragraph_spacing onehalf
+Alternative estimation methods
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+We could instead estimate 
+\begin_inset Formula $X_{t}$
+\end_inset
+
+ via PCA and then use 
+\end_layout
+
+\begin_layout Subsubsection
+\paragraph_spacing onehalf
+MLE
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+We would first stack 
+\begin_inset Formula $X_{t}$
+\end_inset
+
+ and 
+\begin_inset Formula $y_{t}$
+\end_inset
+
+ 
+\begin_inset Formula 
+\begin{eqnarray*}
+Y_{t} & = & \left(\begin{array}{c}
+X_{t}\\
+y_{t}
+\end{array}\right)\\
+\\
+Y_{t} & = & B_{0}+B_{1}Y_{t-1}+\mu_{t}\\
+\\
+\mu_{t} & \sim & N\left(0,\left(\begin{array}{cc}
+Q & 0\\
+0 & \Phi
+\end{array}\right)\right)
+\end{eqnarray*}
+
+\end_inset
+
+we would then use MLE.
+ The standard errors may need to be corrected for errors coming from the
+ PCA.
+ This can be done using a Bootstrap approach but would be very time consuming.
+\end_layout
+
+\begin_layout Subsection
+\paragraph_spacing onehalf
+Finding moments of inflation
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:inflation-moments"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+Below we use the forward approach
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+This is partly reproduced from Christensen, Lopez, Rudebusch (2013)
+\end_layout
+
+\end_inset
+
+
+\begin_inset Formula 
+\begin{eqnarray*}
+ln\left(\frac{\Pi_{t+\tau}}{\Pi_{t}}\right) & = & \int_{t}^{t+\tau}(\rho^{N}-\rho^{R})^{'}X_{s}ds\\
+\\
+\frac{\partial}{\partial\tau}ln\left(\frac{\Pi_{t+\tau}}{\Pi_{t}}\right) & = & (\rho^{N}-\rho^{R})^{'}X_{t+\tau}\\
+\\
+Z_{t,t+\tau} & \equiv & \left(\begin{array}{c}
+X_{t+\tau}\\
+ln\left(\Pi_{t+\tau}/\Pi_{t}\right)
+\end{array}\right)\qquad\text{the augmented state vector}\\
+\\
+dZ_{t,t+\tau} & = & \underbrace{\left(\begin{array}{cc}
+K^{P} & 0\\
+0 & 0
+\end{array}\right)\left(\begin{array}{c}
+\theta^{P}\\
+0
+\end{array}\right)}_{K}dt-\underbrace{\left(\begin{array}{cc}
+K^{p} & 0\\
+-(\rho^{N}-\rho^{R})^{'} & 0
+\end{array}\right)}_{-\theta}Z_{t,t+\tau}dt+\underbrace{\left(\begin{array}{cc}
+\Sigma & 0\\
+0 & 0
+\end{array}\right)}_{\bar{\Sigma}}\underbrace{\left(\begin{array}{c}
+dW_{t+\tau}\\
+0
+\end{array}\right)}_{d\bar{W}_{t+\tau}}\\
+\\
+Z_{t,t+\tau} & = & Z_{t,t}+\int_{t}^{t+\tau}Kds+\int_{t}^{t+\tau}\theta Z_{t,s}ds+\int_{t}^{t+\tau}\bar{\Sigma}d\bar{W}_{s}\\
+\\
+m_{t,t+\tau}=E_{t}\left[Z_{t,t+\tau}\right] & = & Z_{t,t}+\int_{t}^{t+\tau}Kds+E_{t}\left[\int_{t}^{t+\tau}\theta Z_{t,s}ds\right]\equiv m\left\{ \tau\right\} \\
+\\
+\frac{\partial}{\partial\tau}m\left\{ \tau\right\}  & = & K+\theta m\left\{ \tau\right\} \\
+\\
+m_{t,t}=m\left\{ 0\right\} = & = & Z_{t,t}=\left(\begin{array}{c}
+X_{t}\\
+0
+\end{array}\right)\\
+\\
+v_{t,t+\tau}=Var_{t}\left[Z_{t,t+\tau}\right]=v\left\{ \tau\right\}  & = & E_{t}\left[\left(\int_{t}^{t+\tau}\theta Z_{t,s}ds-E_{t}\left[\int_{t}^{t+\tau}\theta Z_{t,s}ds\right]\right)\left(\int_{t}^{t+\tau}\theta Z_{t,s}ds-E_{t}\left[\int_{t}^{t+\tau}\theta Z_{t,s}ds\right]\right)^{'}\right]\\
+ &  & +\int_{t}^{t+\tau}\bar{\Sigma}\bar{\Sigma}^{'}ds\\
+\\
+\frac{\partial}{\partial\tau}v\left\{ \tau\right\}  & = & E_{t}\left[\left(\theta Z_{t,t+\tau}-E_{t}\left[\theta Z_{t,t+\tau}ds\right]\right)\left(\int_{t}^{t+\tau}\theta Z_{t,s}ds-E_{t}\left[\int_{t}^{t+\tau}\theta Z_{t,s}ds\right]\right)^{'}\right]\\
+ &  & +E_{t}\left[\left(\int_{t}^{t+\tau}\theta Z_{t,s}ds-E_{t}\left[\int_{t}^{t+\tau}\theta Z_{t,s}ds\right]\right)\left(\theta Z_{t,t+\tau}-E_{t}\left[\theta Z_{t,t+\tau}ds\right]\right)^{'}\right]\\
+ &  & +\bar{\Sigma}\bar{\Sigma}^{'}\\
+ &  & \text{using:}\\
+Z_{t,t+\tau}-E_{t}\left[Z_{t,t+\tau}\right] & = & \int_{t}^{t+\tau}\theta Z_{t,s}ds-E_{t}\left[\int_{t}^{t+\tau}\theta Z_{t,s}ds\right]+\int_{t}^{t+\tau}\bar{\Sigma}d\bar{W}_{s}
+\end{eqnarray*}
+
+\end_inset
+
+
+\begin_inset Formula 
+\begin{eqnarray*}
+ &  & \text{yields:}\\
+\frac{\partial}{\partial\tau}v\left\{ \tau\right\}  & = & E_{t}\left[\left(\theta\left(\int_{t}^{t+\tau}\theta Z_{t,s}ds-E_{t}\left[\int_{t}^{t+\tau}\theta Z_{t,s}ds\right]+\int_{t}^{t+\tau}\bar{\Sigma}d\bar{W}_{s}\right)\right)\left(\int_{t}^{t+\tau}\theta Z_{t,s}ds-E_{t}\left[\int_{t}^{t+\tau}\theta Z_{t,s}ds\right]\right)^{'}\right]\\
+ &  & +E_{t}\left[\left(\int_{t}^{t+\tau}\theta Z_{t,s}ds-E_{t}\left[\int_{t}^{t+\tau}\theta Z_{t,s}ds\right]\right)\left(\theta\left(\int_{t}^{t+\tau}\theta Z_{t,s}ds-E_{t}\left[\int_{t}^{t+\tau}\theta Z_{t,s}ds\right]+\int_{t}^{t+\tau}\bar{\Sigma}d\bar{W}_{s}\right)\right)^{'}\right]\\
+ &  & +\bar{\Sigma}\bar{\Sigma}^{'}\\
+\\
+\frac{\partial}{\partial\tau}v\left\{ \tau\right\}  & = & \theta v\left\{ \tau\right\} -\theta\int_{t}^{t+\tau}\bar{\Sigma}\bar{\Sigma}^{'}ds+E_{t}\left[\left(\theta\int_{t}^{t+\tau}\bar{\Sigma}d\bar{W}_{s}\right)\left(\int_{t}^{t+\tau}\theta Z_{t,s}ds-E_{t}\left[\int_{t}^{t+\tau}\theta Z_{t,s}ds\right]\right)^{'}\right]\\
+ &  & +v\left\{ \tau\right\} \theta^{'}-\left(\int_{t}^{t+\tau}\bar{\Sigma}\bar{\Sigma}^{'}ds\right)\theta^{'}+E_{t}\left[\left(\int_{t}^{t+\tau}\theta Z_{t,s}ds-E_{t}\left[\int_{t}^{t+\tau}\theta Z_{t,s}ds\right]\right)\left(\theta\int_{t}^{t+\tau}\bar{\Sigma}d\bar{W}_{s}\right)^{'}\right]\\
+ &  & +\bar{\Sigma}\bar{\Sigma}^{'}
+\end{eqnarray*}
+
+\end_inset
+
+
+\begin_inset Formula 
+\begin{eqnarray*}
+ &  & \text{using:}\\
+\int_{t}^{t+\tau}\theta Z_{t,s}ds-E_{t}\left[\int_{t}^{t+\tau}\theta Z_{t,s}ds\right] & = & Z_{t,t+\tau}-E_{t}\left[Z_{t,t+\tau}\right]-\int_{t}^{t+\tau}\bar{\Sigma}d\bar{W}_{s}\\
+ &  & \text{yields:}\\
+\frac{\partial}{\partial\tau}v\left\{ \tau\right\}  & = & \theta v\left\{ \tau\right\} -\theta\int_{t}^{t+\tau}\bar{\Sigma}\bar{\Sigma}^{'}ds+E_{t}\left[\left(\theta\int_{t}^{t+\tau}\bar{\Sigma}\bar{\Sigma}^{'}ds\right)\right]\\
+ &  & +v\left\{ \tau\right\} \theta^{'}-\left(\int_{t}^{t+\tau}\bar{\Sigma}\bar{\Sigma}^{'}ds\right)\theta^{'}+E_{t}\left[\left(\theta\int_{t}^{t+\tau}\bar{\Sigma}\bar{\Sigma}^{'}ds\right)\right]\\
+ &  & +\bar{\Sigma}\bar{\Sigma}^{'}\\
+\\
+\frac{\partial}{\partial\tau}v\left\{ \tau\right\}  & = & \theta v\left\{ \tau\right\} +v\left\{ \tau\right\} \theta^{'}+\bar{\Sigma}\bar{\Sigma}^{'}\\
+\\
+v_{t,t}=v\left\{ 0\right\}  & = & 0_{n\times n}\quad\text{where }n\text{ is the size of the augmented state vector}\\
+ &  & \text{It will be convenient to first vectorize }v_{t,t+\tau}\\
+\frac{\partial}{\partial\tau}vec\left(v\left\{ \tau\right\} \right) & = & vec\left(I_{n\times n}\theta v\left\{ \tau\right\} \right)+vec\left(v\left\{ \tau\right\} \theta^{'}\right)+vec\left(I_{n\times n}\bar{\Sigma}\bar{\Sigma}^{'}\right)\\
+\\
+\frac{\partial}{\partial\tau}vec\left(v\left\{ \tau\right\} \right) & = & \left(I_{n\times n}\otimes\theta\right)vec\left(v\left\{ \tau\right\} \right)+\left(\theta\otimes I_{n\times n}\right)vec\left(v\left\{ \tau\right\} \right)+\left(I_{n\times n}\otimes\bar{\Sigma}\right)vec\left(\bar{\Sigma}^{'}\right)
+\end{eqnarray*}
+
+\end_inset
+
+Notice that 
+\begin_inset Formula $v\left\{ \tau\right\} $
+\end_inset
+
+ does not depend on 
+\begin_inset Formula $t$
+\end_inset
+
+ because 
+\begin_inset Formula $v_{t,t}=v\left\{ 0\right\} =0_{n\times n}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+\begin_inset Formula 
+\begin{eqnarray*}
+ln\left(\Pi_{t}\right) & = & \int_{0}^{t}(\rho^{N}-\rho^{R})^{'}X_{s}ds\\
+\\
+dln\left(\Pi_{t}\right) & = & (\rho^{N}-\rho^{R})^{'}X_{t}dt\\
+\\
+Z_{0,t} & \equiv & \left(\begin{array}{c}
+X_{t}\\
+ln\left(\Pi_{t}\right)
+\end{array}\right)\qquad\text{the augmented state vector}\\
+\\
+dZ_{0,t} & = & \underbrace{\left(\begin{array}{cc}
+K^{P} & 0\\
+0 & 0
+\end{array}\right)\left(\begin{array}{c}
+\theta^{P}\\
+0
+\end{array}\right)}_{K}dt-\underbrace{\left(\begin{array}{cc}
+K^{p} & 0\\
+-(\rho^{N}-\rho^{R})^{'} & 0
+\end{array}\right)}_{-\theta}Z_{0,t}dt+\underbrace{\left(\begin{array}{cc}
+\Sigma & 0\\
+0 & 0
+\end{array}\right)}_{\bar{\Sigma}}\underbrace{\left(\begin{array}{c}
+dW_{t}\\
+0
+\end{array}\right)}_{d\bar{W}_{t}}\\
+\\
+Z_{0,t} & = & \int_{0}^{t}Kds+\int_{0}^{t}\theta Z_{0,s}ds+\int_{0}^{t}\bar{\Sigma}d\bar{W}_{s}\\
+\\
+m_{0,t}=E_{0}\left[Z_{0,t}\right] & = & \int_{0}^{t}Kds+E_{0}\left[\int_{0}^{t}\theta Z_{0,s}ds\right]\\
+\\
+\frac{\partial}{\partial t}m_{0,t} & = & K+\theta m_{0,t}\\
+\\
+m_{0,0} & = & Z_{0,0}=\left(\begin{array}{c}
+X_{0}\\
+0
+\end{array}\right)\\
+\\
+v_{0,t}=Var_{0}\left[Z_{0,t}\right] & = & E_{0}\left[\left(\int_{0}^{t}\theta Z_{0,s}ds-E_{0}\left[\int_{0}^{t}\theta Z_{0,s}ds\right]\right)\left(\int_{0}^{t}\theta Z_{0,s}ds-E_{0}\left[\int_{0}^{t}\theta Z_{0,s}ds\right]\right)^{'}\right]+\int_{0}^{t}\bar{\Sigma}\bar{\Sigma}^{'}ds\\
+\\
+\frac{\partial}{\partial t}v_{0,t} & = & E_{0}\left[\left(\theta Z_{0,t}-E_{0}\left[\theta Z_{0,t}ds\right]\right)\left(\int_{0}^{t}\theta Z_{0,s}ds-E_{0}\left[\int_{0}^{t}\theta Z_{0,s}ds\right]\right)^{'}\right]\\
+ &  & +E_{0}\left[\left(\int_{0}^{t}\theta Z_{0,s}ds-E_{0}\left[\int_{0}^{t}\theta Z_{0,s}ds\right]\right)\left(\theta Z_{0,t}-E_{0}\left[\theta Z_{0,t}ds\right]\right)^{'}\right]\\
+ &  & +\bar{\Sigma}\bar{\Sigma}^{'}\\
+ &  & \text{using:}\\
+Z_{0,s}-E_{0}\left[Z_{0,t}ds\right] & = & \int_{0}^{t}\theta Z_{0,s}ds-E_{0}\left[\int_{0}^{t}\theta Z_{0,s}ds\right]+\int_{0}^{t}\bar{\Sigma}d\bar{W}_{s}\\
+ &  & \text{yields:}\\
+\frac{\partial}{\partial t}v_{0,t} & = & E_{0}\left[\left(\theta\left(\int_{0}^{t}\theta Z_{0,s}ds-E_{0}\left[\int_{0}^{t}\theta Z_{0,s}ds\right]+\int_{0}^{t}\bar{\Sigma}d\bar{W}_{s}\right)\right)\left(\int_{0}^{t}\theta Z_{0,s}ds-E_{0}\left[\int_{0}^{t}\theta Z_{0,s}ds\right]\right)^{'}\right]\\
+ &  & +E_{0}\left[\left(\int_{0}^{t}\theta Z_{0,s}ds-E_{0}\left[\int_{0}^{t}\theta Z_{0,s}ds\right]\right)\left(\theta\left(\int_{0}^{t}\theta Z_{0,s}ds-E_{0}\left[\int_{0}^{t}\theta Z_{0,s}ds\right]+\int_{0}^{t}\bar{\Sigma}d\bar{W}_{s}\right)\right)^{'}\right]\\
+ &  & +\bar{\Sigma}\bar{\Sigma}^{'}\\
+\\
+\frac{\partial}{\partial t}v_{0,t} & = & \theta v_{0,t}-\theta\int_{0}^{t}\bar{\Sigma}\bar{\Sigma}^{'}ds+E_{0}\left[\left(\theta\int_{0}^{t}\bar{\Sigma}d\bar{W}_{s}\right)\left(\int_{0}^{t}\theta Z_{0,s}ds-E_{0}\left[\int_{0}^{t}\theta Z_{0,s}ds\right]\right)^{'}\right]\\
+ &  & +v_{0,t}\theta^{'}-\left(\int_{0}^{t}\bar{\Sigma}\bar{\Sigma}^{'}ds\right)\theta^{'}+E_{0}\left[\left(\int_{0}^{t}\theta Z_{0,s}ds-E_{0}\left[\int_{0}^{t}\theta Z_{0,s}ds\right]\right)\left(\theta\int_{0}^{t}\bar{\Sigma}d\bar{W}_{s}\right)^{'}\right]\\
+ &  & +\bar{\Sigma}\bar{\Sigma}^{'}\\
+ &  & \text{using:}\\
+\int_{0}^{t}\theta Z_{0,s}ds-E_{0}\left[\int_{0}^{t}\theta Z_{0,s}ds\right] & = & Z_{0,s}-E_{0}\left[Z_{0,t}ds\right]-\int_{0}^{t}\bar{\Sigma}d\bar{W}_{s}\\
+ &  & \text{yields:}\\
+\frac{\partial}{\partial t}v_{0,t} & = & \theta v_{0,t}-\theta\int_{0}^{t}\bar{\Sigma}\bar{\Sigma}^{'}ds+E_{0}\left[\left(\theta\int_{0}^{t}\bar{\Sigma}\bar{\Sigma}^{'}ds\right)\right]\\
+ &  & +v_{0,t}\theta^{'}-\left(\int_{0}^{t}\bar{\Sigma}\bar{\Sigma}^{'}ds\right)\theta^{'}+E_{0}\left[\left(\theta\int_{0}^{t}\bar{\Sigma}\bar{\Sigma}^{'}ds\right)\right]\\
+ &  & +\bar{\Sigma}\bar{\Sigma}^{'}\\
+\\
+\frac{\partial}{\partial t}v_{0,t} & = & \theta v_{0,t}+v_{0,t}\theta^{'}+\bar{\Sigma}\bar{\Sigma}^{'}\\
+\\
+v_{0,0} & = & 0_{n\times n}\quad\text{where }n\text{ is the size of the augmented state vector}\\
+ &  & \text{It will be convenient to first vectorize }v_{0,t}\\
+\frac{\partial}{\partial t}vec\left(v_{0,t}\right) & = & vec\left(I_{n\times n}\theta v_{0,t}\right)+vec\left(v_{0,t}\theta^{'}\right)+vec\left(I_{n\times n}\bar{\Sigma}\bar{\Sigma}^{'}\right)\\
+\\
+\frac{\partial}{\partial t}vec\left(v_{0,t}\right) & = & \left(I_{n\times n}\otimes\theta\right)vec\left(v_{0,t}\right)+\left(\theta\otimes I_{n\times n}\right)vec\left(v_{0,t}\right)+\left(I_{n\times n}\otimes\bar{\Sigma}\right)vec\left(\bar{\Sigma}^{'}\right)
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+We now have
+\begin_inset Formula 
+\begin{eqnarray*}
+-(\rho^{N}-\rho^{R})^{'}\int_{t}^{t+\tau}X_{s}ds & \sim & \mathcal{N}\left(-m_{t,t+\tau},v\left\{ \tau\right\} \right)\\
+\\
+E_{t}\left[exp\left(-(\rho^{N}-\rho^{R})^{'}\int_{t}^{t+\tau}X_{s}ds\right)\right] & = & exp\left(-m_{t,t+\tau}^{(n)}+\frac{1}{2}v^{(n,n)}\left\{ \tau\right\} \right)\\
+\\
+\Rightarrow\pi_{t}^{e}\left\{ \tau\right\}  & = & -\frac{1}{\tau}\left(-m_{t,t+\tau}^{(n)}+\frac{1}{2}v^{(n,n)}\left\{ \tau\right\} \right)
+\end{eqnarray*}
+
+\end_inset
+
+Let us verify that the solution is indeed correct
+\begin_inset Formula 
+\begin{eqnarray*}
+\pi_{t}^{e}\left\{ \tau\right\}  & = & -\frac{1}{\tau}ln\left(E_{t}\left[exp\left(-\int_{t}^{t+\tau}(r_{s}^{N}-r_{s}^{R})ds\right)\right]\right)\\
+ & = & -\frac{1}{\tau}ln\left(E_{t}\left[exp\left(-(\rho^{N}-\rho^{R})^{'}\int_{t}^{t+\tau}X_{s}ds\right)\right]\right)\\
+ &  & \text{Using L'Hopital's rule:}\\
+\lim_{\tau\downarrow0}\pi_{t}^{e}\left\{ \tau\right\}  & = & \pi_{t}^{e}\left\{ 0\right\} =(\rho^{N}-\rho^{R})^{'}X_{t}\\
+ &  & \text{On the other hand, using L'Hopital's rule: }\\
+\lim_{\tau\downarrow0}\pi_{t}^{e}\left\{ \tau\right\}  & = & -\left(-\frac{\partial}{\partial\tau}m_{t,t+\tau}^{(n)}+\frac{1}{2}\frac{\partial}{\partial\tau}v^{(n,n)}\left\{ \tau\right\} \right)\bigg|_{\tau=0}\\
+\\
+\lim_{\tau\downarrow0}\pi_{t}^{e}\left\{ \tau\right\}  & = & \frac{\partial}{\partial\tau}m_{t,t+\tau}^{(n)}-\frac{1}{2}\frac{\partial}{\partial\tau}v^{(n,n)}\left\{ \tau\right\} \bigg|_{\tau=0}\\
+\\
+\lim_{\tau\downarrow0}\pi_{t}^{e}\left\{ \tau\right\}  & = & K^{(n,n)}+\left(\theta m\left\{ \tau\right\} \right)^{(n,n)}-0\\
+\\
+\lim_{\tau\downarrow0}\pi_{t}^{e}\left\{ \tau\right\}  & = & 0+\left(\theta m\left\{ 0\right\} \right)^{(n,n)}=(\rho^{N}-\rho^{R})^{'}X_{t}\qquad\text{QED}
+\end{eqnarray*}
+
+\end_inset
+
+Analytical solution:
+\begin_inset Formula 
+\begin{eqnarray*}
+\frac{\partial}{\partial\tau}m\left\{ \tau\right\}  & = & K+\theta m\left\{ \tau\right\} \\
+\\
+\frac{\partial}{\partial\tau}m\left\{ \tau\right\} -\theta m\left\{ \tau\right\}  & = & K\\
+\\
+exp\left(-\theta\tau\right)\frac{\partial}{\partial\tau}m\left\{ \tau\right\} -exp\left(-\theta\tau\right)\theta m\left\{ \tau\right\}  & = & exp\left(-\theta\tau\right)K\\
+\\
+\frac{\partial}{\partial\tau}\left(exp\left(-\theta\tau\right)m\left\{ \tau\right\} \right) & = & exp\left(-\theta\tau\right)K\\
+\\
+exp\left(-\theta\tau\right)m\left\{ \tau\right\}  & = & \int exp\left(-\theta u\right)Kdu
+\end{eqnarray*}
+
+\end_inset
+
+Since 
+\begin_inset Formula $\theta$
+\end_inset
+
+ and 
+\begin_inset Formula $K$
+\end_inset
+
+ are singular, we will rely on numerical methods to solve the ODE's rather
+ than look for analytical solutions.
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+\begin_inset Formula 
+\begin{eqnarray*}
+ln\left(\Pi_{t}\right) & = & \int_{0}^{t}(\rho^{N}-\rho^{R})^{'}X_{s}ds\\
+\\
+dln\left(\Pi_{t}\right) & = & (\rho^{N}-\rho^{R})^{'}X_{t}dt\\
+\\
+Z_{0,t+\tau} & \equiv & \left(\begin{array}{c}
+X_{t+\tau}\\
+ln\left(\Pi_{t+\tau}\right)
+\end{array}\right)\\
+\\
+dZ_{0,t} & = & \underbrace{\left(\begin{array}{cc}
+K^{P} & 0\\
+0 & 0
+\end{array}\right)\left(\begin{array}{c}
+\theta^{P}\\
+0
+\end{array}\right)}_{K}dt-\underbrace{\left(\begin{array}{cc}
+K^{p} & 0\\
+(\rho^{N}-\rho^{R})^{'} & 0
+\end{array}\right)}_{\theta}Z_{0,t}dt+\underbrace{\left(\begin{array}{cc}
+\Sigma & 0\\
+0 & 0
+\end{array}\right)}_{\bar{\Sigma}}\underbrace{\left(\begin{array}{c}
+dW_{t}\\
+0
+\end{array}\right)}_{d\bar{W}_{t}}\\
+\\
+Z_{0,t} & = & \int_{0}^{t}Kds+\int_{0}^{t}\theta Z_{0,s}ds+\int_{0}^{t}\bar{\Sigma}d\bar{W}_{s}\\
+\\
+m_{t,t+\tau}=E_{t}\left[Z_{0,t+\tau}\right] & = & Z_{0,t}+\int_{t}^{t+\tau}Kds+E_{0}\left[\int_{t}^{t+\tau}\theta Z_{0,s}ds\right]=m\left\{ \tau\right\} \\
+\\
+\frac{\partial}{\partial\tau}m\left\{ \tau\right\}  & = & K+\theta m\left\{ \tau\right\} \\
+\\
+m_{t,t}=m\left\{ 0\right\}  & = & Z_{0,t}\quad\text{with }Z_{0,0}=\left(\begin{array}{c}
+X_{0}\\
+0
+\end{array}\right)
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+\paragraph_spacing onehalf
+Alternative approach
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+We tried using the Kolmogorov Backward Equation instead
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+\begin_inset Formula 
+\begin{eqnarray*}
+\pi_{t}^{e}\left\{ \tau\right\}  & = & -\frac{1}{\tau}ln\left(E_{t}\left[exp\left(-\int_{t}^{t+\tau}(r_{s}^{N}-r_{s}^{R})ds\right)\right]\right)=-\frac{1}{\tau}ln\left(E_{t}\left[exp\left(-(\rho^{N}-\rho^{R})^{'}\int_{t}^{t+\tau}X_{s}ds\right)\right]\right)\\
+ &  & \text{Using L'Hopital's rule:}\\
+\lim_{\tau\downarrow0}\pi_{t}^{e}\left\{ \tau\right\}  & = & \pi_{t}^{e}\left\{ 0\right\} =(\rho^{N}-\rho^{R})^{'}X_{t}\\
+ &  & \text{Let}\\
+f\left\{ T-t,X\right\}  & = & E_{t}\left[exp\left(-(\rho^{N}-\rho^{R})^{'}\int_{t}^{T}X_{s}ds\right)\right]=E\left[exp\left(-(\rho^{N}-\rho^{R})^{'}\int_{t}^{T}X_{s}ds\right)\bigg|X_{t}=X\right]\\
+\\
+E_{t}\left(df\left\{ T-t,X\right\} \right) & = & 0\qquad\text{Let }\tau=T-t\\
+0 & = & \left(\frac{\partial f}{\partial\tau}\right)\left(\frac{\partial(T-t)}{\partial t}\right)dt+\frac{\partial f}{\partial X^{'}}dX+\frac{1}{2}tr\left(\frac{\partial^{2}f}{\partial X^{'}\partial X}dXdX^{'}\right)\\
+\Rightarrow0 & = & -f_{\tau}dt+f_{X}dX+\frac{1}{2}f_{XX}dXdX^{'}\quad\text{Kolmogorov Backward Equation}\\
+ &  & \text{guess:}\\
+f\left\{ \tau,X\right\}  & = & a_{0}\left\{ \tau\right\} +a_{1}\left\{ \tau\right\} ^{'}X\quad\text{with}\\
+f\left\{ 0,X\right\}  & = & 0\\
+\\
+0 & = & -\dot{a}_{0}\left\{ \tau\right\} -\dot{a}_{1}\left\{ \tau\right\} ^{'}X+a_{1}\left\{ \tau\right\} ^{'}K^{P}\left(\theta^{P}-X\right)\\
+ &  & \text{matching variables:}\\
+\dot{a}_{0}\left\{ \tau\right\}  & = & a_{1}\left\{ \tau\right\} ^{'}K^{P}\theta^{P}\\
+\\
+\dot{a}_{1}\left\{ \tau\right\} ^{'} & = & -a_{1}\left\{ \tau\right\} ^{'}K^{P}\\
+\\
+a_{0}\left\{ 0\right\}  & = & 0\\
+\\
+a_{1}\left\{ 0\right\}  & = & 0
+\end{eqnarray*}
+
+\end_inset
+
+Solution:
+\begin_inset Formula 
+\begin{eqnarray*}
+\dot{a}_{1}\left\{ \tau\right\} ^{'} & = & -a_{1}\left\{ \tau\right\} ^{'}K^{P}\\
+\\
+\dot{a}_{1}\left\{ \tau\right\} ^{'}exp\left(K^{P}\tau\right)+a_{1}\left\{ \tau\right\} ^{'}K^{P}exp\left(K^{P}\tau\right) & = & 0\\
+\\
+\frac{\partial}{\partial\tau}\left(a_{1}\left\{ \tau\right\} ^{'}exp\left(K^{P}\tau\right)\right) & = & 0\\
+\\
+a_{1}\left\{ \tau\right\} ^{'}exp\left(K^{P}\tau\right) & = & Const\\
+\\
+a_{1}\left\{ \tau\right\} ^{'} & = & exp\left(-K^{P}\tau\right)Const\\
+\\
+a_{1}\left\{ 0\right\}  & = & Const\Rightarrow Const=-1\\
+\\
+a_{0}\left\{ \tau\right\}  & = & \int_{0}^{\tau}\left(-a_{1}\left\{ u\right\} ^{'}K^{P}\theta^{P}\right)du\\
+\\
+a_{0}\left\{ \tau\right\}  & = & \left(K^{P}\right)^{-1}exp\left(-K^{P}u\right)\bigg|_{u=0}^{\tau}K^{P}\theta^{P}+K^{P}\theta^{P}\tau\\
+\\
+a_{0}\left\{ \tau\right\}  & = & \left(K^{P}\right)^{-1}\left(exp\left(-K^{P}\tau\right)-1\right)K^{P}\theta^{P}+K^{P}\theta^{P}\tau\\
+\\
+a_{0}\left\{ \tau\right\}  & = & \left(\left(K^{P}\right)^{-1}\left(exp\left(-K^{P}\tau\right)-1\right)+\tau\right)K^{P}\theta^{P}
+\end{eqnarray*}
+
+\end_inset
+
+Thus
+\begin_inset Formula 
+\begin{eqnarray*}
+\pi_{t}^{e}\left\{ \tau\right\}  & = & -\frac{1}{\tau}ln\left(f\left\{ \tau,X\right\} \right)=\left(K^{P}\right)^{-1}\left(exp\left(-K^{P}\tau\right)-1\right)K^{P}\theta^{P}\\
+\\
+\Rightarrow\pi_{t}^{e}\left\{ \tau\right\}  & = & -\frac{1}{\tau}\left(\left(K^{P}\right)^{-1}\left(exp\left(-K^{P}\tau\right)-1\right)+\tau\right)K^{P}\theta^{P}\\
+ &  & -\frac{1}{\tau}\left(exp\left(-K^{P}\tau\right)^{'}-1\right)X_{t}\\
+\\
+ &  & \text{Using L'Hopital's rule:}\\
+\lim_{\tau\downarrow0}\pi_{t}^{e}\left\{ \tau\right\}  & = & \pi_{t}^{e}\left\{ 0\right\} =(\rho^{N}-\rho^{R})^{'}X_{t}\\
+ &  & \text{Thus the initial guess for }f\text{ was wrong}
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Note Note
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Formula 
+\begin{eqnarray*}
+\pi_{t}^{e}\left\{ \tau\right\}  & = & -\frac{1}{\tau}ln\left(E_{t}\left[exp\left(-\int_{t}^{t+\tau}(r_{s}^{N}-r_{s}^{R})ds\right)\right]\right)=-\frac{1}{\tau}ln\left(E_{t}\left[exp\left(-(\rho^{N}-\rho^{R})^{'}\int_{t}^{t+\tau}X_{s}ds\right)\right]\right)\\
+ &  & \text{Using L'Hopital's rule:}\\
+\lim_{\tau\downarrow0}\pi_{t}^{e}\left\{ \tau\right\}  & = & \pi_{t}^{e}\left\{ 0\right\} =(\rho^{N}-\rho^{R})^{'}X_{t}\\
+ &  & \text{Let}\\
+f\left\{ T-t,X\right\}  & = & E_{t}\left[exp\left(-(\rho^{N}-\rho^{R})^{'}\int_{t}^{T}X_{s}ds\right)\right]=E\left[exp\left(-(\rho^{N}-\rho^{R})^{'}\int_{t}^{T}X_{s}ds\right)\bigg|X_{t}=X\right]\\
+\\
+E_{t}\left(df\left\{ T-t,X\right\} \right) & = & 0\qquad\text{Let }\tau=T-t\\
+0 & = & \left(\frac{\partial f}{\partial\tau}\right)\left(\frac{\partial(T-t)}{\partial t}\right)dt+\frac{\partial f}{\partial X^{'}}dX+\frac{1}{2}tr\left(\frac{\partial^{2}f}{\partial X^{'}\partial X}dXdX^{'}\right)\\
+\Rightarrow0 & = & -f_{\tau}dt+f_{X}dX+\frac{1}{2}f_{XX}dXdX^{'}\quad\text{Kolmogorov Backward Equation}\\
+ &  & \text{guess:}\\
+f\left\{ \tau,X\right\}  & = & exp\left(a_{0}\left\{ \tau\right\} +a_{1}\left\{ \tau\right\} ^{'}X\right)\quad\text{with}\\
+f\left\{ 0,X\right\}  & = & 0\\
+\\
+0 & = & -\dot{a}_{0}\left\{ \tau\right\} -\dot{a}_{1}\left\{ \tau\right\} ^{'}X+a_{1}\left\{ \tau\right\} ^{'}K^{P}\left(\theta^{P}-X\right)+\frac{1}{2}a_{1}\left\{ \tau\right\} ^{'}\Sigma\Sigma^{'}a_{1}\left\{ \tau\right\} \\
+ &  & \text{matching variables:}\\
+\dot{a}_{0}\left\{ \tau\right\}  & = & a_{1}\left\{ \tau\right\} ^{'}K^{P}\theta^{P}+\frac{1}{2}a_{1}\left\{ \tau\right\} ^{'}\Sigma\Sigma^{'}a_{1}\left\{ \tau\right\} \\
+\\
+\dot{a}_{1}\left\{ \tau\right\} ^{'} & = & -a_{1}\left\{ T-t\right\} ^{'}K^{P}\\
+\\
+a_{0}\left\{ 0\right\}  & = & -\infty\\
+\\
+a_{1}\left\{ 0\right\}  & = & 0
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Formula 
+\begin{eqnarray*}
+\pi_{t}^{e}\left\{ \tau\right\}  & = & -\frac{1}{\tau}ln\left(E_{t}\left[exp\left(-\int_{t}^{t+\tau}(r_{s}^{N}-r_{s}^{R})ds\right)\right]\right)=-\frac{1}{\tau}ln\left(E_{t}\left[exp\left(-(\rho^{N}-\rho^{R})^{'}\int_{t}^{t+\tau}X_{s}ds\right)\right]\right)\\
+ &  & \text{Using L'Hopital's rule:}\\
+\lim_{\tau\downarrow0}\pi_{t}^{e}\left\{ \tau\right\}  & = & \pi_{t}^{e}\left\{ 0\right\} =(\rho^{N}-\rho^{R})^{'}X_{t}\\
+ &  & \text{Let}\\
+f\left\{ T-t,X\right\}  & = & E_{t}\left[exp\left(-(\rho^{N}-\rho^{R})^{'}\int_{t}^{T}X_{s}ds\right)\right]=E\left[exp\left(-(\rho^{N}-\rho^{R})^{'}\int_{t}^{T}X_{s}ds\right)\bigg|X_{t}=X\right]\\
+\\
+E_{t}\left(df\left\{ T-t,X\right\} \right) & = & 0\qquad\text{Let }\tau=T-t\\
+0 & = & \left(\frac{\partial f}{\partial\tau}\right)\left(\frac{\partial(T-t)}{\partial t}\right)dt+\frac{\partial f}{\partial X^{'}}dX+\frac{1}{2}tr\left(\frac{\partial^{2}f}{\partial X^{'}\partial X}dXdX^{'}\right)\\
+\Rightarrow0 & = & -f_{\tau}dt+f_{X}dX+\frac{1}{2}f_{XX}dXdX^{'}\quad\text{Kolmogorov Backward Equation}\\
+ &  & \text{guess:}\\
+f\left\{ \tau,X\right\}  & = & exp\left(a_{0}\left\{ \tau\right\} +a_{1}\left\{ \tau\right\} ^{'}X\right)\quad\text{with}\\
+f\left\{ 0,X\right\}  & = & 0\\
+\\
+0 & = & -\dot{a}_{0}\left\{ \tau\right\} -\dot{a}_{1}\left\{ \tau\right\} ^{'}X+a_{1}\left\{ \tau\right\} ^{'}K^{P}\left(\theta^{P}-X\right)+\frac{1}{2}a_{1}\left\{ \tau\right\} ^{'}\Sigma\Sigma^{'}a_{1}\left\{ \tau\right\} \\
+ &  & \text{matching variables:}\\
+\dot{a}_{0}\left\{ \tau\right\}  & = & a_{1}\left\{ \tau\right\} ^{'}K^{P}\theta^{P}+\frac{1}{2}a_{1}\left\{ \tau\right\} ^{'}\Sigma\Sigma^{'}a_{1}\left\{ \tau\right\} \\
+\\
+\dot{a}_{1}\left\{ \tau\right\} ^{'} & = & -a_{1}\left\{ T-t\right\} ^{'}K^{P}\\
+\\
+a_{0}\left\{ 0\right\}  & = & -\infty\\
+\\
+a_{1}\left\{ 0\right\}  & = & 0
+\end{eqnarray*}
+
+\end_inset
+
+Notice that our guess for 
+\begin_inset Formula $f$
+\end_inset
+
+ is likely incorrect because the boundary conditions are not well defined.
+ Thus we would need to solve the PDE from the Kolmogorov Backward Equation
+ without assuming a functional form.
+ This is difficult to do.
+ We would run into as similar problem if we tried to derive the characteristic
+ function for 
+\begin_inset Formula $f$
+\end_inset
+
+ in a similar manner.
+\end_layout
+
+\begin_layout Subsection
+\paragraph_spacing onehalf
+Currency exchange rates implications
+\end_layout
+
+\begin_layout Standard
+\paragraph_spacing onehalf
+Suppose we have two countries (home, 
+\begin_inset Formula $h$
+\end_inset
+
+ and foreign, 
+\begin_inset Formula $f$
+\end_inset
+
+).
+ For simplicity we assume that the 
+\begin_inset Formula $X_{t}^{h}$
+\end_inset
+
+ and 
+\begin_inset Formula $X_{t}^{f}$
+\end_inset
+
+ are conditionally independent.
+ The exchange rate is 
+\begin_inset Formula 
+\begin{eqnarray*}
+e_{t}^{h,f} & = & \frac{\Pi_{t}^{h}}{\Pi_{t}^{f}}\\
+\\
+e_{t}^{h,f} & = & exp\left(\int_{0}^{t}\left((r_{s}^{N,h}-r_{s}^{N,f})-(r_{s}^{R,h}-r_{s}^{R,f})\right)ds\right)\\
+\\
+\frac{de_{t}^{h,f}}{e_{t}^{h,f}} & = & \left((r_{t}^{N,h}-r_{t}^{N,f})-(r_{t}^{R,h}-r_{t}^{R,f})\right)dt\\
+\\
+dln\left(e_{t}^{h,f}\right) & = & \left((r_{t}^{N,h}-r_{t}^{N,f})-(r_{t}^{R,h}-r_{t}^{R,f})\right)dt
+\end{eqnarray*}
+
+\end_inset
+
+We can then compare the model's implied exchange rates to realized exchange
+ rates.
+ We can also calculate model's implied expected exchange rate over any horizon
+\begin_inset Formula 
+\begin{eqnarray*}
+m_{\tau} & \equiv & m_{0,\tau}^{(n)}\\
+\\
+v_{\tau} & \equiv & v^{(n,n)}\left\{ \tau\right\} \\
+\\
+E_{t}\left[e_{t+\tau}^{h,f}\right] & = & exp\left(m_{\tau}^{h}-m_{\tau}^{f}-\frac{1}{2}\left(v_{\tau}^{h}-v_{\tau}^{f}\right)\right)
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\end_body
+\end_document
