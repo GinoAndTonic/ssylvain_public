@@ -37,10 +37,11 @@ class Estimation:
 
 class Rolling(Estimation):
 
-    def __init__(self, data, US_ilbmaturities, US_nominalmaturities, \
-            estim_freq='daily', num_states=4, fix_Phi=1, setdiag_Kp=1, initV='unconditional', stationarity_assumption='yes', save=1, plots=1):
+    def __init__(self):
         Estimation.__init__(self)
 
+    def run(self, data, US_ilbmaturities, US_nominalmaturities, \
+            estim_freq='daily', num_states=4, fix_Phi=1, setdiag_Kp=1, initV='unconditional', stationarity_assumption='yes', save=1, plots=1):
         US_num_maturities = len(US_ilbmaturities) + len(US_nominalmaturities)
 
         # frequency of data for estimation:
@@ -237,6 +238,7 @@ class Rolling(Estimation):
         if plots==1:
             self.plot_results(bk_mats, exp_inf, mttau, mttau_nn, prob_def, vttau, vttau_nn)
 
+        # return
 
     def expected_inflation(self, Kp_new, rho_n, rho_r, Sigma_new, thetap_new, Xtt_new):
         '''Compute excpected inflation'''
