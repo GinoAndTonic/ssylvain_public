@@ -38,7 +38,7 @@ class Estimation:
 class Rolling(Estimation):
 
     def __init__(self, data, US_ilbmaturities, US_nominalmaturities, \
-            estim_freq='daily', num_states=4, fix_Phi=1, setdiag_Kp=1, initV='unconditional', stationarity_assumption='yes'):
+            estim_freq='daily', num_states=4, fix_Phi=1, setdiag_Kp=1, initV='unconditional', stationarity_assumption='yes', save=1, plots=1):
         Estimation.__init__(self)
 
         US_num_maturities = len(US_ilbmaturities) + len(US_nominalmaturities)
@@ -72,8 +72,9 @@ class Rolling(Estimation):
             USnominals[m].setZeroYieldsTS(data['US_NB'][[m]]/100)
             USnominals[m].setZeroYieldsDates(data['US_NB'].index)
 
-        # Stacking yields data:
-        Y = np.mat(np.hstack((data['US_NB'].values, data['US_ILB'].values)))/100
+        # Horizontal stacking of yields data:
+        Y = pd.concat([data['US_NB'], data['US_ILB']], axis=1)/100
+        self.Y = Y
 
         # See haats_documentation.pdf and haats_documentation.lyx
         # initializing parameters
@@ -89,7 +90,7 @@ class Rolling(Estimation):
             lmda2 = 0.5319/2
             sigmas = np.array([0.0047, 0.00756, 0.00756, 0.02926, 0.02926, 0.00413])
             thetap = np.array([0.06317, -0.1991, -0.1991, -0.00969, -0.00969, 0.03455])
-        Phi_prmtr = np.log(np.diag(np.cov(Y.T)))   # estimate Phi
+        Phi_prmtr = np.log(np.diag(np.cov(Y.values.T)))   # estimate Phi
         if fix_Phi == 0:
             prmtr_0 = np.random.rand(1 + num_states**2 + 1 + num_states + US_num_maturities + num_states)
             if num_states == 6:
@@ -110,7 +111,7 @@ class Rolling(Estimation):
             prmtr_0 = np.random.rand(1 + num_states**2 + 1 + num_states + num_states)
             if num_states == 6:
                 prmtr_0 = np.random.rand(1 + num_states**2 + 1 + 1 + num_states + num_states)
-            Phi_prmtr = np.log(np.diag(np.cov(Y.T)))  #  to impose non-negativity  # estimate Phi
+            Phi_prmtr = np.log(np.diag(np.cov(Y.values.T)))  #  to impose non-negativity  # estimate Phi
             # populate initial parameter vector:
             prmtr_0 = np.array([a])
             if setdiag_Kp==1:
@@ -142,12 +143,14 @@ class Rolling(Estimation):
         str_form2 = np.reshape(np.vstack((str_form2, '  cumloglik')), prmtr_0.size + 2, 0)
         str_form3 = str_form3 + '  {' + str(prmtr_0.size + 1) + ':16s}'
 
+        # These next four lines are constraints we could use in the optimization.
         cons = ineq_cons(num_states, US_num_maturities, fix_Phi, setdiag_Kp, Phi_prmtr)
         ieconsls = ineq_cons_ls(num_states, US_num_maturities, fix_Phi, setdiag_Kp, Phi_prmtr)
         bnds_lvl = prmtr_bounds_lvl(num_states, US_num_maturities)
         bnds_exp = prmtr_bounds_exp(num_states, US_num_maturities)
 
-        # refining the initial guess
+        # refining the initial guess, look for initial guess for X0 by doing a first pass at Kalman filter and taking the
+        # mean of the filtered state
         if 0:
             for ref in range(50):
                 if num_states == 4:
@@ -161,7 +164,7 @@ class Rolling(Estimation):
                 except:
                     print('initial guess is no good')
                     break
-                prmtr_0[-num_states:] = np.array(np.mean(Xtt_ref[5:,:],0).T)[:,0]
+                prmtr_0[-num_states:] = np.array(np.mean(Xtt_ref.values[5:,:],0).T)[:,0]
 
         # objective function:
         def neg_cum_log_likelihood(prmtr):
@@ -185,16 +188,19 @@ class Rolling(Estimation):
             self.Nfeval_inner += 1
             return (-1) * cum_log_likelihood    # we will minimize the negative of the likelihood
 
+        # Running optimization:
         print('\n\n\n')
         print(str_form3.format(*tuple(str_form2)))
         print('new iterations begins__________________________________________')
-        if stationarity_assumption == 'no':
-            optim_output = minimize(neg_cum_log_likelihood, prmtr_0,  method='Powell', options={'disp': 1})
-        elif stationarity_assumption == 'yes':
-            optim_output = minimize(neg_cum_log_likelihood, prmtr_0, method='Powell', options={'disp': 1})
+        optim_output = minimize(neg_cum_log_likelihood, prmtr_0,  method='Powell', options={'disp': 1})
+        #if stationarity_assumption == 'no':
+        #    optim_output = minimize(neg_cum_log_likelihood, prmtr_0,  method='Powell', options={'disp': 1})
+        #elif stationarity_assumption == 'yes':
+        #    optim_output = minimize(neg_cum_log_likelihood, prmtr_0, method='Powell', options={'disp': 1})
 
-        prmtr_new = optim_output['x']
+        prmtr_new = optim_output['x'] #collecting optimal parameters
 
+        # Extracting filtered states:
         if num_states == 4:
             a_new, Kp_new, lmda_new, Phi_new, sigma11_new, sigma22_new, sigma33_new, sigma44_new, Sigma_new, thetap_new = extract_vars(prmtr_ext(optim_output['x']), num_states, US_num_maturities)
         elif num_states == 6:
@@ -203,9 +209,10 @@ class Rolling(Estimation):
         kalman2 = Kalman(Y, A0_new, A1_new, U0_new, U1_new, Q_new, Phi_new, initV)
         Ytt_new, Yttl_new, Xtt_new, Xttl_new, Vtt_new, Vttl_new, Gain_t_new, eta_t_new, cum_log_likelihood_new = kalman2.filter()
 
+        # Computing Forecasts, RMSE, etc. :
         yields_forecast = kalman2.forecast(Xtt_new, 90*(estim_freq=='daily')+12*(estim_freq=='weekly')+3*(estim_freq=='monthly'))
         for m in range(US_nominalmaturities.size):
-            USnominals[m].yields_forecast = yields_forecast[:, m, :]
+            USnominals[m].yields_forecast = yields_forecast.iloc[:,m]
             USnominals[m].forecast_e, USnominals[m].forecast_se, USnominals[m].forecast_rmse = kalman2.rmse(USnominals[m].yields_forecast, m)
 
         for m in range(US_ilbmaturities.size):
@@ -219,61 +226,84 @@ class Rolling(Estimation):
             rho_n = np.mat(np.array([1, 1, 1, 0, 0, 0])).T
             rho_r = np.mat(np.array([0, a_new, a_new, 0, 0, 1])).T
 
-        # keep only the last 10 observations to make the code run faster
-        #Y, Ytt_new, Yttl_new, Xtt_new, Xttl_new, Vtt_new, Vttl_new, Gain_t_new, eta_t_new =\
-        #    Y[-10:, :], Ytt_new[-10:, :], Yttl_new[-10:, :], Xtt_new[-10:, :], Xttl_new[-10:, :], Vtt_new[-10:, :], Vttl_new[-10:, :], Gain_t_new[-10:, :], eta_t_new[-10:, :]
+        # Compute expected inflation
+        bk_mats, exp_inf, irps, mttau, mttau_nn, prob_def, vttau, vttau_nn = self.expected_inflation(Kp_new, rho_n, rho_r, Sigma_new, thetap_new, Xtt_new)
+
+        # Save results
+        if save==1:
+            self.save_output(bk_mats, exp_inf, mttau, mttau_nn, prob_def, vttau, vttau_nn)
+
+        # Plot results
+        if plots==1:
+            self.plot_results(bk_mats, exp_inf, mttau, mttau_nn, prob_def, vttau, vttau_nn)
+
+
+    def expected_inflation(self, Kp_new, rho_n, rho_r, Sigma_new, thetap_new, Xtt_new):
+        '''Compute excpected inflation'''
 
         # Computing Expected Inflation:
-        horizons = np.array(np.arange(100).T)               #in years
-        mttau = np.empty((Y.shape[0], num_states+1, horizons.size))
-        vttau = np.empty((Y.shape[0], (num_states+1)**2, horizons.size))
+        horizons = np.array(np.arange(100).T)  # horizon in years
+        mttau = np.empty((self.Y.shape[0], self.num_states+1, horizons.size))
+        vttau = np.empty((self.Y.shape[0], (self.num_states+1)**2, horizons.size))
 
+        # First we solve ODE for Covariance matrix of augmented states
         v_ode_out = integrate.ode(v0teqns).set_integrator('dopri5', verbosity=1)
-        v_ode_out.set_initial_value(np.zeros(((num_states+1)**2,1))[:, 0], horizons[0]).set_f_params(Kp_new, rho_n, rho_r, Sigma_new, thetap_new)
-        t_out, v_out = np.array([0]), np.zeros(((num_states+1)**2,1)).T
+        v_ode_out.set_initial_value(np.zeros(((self.num_states+1)**2,1))[:, 0], horizons[0]).set_f_params(Kp_new, rho_n, rho_r, Sigma_new, thetap_new)
+        t_out, v_out = np.array([0]), np.zeros(((self.num_states+1)**2,1)).T
         while v_ode_out.successful() and v_ode_out.t < horizons[-1]:
             v_ode_out.integrate(v_ode_out.t+1)
             t_out = np.vstack((t_out, v_ode_out.t))
             v_out = np.vstack((v_out, v_ode_out.y))
 
-        for tt in np.arange(0,Y.shape[0]):
+        # Then we solve ODE for Mean of augmented states
+        for tt in np.arange(0, self.Y.shape[0]):
             m_ode_out = integrate.ode(m0teqns).set_integrator('dopri5', verbosity=1)
-            m_ode_out.set_initial_value(np.array(np.hstack((Xtt_new,np.zeros((Xtt_new.shape[0],1))))[tt,:])[0,:],\
+            m_ode_out.set_initial_value(np.array(np.hstack((Xtt_new.values,np.zeros((Xtt_new.shape[0],1))))[tt,:])[0,:],\
                                         horizons[0]).set_f_params(Kp_new, rho_n, rho_r, Sigma_new, thetap_new)
-            t_out2, m_out = np.array([0]), np.array(np.hstack((Xtt_new,np.zeros((Xtt_new.shape[0],1)))))[tt,:]
+            t_out2, m_out = np.array([0]), np.array(np.hstack((Xtt_new.values,np.zeros((Xtt_new.shape[0],1)))))[tt,:]
             while m_ode_out.successful() and m_ode_out.t < horizons[-1]:
                 m_ode_out.integrate(m_ode_out.t+1)
                 t_out2 = np.vstack((t_out2, m_ode_out.t))
                 m_out = np.vstack((m_out, m_ode_out.y))
             mttau[tt,:,:] = m_out.T
             vttau[tt,:,:] = v_out.T
+
+        # Lastly, we are only interested in the column corresponding to variable that is not among the original state variables; so we extract it out
         mttau_nn =  np.mat(mttau[:,-1,:])
         vttau_nn =  np.mat(vttau[:,-1,:])
 
-        # %now we can compute the expected inflation
+        # Now we can compute the expected inflation
         exp_inf = -mttau_nn+0.5*vttau_nn
         exp_inf = np.array(np.tile(-1.0/horizons.T,(Xtt_new.shape[0],1)))*np.array(exp_inf)
         exp_inf[:, 0] = np.array(  ((rho_n-rho_r).T) * (np.mat(thetap_new)) )[0,0]
-        exp_inf = np.mat(exp_inf)
+        exp_inf = pd.DataFrame(np.mat(exp_inf),index=self.Y.index)
 
-        # %now we can compute the break-evens
-        bk_mats = np.unique(np.vstack((US_nominalmaturities, US_ilbmaturities)))
-        bk_evens = (np.array([Y[:,np.in1d(US_nominalmaturities, m)] - (Y[:,US_nominalmaturities.size:])[:,np.in1d(US_ilbmaturities, m)] for m in bk_mats])[:,:,0]).T
+        # Now we can compute the break-evens
+        bk_mats = np.unique(np.vstack((self.US_nominalmaturities, self.US_ilbmaturities)))
+        bk_evens = pd.DataFrame(
+                        (np.array([self.Y[:,np.in1d(self.US_nominalmaturities, m)].values # Nominal bond with maturity = m
+                            -(self.Y[:, self.US_nominalmaturities.size:].values)[:,np.in1d(self.US_ilbmaturities, m)]  # ILB with maturity = m
+                            for m in bk_mats])[:,:,0]).T
+                        ,index=self.Y.index, columns=bk_mats)
 
         # %now we can compute the IRPs
-        irps = bk_evens - exp_inf[:,bk_mats-1]
+        irps = bk_evens - exp_inf.iloc[:,bk_mats-1]
 
         # lastly we compute the deflation probabilities
         prob_def = -np.array(mttau_nn)/(np.array(vttau_nn)**0.5)
         prob_def = norm.cdf(prob_def)
         prob_def[:, 0] = 0
-        prob_def = np.mat(prob_def)
+        prob_def = pd.DataFrame(np.mat(prob_def),index=self.Y.index)
+
+        return bk_mats, exp_inf, irps, mttau, mttau_nn, prob_def, vttau, vttau_nn
+
+    def save_output(self, bk_mats, prmtr_new, exp_inf, mttau, mttau_nn, prob_def, vttau, vttau_nn):
 
         # recording output
         datadate = np.array([np.union1d(dates['US_NB'], dates['US_ILB']).astype(DT.datetime)[tt].year*10000+np.union1d(dates['US_NB'], dates['US_ILB']).astype(DT.datetime)[tt].month*100+np.union1d(dates['US_NB'], dates['US_ILB']).astype(DT.datetime)[tt].day for tt in np.arange(0,np.union1d(dates['US_NB'], dates['US_ILB']).shape[0])])
         datadate = np.hstack((0, datadate))
 
-        if num_states ==4:
+        if self.num_states ==4:
             lmda2_new=0
         # TODO: NEED TO FIX THIS CODE BELOW FOR SAVING THE OUTPUT AS TXT FILES. IT IS CURRENTLY NOT STARTING NEW LINE AFTER THE HEADERS.
         # creating txt files to record latest observation of each time series of key results
@@ -283,9 +313,9 @@ class Rolling(Estimation):
             header_Y, header_Ytt_new,  header_Yttl_new = (tuple(['dates'])+tuple([',Nominal: '+str(US_nominalmaturities[vv])+'yr' for vv in range(US_nominalmaturities.size)])\
                                                  + tuple([',ILB: '+str(US_ilbmaturities[vv])+'yr' for vv in range(US_ilbmaturities.size)])+tuple(['\n']) for vvv in range(3))
             header_irps, header_bk_evens = (tuple(['dates'])+tuple([','+str(vv)+'yr' for vv in bk_mats])+tuple(['\n']) for vvv in range(2))
-            if num_states==4:
+            if self.num_states==4:
                 header_Xtt_new,  header_Xttl_new, header_thetap_new, header_X0  = (tuple(['dates,Ln,S,C,Lr'])+tuple(['\n']) for vvv in range(4))
-            if num_states==6:
+            if self.num_states==6:
                 header_Xtt_new,  header_Xttl_new, header_thetap_new, header_X0  = (tuple(['dates,Ln,S1,S2,C1,C2,Lr'])+tuple(['\n']) for vvv in range(4))
             header_Vtt_new,  header_Vttl_new, header_V0 = (((tuple(['dates'])+tuple(np.reshape([[',V('+str(vv)+';'+str(vv2)+')'  for vv in range(num_states)] for vv2 in range(num_states)],(num_states**2)))+tuple(['\n']) )) for vvv in range(3))
             header_prmtr_new = tuple(['dates'])+tuple([',prmtr('+str(vv)+')' for vv in range(prmtr_new.size)])+tuple(['\n'])
@@ -361,3 +391,83 @@ class Rolling(Estimation):
                         np.savetxt(f_handle, np.mat(np.hstack((datadate[-1], np.reshape(np.array(eval('US'+nn+'s[m].'+ss))[-1],(np.array(eval('US'+nn+'s[m].'+ss))[-1].size))))), delimiter=',')
                     f_handle.close()
 
+
+    def plot_results(self,Ytt, Yttl, Xtt, Xttl, Vtt, Vttl, Gain_t, eta_t, figures,US_ilbmaturities, US_nominalmaturities):
+        for vv in ['Ytt', 'Yttl', 'Xtt', 'Xttl', 'Vtt', 'Vttl', 'Gain_t', 'eta_t']:
+            plt.close()
+            fig, ax = plt.subplots()
+            ax.plot(eval(vv))
+            ax.set_title(vv)
+            plt.draw()
+            figures[vv] = fig
+            figures['ax_'+vv] = ax
+            figures[vv+'_name'] = '\\vv'
+            filename = r"S:\PMG\MAS\MAPS\Research\ssylvain\MAS Projects\Inflation\InflationRiskPremia\python" + \
+                str(figures[vv+'_name']) + ".png"
+            # plt.savefig(filename, format="png")
+        plt.close()
+        fig, ax = plt.subplots()
+        ax.plot(self.Y)
+        ax.set_title('Y')
+        figures['Y'] = fig
+        figures['ax_Y'] = ax
+        figures['Y_name'] = '\\Y'
+        plt.draw()
+
+        plt.close()
+        fig, ax = plt.subplots(2,sharex=True)
+        ax[0].plot(self.Y[:,range(US_nominalmaturities.size)],\
+                   label=[r'mat: '+str(US_nominalmaturities[vvv]) for vvv in range(US_nominalmaturities.size)])
+        plt.gca().set_color_cycle(None)     # reset color cycle
+        ax[0].plot(Ytt[:,range(US_nominalmaturities.size)], '--',\
+                   label=[r'mat: '+str(US_nominalmaturities[vvv]) for vvv in range(US_nominalmaturities.size)])
+        ax[0].set_title('Realized and Model Nominal Yields')
+        # handles, labels = figures['ax_YvYtt'].get_legend_handles_labels()
+        # figures['ax_YvYtt'].legend(handles, [r'mat: '+str(np.hstack((US_maturities,US_maturities))[vvv]) for vvv in range(Y.shape[1])])
+        ax[1].plot(self.Y[:,US_nominalmaturities.size+np.arange(US_ilbmaturities.size)],\
+                   label=[r'mat: '+str(US_ilbmaturities[vvv]) for vvv in range(US_ilbmaturities.size)])
+        plt.gca().set_color_cycle(None)     # reset color cycle
+        ax[1].plot(Ytt[:,US_nominalmaturities.size+np.arange(US_ilbmaturities.size)], '--',\
+                   label=[r'mat: '+str(US_ilbmaturities[vvv]) for vvv in range(US_ilbmaturities.size)])
+        ax[1].set_title('Realized and Model ILB Yields')
+        figures['YvYtt'] = fig
+        figures['ax_YvYtt'] = ax
+        figures['YvYtt_name'] = '\\YvYtt'
+        plt.draw()
+
+        plt.close()
+        fig, ax = plt.subplots(2, sharex=True)
+        ax[0].plot(self.Y[:,range(US_nominalmaturities.size)] - Ytt[:,range(US_nominalmaturities.size)],\
+                   label=[r'mat: '+str(US_nominalmaturities[vvv]) for vvv in range(US_nominalmaturities.size)])
+        ax[0].set_title('Realized vs. Model Nominal Yields')
+        ax[1].plot(self.Y[:,US_nominalmaturities.size+np.arange(US_ilbmaturities.size)] - \
+                   Ytt[:,US_nominalmaturities.size+np.arange(US_ilbmaturities.size)],\
+                   label=[r'mat: '+str(US_ilbmaturities[vvv]) for vvv in range(US_ilbmaturities.size)])
+        ax[1].set_title('Realized vs. Model ILB Yields')
+        figures['Y_min_Ytt'] = fig
+        figures['ax_Y_min_Ytt'] = ax
+        figures['Y_min_Ytt_name'] = '\\Y_min_Ytt'
+        plt.draw()
+
+        thetap = np.mat(np.linalg.inv(np.identity(self.U0.size) - self.U1)*self.U0)
+        thetap_vec = np.tile(thetap.T, (Xtt.shape[0], 1))
+
+        plt.close()
+        fig, ax = plt.subplots(2, sharex=False)
+        ax[0].plot(Xtt, label=[""])
+        ax[0].set_color_cycle(None)     # reset color cycle
+        ax[0].plot(thetap_vec, '--', label=[""])
+        ax[0].set_title('State Variables')
+        handles, labels = ax[0].get_legend_handles_labels()
+        if Xtt.shape[1] == 4:
+            ax[0].legend(handles, [r'L^N_t', r'S_t', r'C_t', r'L^R_t', r'\theta_1', r'\theta_2', r'\theta_3', r'\theta_4'])
+        elif Xtt.shape[1] == 5:
+            ax[0].legend(handles, [r'L^N_t', r'S_t', r'C_t', r'L^R_t', r'\xi_t', r'\theta_1', r'\theta_2', r'\theta_3', r'\theta_4', r'\theta_5'])
+        else:
+            ax[0].legend(handles, [r'L^N_t', r'S^{(1)}_t', r'S^{(2)}_t', r'C^{(1)}_t', r'C^{(2)}_t', r'L^R_t', r'\theta_1', r'\theta_2', r'\theta_3', r'\theta_4', r'\theta_5', r'\theta_6'])
+        ax[1].plot(eta_t)
+        ax[1].set_title('State Variables Stochastic Error (\eta_t)')
+        figures['XttvThetap'] = fig
+        figures['ax_XttvThetap'] = ax
+        figures['XttvThetap_name'] = '\\XttvThetap'
+        plt.draw()

@@ -47,12 +47,12 @@ class Bonds(Asset):  # define child class
         self.maturity = maturity
         Bonds.bondCount += 1
         # print("Calling Bonds constructor")
-        self.yields = []
-        self.yields_dates = []
-        self.yields_forecast = []
-        self.forecast_se = []
-        self.forecast_e = []
-        self.forecast_rmse = []
+        self.yields = None
+        self.yields_dates = None
+        self.yields_forecast = None
+        self.forecast_se = None
+        self.forecast_e = None
+        self.forecast_rmse = None
 
     def setBondMaturity(self, maturity):
         self.maturity = maturity
