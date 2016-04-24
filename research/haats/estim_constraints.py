@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import sys
 print(sys.argv)
 from xlrd import open_workbook
-from irp_h import *
+from irp_obj import *
 from kalman import *
 from extract_parameters import *
 from math import exp

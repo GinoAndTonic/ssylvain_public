@@ -1,4 +1,5 @@
 from __future__ import division
+from irp_obj import *
 import shelve
 import psutil
 import subprocess
@@ -12,7 +13,6 @@ import matplotlib as mplt
 import pylab as plab
 import sys
 print(sys.argv)
-from irp_obj import *
 from kalman import *
 from extract_parameters import *
 from math import exp
@@ -405,8 +405,8 @@ class Rolling(Estimation):
             figures['ax_'+vv] = ax
             figures[vv+'_name'] = '\\vv'
             filename = r"S:\PMG\MAS\MAPS\Research\ssylvain\MAS Projects\Inflation\InflationRiskPremia\python" + \
-                str(figures[vv+'_name']) + ".png"
-            # plt.savefig(filename, format="png")
+                str(figures[vv+'_name']) + ".eps"
+            # plt.savefig(filename, format="eps")
         plt.close()
         fig, ax = plt.subplots()
         ax.plot(self.Y)

@@ -156,12 +156,12 @@ class ImportData:
 
             # saving figures
             filename = r""+str.replace(os.getcwd(), '\\', '/')+"/output/figures" + \
-                        str(figures['fig1_name']) + ".png"
-            figures['fig1'].savefig(filename, format="png")
+                        str(figures['fig1_name']) + ".eps"
+            figures['fig1'].savefig(filename, format="eps")
 
             filename = r""+str.replace(os.getcwd(), '\\', '/')+"/output/figures" + \
-                        str(figures['fig2_name']) + ".png"
-            figures['fig2'].savefig(filename, format="png")
+                        str(figures['fig2_name']) + ".eps"
+            figures['fig2'].savefig(filename, format="eps")
             plt.close()
 
             #saving data
