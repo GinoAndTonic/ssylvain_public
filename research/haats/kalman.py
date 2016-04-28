@@ -56,8 +56,8 @@ class Kalman:  # define super-class
     kalmanCount = 0
 
     def __init__(self, Y, A0, A1, U0, U1, Q, Phi, initV='unconditional', X0 = None, V0 = None, statevar_names = None):
-        self.Y, self.A0, self.A1, self.U0, self.U1, self.Q, self.Phi, self.initV, self.X0, self.V0 = Y, A0, A1, U0, U1, \
-                                                                                                     Q, Phi, initV, X0, V0
+        self.Y, self.A0, self.A1, self.U0, self.U1, self.Q, self.Phi, self.initV, self.X0, self.V0, self.statevar_names = Y, A0, A1, U0, U1, \
+                                                                                                     Q, Phi, initV, X0, V0, statevar_names
         n = self.U0.size
         if self.X0 is None:
             self.X0 = np.mat(np.linalg.inv(np.identity(n) - self.U1)*self.U0)
@@ -88,19 +88,15 @@ class Kalman:  # define super-class
         Xtt, Xttl = (pd.DataFrame(np.empty((T,n))*np.nan, index=self.Y.index, columns=self.statevar_names) for vv in range(2))
         Vtt, Vttl = (pd.DataFrame(np.empty((T,n**2))*np.nan, index=self.Y.index,
                                   columns=[str(Xtt.columns[i])+'_'+str(Xtt.columns[j]) for i in np.arange(n) for j in np.arange(n)]) for vv in range(2))
-        Gain_t = self.Y * np.nan
-        eta_t = self.Y * np.nan
+        Gain_t = (pd.DataFrame(np.empty((T,n*m))*np.nan, index=self.Y.index,
+                                  columns=[str(Xtt.columns[i])+'_'+str(self.Y.columns[j]) for i in np.arange(n) for j in np.arange(m)]) )
+        eta_t = Xtt * np.nan
 
         for t in range(T):
-            y = self.Y.iloc[t, :].T
-            # in case there are missing data, we will remove them:
-            # m_ind = (y != np.nan)
-            # m2 = min(m, sum(m_ind))
-            # y, A0, A1, U0, U1, Phi, Q, X0, V0, initV = y[m_ind].T, self.A0[m_ind].T, \
-            #                                     self.A1[np.tile(m_ind,(1,n))].reshape(m2,n), self.U0, self.U1,\
-            #                                     self.Phi[np.tile(m_ind,(1,m2))].reshape(m2,m2), self.Q, self.X0, self.V0, self.initV
+            y = np.mat(self.Y.iloc[t, :].values).T
 
-            m_ind = np.array((y != np.nan)).T[0,:]
+            # in case there are missing data, we will remove them:
+            m_ind = np.array(y != np.nan)[:,0]
             m2 = min(m, sum(m_ind))
             y, A0, A1, U0, U1, Phi, Q, X0, V0, initV = y[m_ind], self.A0[m_ind], \
                                                  self.A1[m_ind, :], self.U0, self.U1,\
@@ -171,7 +167,7 @@ class Kalman:  # define super-class
             if t==0:
                 eta_t.iloc[t, :] = (U0 + U1 * X0 - X0).T
             else:
-                eta_t.iloc[t, :] = (U0 + U1 * xtt - np.mat(Xtt[t-1, :]).T).T
+                eta_t.iloc[t, :] = (U0 + U1 * xtt - np.mat(Xtt.iloc[t-1, :].values).T).T
         # [XttT, VttT, VttlT, Jt, V0T, X0T] = smoother(Xtt, Xttl, Vtt, Vttl, A1, Gain_t, U1, V0, X0, Q)
         # v0T = V0T.reshape(n, n)
         # cum_log_likelihood += (X0-X0T).T*np.linalg.inv(v0T)*(X0-X0T)/2 - (n/2)*np.log(2*np.pi) -(1/2)*np.log(np.linalg.det(v0T))   # adding date zero likelihood

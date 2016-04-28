@@ -1,8 +1,5 @@
 from __future__ import division
-from irp_obj import *
-import shelve
-import psutil
-import subprocess
+from asset_class import *
 import os
 import datetime as DT
 import matplotlib.dates as mdates
@@ -44,6 +41,8 @@ class Rolling(Estimation):
             estim_freq='daily', num_states=4, fix_Phi=1, setdiag_Kp=1, initV='unconditional', stationarity_assumption='yes', save=1, plots=1):
         US_num_maturities = len(US_ilbmaturities) + len(US_nominalmaturities)
 
+        ########################################################
+        #Get and store data
         # frequency of data for estimation:
         if estim_freq == 'daily':
             dt = 1.0/252  # daily increment
@@ -76,6 +75,12 @@ class Rolling(Estimation):
         # Horizontal stacking of yields data:
         Y = pd.concat([data['US_NB'], data['US_ILB']], axis=1)/100
         self.Y = Y
+        ########################################################
+
+
+
+        ########################################################
+        #Initialize parameters
 
         # See haats_documentation.pdf and haats_documentation.lyx
         # initializing parameters
@@ -87,15 +92,15 @@ class Rolling(Estimation):
         sigmas = np.array([0.0047, 0.00756, 0.02926, 0.00413])
         thetap = np.array([0.06317, -0.1991, -0.00969, 0.03455])
         if num_states == 6:
+            statevar_names = ['LN','S1','S2','C1','C2','LR']
             Kp = np.reshape(np.identity(num_states),(num_states**2))
             lmda2 = 0.5319/2
             sigmas = np.array([0.0047, 0.00756, 0.00756, 0.02926, 0.02926, 0.00413])
             thetap = np.array([0.06317, -0.1991, -0.1991, -0.00969, -0.00969, 0.03455])
+        else:
+            statevar_names = ['LN','S','C','LR']
         Phi_prmtr = np.log(np.diag(np.cov(Y.values.T)))   # estimate Phi
         if fix_Phi == 0:
-            prmtr_0 = np.random.rand(1 + num_states**2 + 1 + num_states + US_num_maturities + num_states)
-            if num_states == 6:
-                prmtr_0 = np.random.rand(1 + num_states**2 + 1 + 1 + num_states + US_num_maturities + num_states)
             # repopulate initial parameter vector:
             prmtr_0 = np.array([a])
             if setdiag_Kp==1:
@@ -109,10 +114,6 @@ class Rolling(Estimation):
             prmtr_0 = np.append(prmtr_0, np.log(sigmas )) #  to impose non-negativity
             prmtr_0 = np.append(prmtr_0, thetap)
         else:
-            prmtr_0 = np.random.rand(1 + num_states**2 + 1 + num_states + num_states)
-            if num_states == 6:
-                prmtr_0 = np.random.rand(1 + num_states**2 + 1 + 1 + num_states + num_states)
-            Phi_prmtr = np.log(np.diag(np.cov(Y.values.T)))  #  to impose non-negativity  # estimate Phi
             # populate initial parameter vector:
             prmtr_0 = np.array([a])
             if setdiag_Kp==1:
@@ -125,7 +126,9 @@ class Rolling(Estimation):
             prmtr_0 = np.append(prmtr_0, np.log(sigmas )) #  to impose non-negativity
             prmtr_0 = np.append(prmtr_0, thetap)
 
-        def prmtr_ext(prmtr):   #function to insert parameters for Phi
+        def prmtr_ext(prmtr):
+            '''function to insert parameters for Phi if provided into list of parameters. It also pads the list of parameters
+            with the parameters which are already known and need not be estimated'''
             return prmtr_ext0(prmtr, num_states, Phi_prmtr, fix_Phi, setdiag_Kp)
 
         # this is to display the results in the console
@@ -167,6 +170,10 @@ class Rolling(Estimation):
                     break
                 prmtr_0[-num_states:] = np.array(np.mean(Xtt_ref.values[5:,:],0).T)[:,0]
 
+        ########################################################
+
+
+
         # objective function:
         def neg_cum_log_likelihood(prmtr):
             # try:
@@ -177,18 +184,22 @@ class Rolling(Estimation):
             if (min(np.real(np.linalg.eig(np.array(Kp_out))[0])) < 0) & (stationarity_assumption == 'yes'):
                 cum_log_likelihood = -np.inf
             else:
-                try:
+                if True:#try:
                     A0_out, A1_out, U0_out, U1_out, Q_out = extract_mats(prmtr_ext(prmtr), num_states, US_num_maturities, US_nominalmaturities, US_ilbmaturities, dt)
-                    kalman1 = Kalman(Y, A0_out, A1_out, U0_out, U1_out, Q_out, Phi_out, initV)     # default uses X0, V0 = unconditional mean and error variance
+                    kalman1 = Kalman(Y, A0_out, A1_out, U0_out, U1_out, Q_out, Phi_out, initV, statevar_names=statevar_names)     # default uses X0, V0 = unconditional mean and error variance
                     Ytt, Yttl, Xtt, Xttl, Vtt, Vttl, Gain_t, eta_t, cum_log_likelihood = kalman1.filter()
                     plt.close("all")
-                except:
+                else:#except:
+                    # print("Unexpected error:", sys.exc_info()[0])
                     cum_log_likelihood = -np.inf
             out_n = np.hstack((self.Nfeval_inner, prmtr, cum_log_likelihood))
             print(str_form.format(*tuple(out_n)))    # use * to unpack tuple
             self.Nfeval_inner += 1
             return (-1) * cum_log_likelihood    # we will minimize the negative of the likelihood
 
+
+
+        ######################################################################
         # Running optimization:
         print('\n\n\n')
         print(str_form3.format(*tuple(str_form2)))
@@ -198,6 +209,8 @@ class Rolling(Estimation):
         #    optim_output = minimize(neg_cum_log_likelihood, prmtr_0,  method='Powell', options={'disp': 1})
         #elif stationarity_assumption == 'yes':
         #    optim_output = minimize(neg_cum_log_likelihood, prmtr_0, method='Powell', options={'disp': 1})
+        ######################################################################
+
 
         prmtr_new = optim_output['x'] #collecting optimal parameters
 

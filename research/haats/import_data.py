@@ -22,7 +22,7 @@ class ImportData:
         # print(class_name, "destroyed")
 
     @staticmethod
-    def update_us_data(US_ilbmaturities = None, US_nominalmaturities = None):
+    def update_us_data():
         '''Get Nelson-Siegel-Svensson fitted yield data for TIPS and Nominal bonds from Fed website'''
 
         #########################################################################################################################
@@ -37,8 +37,8 @@ class ImportData:
             columns=pd.DataFrame(excelHandler.tables[0][18:]).values[0,1:]#column labels
             )
         #clean up column names:
-        tips_data.columns=tips_data.columns.str.strip()
-        tips_data=tips_data.filter(regex='TIPSY')
+        tips_data.columns=tips_data.columns.str.strip() # get rid of spaces and carry over lines
+        tips_data=tips_data.filter(regex='TIPSY') # keep only relevant columns
         #convert data to numeric
         for c in tips_data.columns:
             tips_data[c] = pd.to_numeric(tips_data[c], errors='coerce')
@@ -47,10 +47,6 @@ class ImportData:
 
         print(tips_data.head()) #check that data looks good
         print(tips_data.describe())
-
-        if US_ilbmaturities!=None:
-            col_labels = np.array(['TIPSY' + str(c).zfill(2) for c in US_ilbmaturities])    # need to padd with a zero before converting to string
-            tips_data = tips_data[col_labels]
 
         data_US_ILB, US_ILB_dates = tips_data.values, tips_data.index
 
@@ -69,7 +65,7 @@ class ImportData:
             columns=pd.DataFrame(excelHandler.tables[0][9:]).values[0,1:]#column labels
             )
         #clean up column names:
-        nominal_data.columns=nominal_data.columns.str.strip()
+        nominal_data.columns=nominal_data.columns.str.strip() # get rid of spaces and carry over lines
         nominal_data=nominal_data.filter(regex='SVENY')
 
         #convert data to numeric
@@ -79,12 +75,7 @@ class ImportData:
         nominal_data = nominal_data.sort_index()
 
         print(nominal_data.head()) #check that data looks good
-        print(nominal_data.describe())
-
-
-        if US_nominalmaturities!=None:
-            col_labels = np.array(['SVENY' + str(c).zfill(2) for c in US_nominalmaturities])    # need to padd with a zero before converting to string
-            nominal_data = nominal_data[col_labels]
+        print(nominal_data.describe()) # keep only relevant columns
 
         data_US_NB, US_NB_dates = nominal_data.values, nominal_data.index
 
@@ -95,7 +86,7 @@ class ImportData:
         return tips_data, nominal_data
 
     @staticmethod
-    def importUS_Data(US_ilbmaturities = None, US_nominalmaturities = None, plots=0, save=0):
+    def importUS_Data(US_ilbmaturities = None, US_nominalmaturities = None, plots=1, save=1):
         '''This is to import US nominal and tips yields from
         Gurkaynak and Wright (2006;2008)
         http://www.federalreserve.gov/econresdata/researchdata/feds200628.xls
@@ -112,9 +103,14 @@ class ImportData:
             if np.array(time.strftime("%Y-%m-%d",(time.gmtime(os.path.getmtime(tips_f)))), dtype=np.datetime64) == np.array(time.strftime("%Y-%m-%d",(time.gmtime(os.path.getmtime(nominal_f)))), dtype=np.datetime64) >= edate:
                 tips_data, nominal_data = pd.read_csv(tips_f,index_col=0) , pd.read_csv(nominal_f,index_col=0)
             else:
-                tips_data, nominal_data = ImportData.update_us_data(US_ilbmaturities, US_nominalmaturities)
+                tips_data, nominal_data = ImportData.update_us_data()
         else:
-            tips_data, nominal_data = ImportData.update_us_data(US_ilbmaturities, US_nominalmaturities)
+            tips_data, nominal_data = ImportData.update_us_data()
+
+        if US_ilbmaturities is None:
+            US_ilbmaturities = np.array([str.replace(i,'TIPSY','') for i in tips_data.columns.values], dtype=int)
+        if US_nominalmaturities is None:
+            US_nominalmaturities = np.array([str.replace(i,'SVENY','') for i in nominal_data.columns.values], dtype=int)
 
         if plots == 1:
             #########################################################################################################################
@@ -147,28 +143,31 @@ class ImportData:
             plt.draw()
 
         if save==1:
-            if not os.path.exists(r""+str.replace(os.getcwd(), '\\', '/')+"/output/data"):
-                os.makedirs(r""+str.replace(os.getcwd(), '\\', '/')+"/output/data") #make output directory if it doesn't exist
-            if not os.path.exists(r""+str.replace(os.getcwd(), '\\', '/')+"/output/figures"):
-                os.makedirs(r""+str.replace(os.getcwd(), '\\', '/')+"/output/figures") #make output directory if it doesn't exist
 
             #########################################################################################################################
 
-            # saving figures
-            filename = r""+str.replace(os.getcwd(), '\\', '/')+"/output/figures" + \
-                        str(figures['fig1_name']) + ".eps"
-            figures['fig1'].savefig(filename, format="eps")
-
-            filename = r""+str.replace(os.getcwd(), '\\', '/')+"/output/figures" + \
-                        str(figures['fig2_name']) + ".eps"
-            figures['fig2'].savefig(filename, format="eps")
-            plt.close()
-
-            #saving data
+            # saving data
+            if not os.path.exists(r""+str.replace(os.getcwd(), '\\', '/')+"/output/data"):
+                os.makedirs(r""+str.replace(os.getcwd(), '\\', '/')+"/output/data") #make output directory if it doesn't exist
             nominal_data.to_csv(nominal_f)
             tips_data.to_csv(tips_f)
 
-            #########################################################################################################################
+            # saving figures
+            if plots == 1:
+                if not os.path.exists(r""+str.replace(os.getcwd(), '\\', '/')+"/output/figures"):
+                    os.makedirs(r""+str.replace(os.getcwd(), '\\', '/')+"/output/figures") #make output directory if it doesn't exist
+                filename = r""+str.replace(os.getcwd(), '\\', '/')+"/output/figures" + \
+                            str(figures['fig1_name']) + ".eps"
+                figures['fig1'].savefig(filename, format="eps")
+
+                filename = r""+str.replace(os.getcwd(), '\\', '/')+"/output/figures" + \
+                            str(figures['fig2_name']) + ".eps"
+                figures['fig2'].savefig(filename, format="eps")
+                plt.close()
+
+            #########################################################################################################################\
+        tips_data = tips_data[np.array(['TIPSY' + str(c).zfill(2) for c in US_ilbmaturities]) ]  # need to padd column names with a zero before converting to string
+        nominal_data = nominal_data[np.array(['SVENY' + str(c).zfill(2) for c in US_nominalmaturities]) ] # need to padd column names with a zero before converting to string
 
         return tips_data, nominal_data
 
@@ -204,7 +203,7 @@ class ImportData:
         # storing copies of the data in dictionaries:
         data = {'US_NB': nominal_data, 'US_ILB': tips_data}
 
-        if estim_freq != None:
+        if estim_freq is not None:
             for vv in ['US_NB', 'US_ILB']:
                 data[vv] = data[vv].asfreq(estim_freq, method='pad')
 

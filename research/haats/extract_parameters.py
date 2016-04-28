@@ -7,7 +7,9 @@ import numpy as np
 __author__ = 'ssylvain'
 
 
-def prmtr_ext0(prmtr, num_states, Phi_prmtr, fix_Phi=1, setdiag_Kp=0):   #function to insert parameters for Phi
+def prmtr_ext0(prmtr, num_states, Phi_prmtr, fix_Phi=1, setdiag_Kp=0):
+    '''function to insert parameters for Phi if provided into list of parameters. It also pads the list of parameters
+    with the parameters which are already known and need not be estimated'''
     if fix_Phi == 0: #here will not estimate Phi
         if setdiag_Kp==1: #here Kp is diagonal
             prmtr_ext = prmtr
@@ -27,33 +29,8 @@ def prmtr_ext0(prmtr, num_states, Phi_prmtr, fix_Phi=1, setdiag_Kp=0):   #functi
     return prmtr_ext
 
 
-def param_mapping0(prmtr, num_states, US_num_maturities):
-    prmtr_new = np.empty((prmtr.size)) * np.nan
-
-    prmtr_new[0] = prmtr[0]     # a is unconstrained
-
-    for vv in (np.arange(num_states**2)+1).tolist():     # Kp is unconstrained
-        prmtr_new[vv] = prmtr[vv]
-
-    prmtr_new[num_states**2+1] = 1e-16 - 1 + (prmtr[num_states**2+1]**2+1)**0.5     # lmda has lower bound 1e-16
-    if num_states ==6:
-        N6 = 1
-        prmtr_new[num_states**2+1+N6] = 1e-16 - 1 + (prmtr[num_states**2+1+N6]**2+1)**0.5     # lmda has lower bound 1e-16
-    else:
-        N6 = 0
-
-    for vv in (np.arange(US_num_maturities)+num_states**2+1+N6+1).tolist():     # Phi has lower bound 1e-16
-        prmtr_new[vv] = 1e-16 - 1 + (prmtr[vv]**2+1)**0.5
-
-    for vv in (np.arange(num_states)+US_num_maturities+num_states**2+1+N6+1).tolist():    # Sigma has lower bound 1e-16
-        prmtr_new[vv] = 1e-16 - 1 + (prmtr[vv]**2+1)**0.5
-
-    for vv in (np.arange(num_states)+num_states+US_num_maturities+num_states**2+1+N6+1).tolist():     # Theta is unconstrained
-        prmtr_new[vv] = prmtr[vv]
-    return prmtr_new
-
-
-def param_mapping(prmtr, num_states, US_num_maturities):    #here we use use exp() to guarantee positivity
+def param_mapping(prmtr, num_states, US_num_maturities):
+    '''here we use use exp() to map some variables and guarantee positivity'''
     prmtr_new = np.empty((prmtr.size)) * np.nan
 
     prmtr_new[0] = prmtr[0]     # a is unconstrained
@@ -80,6 +57,7 @@ def param_mapping(prmtr, num_states, US_num_maturities):    #here we use use exp
 
 
 def extract_vars(prmtr, num_states, US_num_maturities):
+    '''assign parameter list to parameter names'''
     prmtr_new = param_mapping(prmtr, num_states, US_num_maturities)
     lst = prmtr_new.tolist()
     try:
@@ -115,6 +93,7 @@ def extract_vars(prmtr, num_states, US_num_maturities):
 
 
 def a1(bondtype, maturity, prmtr, num_states, US_num_maturities):
+    '''building A_1 matrix of parameters'''
     tau = maturity
     if num_states == 4:
         a, Kp, lmda, Phi, sigma11, sigma22, sigma33, sigma44, Sigma, thetap = extract_vars(prmtr, num_states, US_num_maturities)
@@ -154,6 +133,7 @@ def a1(bondtype, maturity, prmtr, num_states, US_num_maturities):
 
 
 def a0(bondtype, maturity, prmtr, num_states, US_num_maturities):
+    '''building A_0 matrix of parameters'''
     tau = maturity
     if num_states == 4:
         a, Kp, lmda, Phi, sigma11, sigma22, sigma33, sigma44 , Sigma, thetap = extract_vars(prmtr, num_states, US_num_maturities)
@@ -209,6 +189,7 @@ def a0(bondtype, maturity, prmtr, num_states, US_num_maturities):
 
 
 def q(dt, prmtr, num_states, US_num_maturities):
+    '''computing Q matrix'''
     if num_states == 4:
         a, Kp, lmda, Phi, sigma11, sigma22, sigma33, sigma44, Sigma, thetap = extract_vars(prmtr, num_states, US_num_maturities)
     elif num_states == 6:
@@ -222,6 +203,7 @@ def q(dt, prmtr, num_states, US_num_maturities):
 
 
 def extract_mats(prmtr, num_states, US_num_maturities, US_nominalmaturities, US_ilbmaturities, dt):
+    '''building all needed matricees of parameters'''
     if num_states == 4:
         a, Kp, lmda, Phi, sigma11, sigma22, sigma33, sigma44, Sigma, thetap = extract_vars(prmtr, num_states, US_num_maturities)
     elif num_states == 6:

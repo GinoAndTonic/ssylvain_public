@@ -1603,40 +1603,6 @@ we could then use MLE.
 
 \begin_layout Section
 \paragraph_spacing onehalf
-Collaboration with broader MAS
-\end_layout
-
-\begin_layout Standard
-\paragraph_spacing onehalf
-We would welcome collaboration with MP&S, Market Advantage and EM Allocation
- for the following reasons
-\end_layout
-
-\begin_layout Itemize
-\paragraph_spacing onehalf
-These groups have in the past used term-structure models (MP&S) and have
- interest in understanding inflation risk-premia (Market Advantage, EM Al)
-\end_layout
-
-\begin_layout Itemize
-\paragraph_spacing onehalf
-They may assist us in obtaining raw (un-smoothed) zero-coupon yields for
- Nominal Bonds and ILBs
-\end_layout
-
-\begin_layout Itemize
-\paragraph_spacing onehalf
-As well as data DM-ex-US (Market Advantage, MP&S) and EM (EM Al.)
-\end_layout
-
-\begin_layout Itemize
-\paragraph_spacing onehalf
-Lastly we can collaborate with said teams to construct signals and fully
- automate every step of the process
-\end_layout
-
-\begin_layout Section
-\paragraph_spacing onehalf
 Appendix
 \end_layout
 
@@ -1731,7 +1697,7 @@ status open
 \begin_layout Plain Layout
 \align center
 \begin_inset Graphics
-	filename ../../../../Dropbox/blackrock/InflationRiskPremia/ns_pic1.eps
+	filename output/figures/ns_pic1.eps
 	scale 40
 
 \end_inset
