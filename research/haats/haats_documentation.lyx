@@ -1602,6 +1602,145 @@ we could then use MLE.
 \end_layout
 
 \begin_layout Section
+Introducing observed macro-economic and/or technical variables
+\end_layout
+
+\begin_layout Standard
+Suppose we use 
+\begin_inset Formula $4$
+\end_inset
+
+ unobserved state variables and some observed variables, 
+\begin_inset Formula $\tilde{X}_{t}$
+\end_inset
+
+.
+\begin_inset Formula 
+\begin{eqnarray*}
+X_{t} & = & \left(\begin{array}{c}
+L_{t}^{N}\\
+S_{t}\\
+C_{t}\\
+L_{t}^{R}\\
+\tilde{X}_{t}
+\end{array}\right)\\
+\\
+y_{t}^{N}\{\tau\} & = & L_{t}^{N}+S_{t}\left(\frac{1-e^{-\lambda\tau}}{\lambda\tau}\right)+C_{t}\left(\frac{1-e^{-\lambda\tau}}{\lambda\tau}-e^{-\lambda\tau}\right)-\frac{G_{t}^{N}\left\{ \tau\right\} }{\tau}+\Lambda_{N}\tilde{X}_{t}\\
+\\
+y_{t}^{R}\{\tau\} & = & L_{t}^{R}+\alpha^{R}S_{t}\left(\frac{1-e^{-\lambda\tau}}{\lambda\tau}\right)+\alpha^{R}C_{t}\left(\frac{1-e^{-\lambda\tau}}{\lambda\tau}-e^{-\lambda\tau}\right)-\frac{G_{t}^{R}\left\{ \tau\right\} }{\tau}+\Lambda_{R}\tilde{X}_{t}
+\end{eqnarray*}
+
+\end_inset
+
+We then have
+\begin_inset Formula 
+\begin{eqnarray*}
+B_{5,t}^{R}\left\{ \tau\right\}  & = & -\tau\Lambda_{R}\\
+\\
+B_{5,t}^{N}\left\{ \tau\right\}  & = & -\tau\Lambda_{N}\\
+\\
+K^{Q} & = & \left(\begin{array}{ccccc}
+0 & 0 & 0 & 0 & 0\\
+0 & \lambda & 0 & 0 & 0\\
+0 & -\lambda & \lambda & 0 & 0\\
+0 & 0 & 0 & 0 & 0\\
+0 & 0 & 0 & 0 & 0
+\end{array}\right)\\
+\\
+\rho^{N} & = & \left(\begin{array}{c}
+1\\
+1\\
+0\\
+0\\
+\Lambda_{N}
+\end{array}\right)\\
+\\
+\rho^{R} & = & \left(\begin{array}{c}
+0\\
+\alpha^{R}\\
+0\\
+1\\
+\Lambda_{R}
+\end{array}\right)
+\end{eqnarray*}
+
+\end_inset
+
+We would need only a slight modification the measurement equation of the
+ Kalman Filter.
+\begin_inset Formula 
+\begin{eqnarray*}
+Y_{t}=\left(\begin{array}{c}
+y_{t}\\
+\tilde{X}_{t}
+\end{array}\right) & = & A_{0}+A_{1}X_{t}+\epsilon_{t}\\
+\\
+\epsilon_{t}^{N} & \sim & N(0,\Phi)\\
+\\
+A_{1} & = & \left(\begin{array}{c}
+A_{1}^{N}\\
+A_{1}^{R}\\
+{}[0,0,0,0,1]
+\end{array}\right),\quad\quad A_{0}=\left(\begin{array}{c}
+A_{0}^{N}\\
+A_{0}^{R}\\
+0
+\end{array}\right)\\
+\\
+\Phi & = & \left(\begin{array}{ccc}
+\phi_{N}^{2} & 0 & 0\\
+0 & \phi_{R}^{2} & 0\\
+0 & 0 & 0
+\end{array}\right)
+\end{eqnarray*}
+
+\end_inset
+
+The subsequent steps of the Kalman Filter estimation algorithm remain unchanged.
+\end_layout
+
+\begin_layout Subsection
+Missing data
+\end_layout
+
+\begin_layout Standard
+If we use macro-economic variables as additional state variables there may
+ be some missing, delayed or intermittent data.
+ The Kalman Filter can handle these cases.
+ In particular, when 
+\begin_inset Formula $\tilde{X}_{t}$
+\end_inset
+
+ is missing 
+\begin_inset Formula 
+\begin{eqnarray*}
+\Phi & = & \left(\begin{array}{ccc}
+\phi_{N}^{2} & 0 & 0\\
+0 & \phi_{R}^{2} & 0\\
+0 & 0 & \infty
+\end{array}\right)
+\end{eqnarray*}
+
+\end_inset
+
+and the corresponding elements of the update step of the Kalman filter become
+\begin_inset Formula 
+\begin{eqnarray*}
+S_{k}\left\{ 5\right\}  & = & \infty\qquad\text{innovation variance}\\
+\\
+G_{k}\left\{ 5\right\}  & = & 0\qquad\text{Kalman gains (see Appendix for derivation)}\\
+\\
+\hat{X}_{k|k}\left\{ 5\right\}  & = & \hat{X}_{k|k-1}\left\{ 5\right\} \\
+\\
+\hat{V}_{k|k}\left\{ 5\right\}  & = & \hat{V}_{k|k-1}\left\{ 5\right\} 
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
 \paragraph_spacing onehalf
 Appendix
 \end_layout

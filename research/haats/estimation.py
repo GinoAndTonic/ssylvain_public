@@ -184,12 +184,12 @@ class Rolling(Estimation):
             if (min(np.real(np.linalg.eig(np.array(Kp_out))[0])) < 0) & (stationarity_assumption == 'yes'):
                 cum_log_likelihood = -np.inf
             else:
-                if True:#try:
+                try:
                     A0_out, A1_out, U0_out, U1_out, Q_out = extract_mats(prmtr_ext(prmtr), num_states, US_num_maturities, US_nominalmaturities, US_ilbmaturities, dt)
                     kalman1 = Kalman(Y, A0_out, A1_out, U0_out, U1_out, Q_out, Phi_out, initV, statevar_names=statevar_names)     # default uses X0, V0 = unconditional mean and error variance
                     Ytt, Yttl, Xtt, Xttl, Vtt, Vttl, Gain_t, eta_t, cum_log_likelihood = kalman1.filter()
                     plt.close("all")
-                else:#except:
+                except:
                     # print("Unexpected error:", sys.exc_info()[0])
                     cum_log_likelihood = -np.inf
             out_n = np.hstack((self.Nfeval_inner, prmtr, cum_log_likelihood))

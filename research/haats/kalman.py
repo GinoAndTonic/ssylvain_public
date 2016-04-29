@@ -68,7 +68,7 @@ class Kalman:  # define super-class
                 self.V0 = np.mat(solve_discrete_lyapunov(np.array(self.U1.T), np.array(self.Q)))
             elif initV == 'identity':
                 self.V0 = np.mat(np.identity(n))
-        if statevar_names==None:
+        if statevar_names is None:
             self.statevar_names = np.arange(len(self.X0))
         Kalman.kalmanCount += 1
         # print("Calling Kalman constructor")
@@ -78,8 +78,6 @@ class Kalman:  # define super-class
         # print(class_name, "destroyed")
 
     def filter(self):
-        # masking missing observation so as to not affect calculations
-        # self.Y = ma.masked_array(self.Y, mask = np.array(self.Y == np.nan))
         T = self.Y.shape[0]
         m = self.Y.shape[1]
         n = self.U0.size

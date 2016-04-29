@@ -40,9 +40,9 @@ allow_missing_data = 0
 # set frequency of the data: daily, monthly, quarterly, yearly
 estim_freq = 'daily'
 
-fix_Phi = 0     # "1" if you want to fix the volatility of observed yields using covar of historical data
+fix_Phi = 1     # "1" if you want to fix the volatility of observed yields using covar of historical data
                 # "0" if you want to jointly estimate it with other model parameters
-setdiag_Kp = 0  # "1" if you want to Kp to be diagonal so the state variables are assumed independent
+setdiag_Kp = 1  # "1" if you want to Kp to be diagonal so the state variables are assumed independent
                 # "0" if you want to Kp to be unrestricted
 
 # options for initializing the Kalman filter error variance:
@@ -60,7 +60,7 @@ US_maturities = np.hstack((US_nominalmaturities, US_ilbmaturities))
 ############################################################
 
 # Set start and end dates for estimation
-sdate, edate = '2004-01-01', '2010-01-01'
+sdate, edate = '2004-01-01', time.strftime("%Y-%m-%d") #'2010-01-01'
 print("start date: %s" % sdate)
 print("end date: %s" % edate)
 
