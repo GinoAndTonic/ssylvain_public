@@ -19,10 +19,20 @@
 
 \usepackage{multirow} 
 
-\usepackage{sectsty} 
+
+\definecolor{lightgray}{gray}{0.88}
+
+
 
 \definecolor{lightgray}{gray}{0.88}
 \usepackage{hyperref}
+\hypersetup{
+    colorlinks,
+    citecolor=black,
+    filecolor=black,
+    linkcolor=black,
+    urlcolor=black
+}
 \end_preamble
 \use_default_options true
 \maintain_unincluded_children false
@@ -30,11 +40,11 @@
 \language_package default
 \inputencoding auto
 \fontencoding global
-\font_roman default
+\font_roman times
 \font_sans default
 \font_typewriter default
 \font_math auto
-\font_default_family default
+\font_default_family rmdefault
 \use_non_tex_fonts false
 \font_sc false
 \font_osf false
@@ -45,7 +55,7 @@
 \output_sync 0
 \bibtex_command default
 \index_command default
-\paperfontsize default
+\paperfontsize 11
 \spacing single
 \use_hyperref false
 \papersize default
@@ -94,6 +104,29 @@
 
 \begin_body
 
+\begin_layout Standard
+\paragraph_spacing onehalf
+\begin_inset Formula $\qquad$
+\end_inset
+
+
+\begin_inset VSpace 6cm
+\end_inset
+
+
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "100col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status open
+
 \begin_layout Title
 \paragraph_spacing onehalf
 Decomposing Break-even Yields Into Inflation Expectations and Inflation
@@ -103,6 +136,11 @@ Decomposing Break-even Yields Into Inflation Expectations and Inflation
 \begin_layout Author
 \paragraph_spacing onehalf
 Serginio Sylvain
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -123,6 +161,11 @@ Table of Contents
 
 \begin_layout Standard
 \paragraph_spacing onehalf
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+\paragraph_spacing onehalf
 \begin_inset ERT
 status open
 
@@ -135,6 +178,73 @@ makeatletter
 @starttoc{toc} 
 \backslash
 makeatother
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+%
+\backslash
+newpage 
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+pagenumbering{roman}  
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+begin{normalsize}
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+tableofcontents   
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+end{normalsize}
+\end_layout
+
+\begin_layout Plain Layout
+
+%
+\backslash
+listofmyequations 
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+newpage 
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+pagenumbering{arabic}
 \end_layout
 
 \end_inset
@@ -382,7 +492,16 @@ dX_{t} & = & K_{t}^{Q}\left(\theta_{t}^{Q}-X_{t}\right)dt+\Sigma_{t}\left(\begin
 
 \end_inset
 
-Following Christensen, Lopez, Rudebusch (2010), we assume that there are
+To simplify the model, we will assume 
+\begin_inset Formula $\theta_{t}^{Q}=0$
+\end_inset
+
+, and 
+\begin_inset Formula $\nu_{t}^{(i)}=1\quad,\quad\beta_{t}^{(i)}=0\quad\forall i$
+\end_inset
+
+.
+ Following Christensen, Lopez, Rudebusch (2010), we assume that there are
  
 \begin_inset Formula $4$
 \end_inset
@@ -1424,7 +1543,10 @@ status open
 
 \begin_layout Plain Layout
 This data is available publicly, is of daily frequency and is updated regularly.
- 
+ See http://www.federalreserve.gov/pubs/feds/2006/200628/200628abs.html, http://www.
+federalreserve.gov/pubs/feds/2008/200805/200805abs.html, http://www.federalreserve.g
+ov/econresdata/researchdata/feds200628.xls, and http://www.federalreserve.gov/econr
+esdata/researchdata/feds200805.xls
 \end_layout
 
 \end_inset
@@ -1776,12 +1898,12 @@ E_{t}^{Q}\left[\frac{dP_{t}\{\tau\}}{P_{t}\{\tau\}}\right]-r_{t} & = & -\rho_{0}
 \nonumber \\
 E_{t}^{Q}\left[\frac{dP_{t}\{\tau\}}{P_{t}\{\tau\}}\right]-r_{t} & = & 0\nonumber \\
 \nonumber \\
-\Rightarrow0 & = & -\rho_{0}-\rho_{1}\cdot X_{t}+X_{t}\cdot\frac{d}{dt}B_{t}\left\{ \tau\right\} dt+\frac{d}{dt}G_{t}\left\{ \tau\right\} dt+B_{t}\left\{ \tau\right\} ^{'}K_{t}^{P}\left(\theta_{t}^{P}-X_{t}\right)dt\nonumber \\
+\Rightarrow0 & = & -\rho_{0}-\rho_{1}\cdot X_{t}+X_{t}\cdot\frac{d}{dt}B_{t}\left\{ \tau\right\} dt+\frac{d}{dt}G_{t}\left\{ \tau\right\} dt+B_{t}\left\{ \tau\right\} ^{'}K_{t}^{Q}\left(\theta_{t}^{Q}-X_{t}\right)dt\nonumber \\
  &  & +\frac{1}{2}\sum_{j=1}^{4}\left(\Sigma_{t}^{'}B_{t}\left\{ \tau\right\} B_{t}\left\{ \tau\right\} ^{'}\Sigma_{t}\right)_{\{j,j\}}\left(\nu_{t}^{(j)}+\beta_{t}^{(j)}\cdot X_{t}\right)dt\nonumber \\
 \nonumber \\
-\Rightarrow\frac{d}{dt}B_{t}\left\{ \tau\right\}  & = & \rho_{1}+K_{t}^{P'}B_{t}\left\{ \tau\right\} -\frac{1}{2}\sum_{j=1}^{4}\left(\Sigma_{t}^{'}B_{t}\left\{ \tau\right\} B_{t}\left\{ \tau\right\} ^{'}\Sigma_{t}\right)_{\{j,j\}}\left(\beta_{t}^{(j)}\right)\label{eq:ODE_B}\\
+\Rightarrow\frac{d}{dt}B_{t}\left\{ \tau\right\}  & = & \rho_{1}+K_{t}^{Q'}B_{t}\left\{ \tau\right\} -\frac{1}{2}\sum_{j=1}^{4}\left(\Sigma_{t}^{'}B_{t}\left\{ \tau\right\} B_{t}\left\{ \tau\right\} ^{'}\Sigma_{t}\right)_{\{j,j\}}\left(\beta_{t}^{(j)}\right)\label{eq:ODE_B}\\
 \nonumber \\
-\Rightarrow\frac{d}{dt}G_{t}\left\{ \tau\right\}  & = & \rho_{0}-B_{t}\left\{ \tau\right\} ^{'}K_{t}^{P}\theta_{t}^{P}-\frac{1}{2}\sum_{j=1}^{4}\left(\Sigma_{t}^{'}B_{t}\left\{ \tau\right\} B_{t}\left\{ \tau\right\} ^{'}\Sigma_{t}\right)_{\{j,j\}}\nu_{t}^{(j)}\label{eq:ODE_C}\\
+\Rightarrow\frac{d}{dt}G_{t}\left\{ \tau\right\}  & = & \rho_{0}-B_{t}\left\{ \tau\right\} ^{'}K_{t}^{Q}\theta_{t}^{Q}-\frac{1}{2}\sum_{j=1}^{4}\left(\Sigma_{t}^{'}B_{t}\left\{ \tau\right\} B_{t}\left\{ \tau\right\} ^{'}\Sigma_{t}\right)_{\{j,j\}}\nu_{t}^{(j)}\label{eq:ODE_C}\\
 \nonumber \\
 P_{t}\{0\}=1 & \Rightarrow & B_{t}\left\{ 0\right\} =G_{t}\left\{ 0\right\} =0\label{eq:BCs}
 \end{eqnarray}
@@ -1836,7 +1958,7 @@ status open
 \begin_layout Plain Layout
 \align center
 \begin_inset Graphics
-	filename output/figures/ns_pic1.eps
+	filename ../../../../Downloads/ns_pic1.eps
 	scale 40
 
 \end_inset
@@ -1926,6 +2048,78 @@ P_{t}\{0\}=1 & \Rightarrow & B_{t}\left\{ 0\right\} =G_{t}\left\{ 0\right\} =0
 
 \end_inset
 
+The above results combined with 
+\begin_inset Formula 
+\begin{eqnarray*}
+\frac{d}{dt}B_{t}\left\{ \tau\right\}  & = & \rho_{1}+K_{t}^{Q'}B_{t}\left\{ \tau\right\} -\frac{1}{2}\sum_{j=1}^{4}\left(\Sigma_{t}^{'}B_{t}\left\{ \tau\right\} B_{t}\left\{ \tau\right\} ^{'}\Sigma_{t}\right)_{\{j,j\}}\left(\beta_{t}^{(j)}\right)\\
+\frac{d}{dt}G_{t}\left\{ \tau\right\}  & = & \rho_{0}-B_{t}\left\{ \tau\right\} ^{'}K_{t}^{Q}\theta_{t}^{Q}-\frac{1}{2}\sum_{j=1}^{4}\left(\Sigma_{t}^{'}B_{t}\left\{ \tau\right\} B_{t}\left\{ \tau\right\} ^{'}\Sigma_{t}\right)_{\{j,j\}}\nu_{t}^{(j)}\\
+\beta_{t}^{(j)} & = & 0\quad\forall j\\
+\nu_{t}^{(j)} & = & 1\quad\forall j
+\end{eqnarray*}
+
+\end_inset
+
+imply
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{eqnarray*}
+\rho^{N} & = & \left(\begin{array}{c}
+1\\
+1\\
+0\\
+0
+\end{array}\right)\quad\quad,\quad\quad\rho^{R}=\left(\begin{array}{c}
+0\\
+\alpha^{R}\\
+0\\
+1
+\end{array}\right)\\
+K_{t}^{Q} & = & \left(\begin{array}{cccc}
+0 & 0 & 0 & 0\\
+0 & \lambda & -\lambda & 0\\
+0 & 0 & \lambda & 0\\
+0 & 0 & 0 & 0
+\end{array}\right)
+\end{eqnarray*}
+
+\end_inset
+
+We set 
+\begin_inset Formula $\rho_{0}=\left(\begin{array}{c}
+0\\
+0\\
+0\\
+0
+\end{array}\right)$
+\end_inset
+
+ for identification.
+\begin_inset Note Note
+status collapsed
+
+\begin_layout Plain Layout
+\paragraph_spacing onehalf
+Notice that 
+\begin_inset Formula 
+\begin{eqnarray*}
+y_{t}^{N}\{\infty\} & = & -\infty\\
+\\
+y_{t}^{N}\{0\} & = & L_{t}^{N}+S_{t}\\
+\\
+y_{t}^{R}\{\infty\} & = & -\infty\\
+\\
+y_{t}^{R}\{0\} & = & L_{t}^{R}+\alpha^{R}S_{t}
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
 
 \end_layout
 
@@ -1951,7 +2145,7 @@ Without loss of generality we can set
 \begin_inset Formula $\theta^{Q}=0$
 \end_inset
 
- because once we as we show below 
+ because as we show below 
 \begin_inset Formula $X_{t}$
 \end_inset
 
@@ -2212,7 +2406,7 @@ X_{t} & = & exp\left(-K^{p}(t-t_{0})\right)\left((K^{p})^{-1}exp\left(K^{p}(t-t_
 E^{P}\left[X_{t}|\mathcal{F}_{t_{0}}\right] & = & \left(I-exp\left(-K^{p}(t-t_{0})\right)\right)\theta^{P}+exp\left(-K^{p}(t-t_{0})\right)X_{t_{0}}\\
 \\
 Var^{P}\left[X_{t}|\mathcal{F}_{t_{0}}\right] & = & \int_{t_{0}}^{t}exp\left(-K^{p}(t-s)\right)\Sigma\Sigma^{'}exp\left(-K^{p}(t-s)\right)^{'}ds\\
- &  & \text{let }u=t-s\\
+ &  & \text{let }u=t-s\text{ using a change of variable:}\\
 Var^{P}\left[X_{t}|\mathcal{F}_{t_{0}}\right] & = & -\int_{t-t_{0}}^{0}exp\left(-K^{p}u\right)\Sigma\Sigma^{'}exp\left(-K^{p}u\right)^{'}du\\
 Var^{P}\left[X_{t}|\mathcal{F}_{t_{0}}\right] & = & \int_{0}^{t-t_{0}}exp\left(-K^{p}u\right)\Sigma\Sigma^{'}exp\left(-K^{p}u\right)^{'}du
 \end{eqnarray*}
@@ -2236,7 +2430,7 @@ Q & = & \int_{0}^{\Delta t_{i}}exp\left(-K^{p}u\right)\Sigma\Sigma^{'}exp\left(-
 The measurement equations are 
 \begin_inset Formula 
 \begin{eqnarray*}
-y_{t}^{N}\left\{ \tau\right\}  & = & A_{0}^{N}\left\{ \tau\right\} +A_{1}^{R}\left\{ \tau\right\} ^{'}X_{t}+\epsilon_{t}^{N}\\
+y_{t}^{N}\left\{ \tau\right\}  & = & A_{0}^{N}\left\{ \tau\right\} +A_{1}^{N}\left\{ \tau\right\} ^{'}X_{t}+\epsilon_{t}^{N}\\
 \\
 y_{t}^{R}\left\{ \tau\right\}  & = & A_{0}^{R}\left\{ \tau\right\} +A_{1}^{R}\left\{ \tau\right\} ^{'}X_{t}+\epsilon_{t}^{R}\\
  &  & \text{where}\\
@@ -2264,6 +2458,41 @@ A_{0}^{R}\left\{ \tau\right\}  & = & -\frac{\sigma_{22}^{2}}{2\tau}(\alpha^{R})^
  &  & -\frac{\sigma_{33}^{2}}{2\tau}(\alpha^{R})^{2}\left(\int_{t}^{t+\tau}\left(\frac{1-e^{-\lambda(t+\tau-s)}}{\lambda}-e^{-\lambda(t+\tau-s)}(t+\tau-s)\right)^{2}ds\right)\\
  &  & -\frac{\sigma_{44}^{2}}{2\tau}\left(\int_{t}^{t+\tau}(t+\tau-s)^{2}ds\right)
 \end{eqnarray*}
+
+\end_inset
+
+Simplifying a bit
+\begin_inset Formula 
+\begin{eqnarray*}
+A_{0}^{N}\left\{ \tau\right\}  & = & -\frac{\sigma_{11}^{2}}{2\tau}\left(\frac{\tau^{3}}{3}\right)\\
+ &  & -\frac{\sigma_{22}^{2}}{2\tau}\left(-\frac{-2\lambda\tau+e^{-2\lambda\tau}-4e^{-\lambda\tau}+3}{2\lambda^{3}}\right)\\
+ &  & -\frac{\sigma_{33}^{2}}{2\tau}\left(\frac{e^{-2\lambda\tau}\left(8e^{\lambda\tau}(\lambda\tau+2)-2\lambda\tau(\lambda\tau+3)+e^{2\lambda\tau}(4\lambda\tau-11)-5\right)}{4\lambda^{3}}\right)\\
+\\
+\\
+A_{0}^{R}\left\{ \tau\right\}  & = & -\frac{\sigma_{22}^{2}}{2\tau}(\alpha^{R})^{2}\left(-\frac{-2\lambda\tau+e^{-2\lambda\tau}-4e^{-\lambda\tau}+3}{2\lambda^{3}}\right)\\
+ &  & -\frac{\sigma_{33}^{2}}{2\tau}(\alpha^{R})^{2}\left(\frac{e^{-2\lambda\tau}\left(8e^{\lambda\tau}(\lambda\tau+2)-2\lambda\tau(\lambda\tau+3)+e^{2\lambda\tau}(4\lambda\tau-11)-5\right)}{4\lambda^{3}}\right)\\
+ &  & -\frac{\sigma_{44}^{2}}{2\tau}\left(\frac{\tau^{3}}{3}\right)
+\end{eqnarray*}
+
+\end_inset
+
+
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+\paragraph_spacing onehalf
+\begin_inset Formula 
+\begin{eqnarray*}
+A_{0}^{N}\left\{ \infty\right\}  & = & -\frac{\sigma_{11}^{2}}{2\tau}\left(\frac{\tau^{3}}{3}\right)\\
+ &  & -\frac{\sigma_{22}^{2}}{2}\left(\frac{1}{\lambda^{2}}\right)-\frac{\sigma_{33}^{2}}{2}\left(\frac{1}{\lambda^{2}}\right)\\
+A_{0}^{N}\left\{ \infty\right\}  & = & A_{0}^{R}\left\{ \infty\right\} =-\infty
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
 
 \end_inset
 
@@ -2505,21 +2734,27 @@ V & = & exp\left(-K^{p}\Delta\right)Vexp\left(-K^{p}\Delta\right)^{'}\\
 \end_inset
 
 Below we derive the unconditional error variance
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+https://en.wikipedia.org/wiki/Lyapunov_equation
+\end_layout
+
+\end_inset
+
+
 \begin_inset Formula 
 \begin{eqnarray*}
 \hat{V}_{k|k-1} & = & exp\left(-K^{p}\Delta\right)\hat{V}_{k-1|k-1}exp\left(-K^{p}\Delta\right)^{'}+Q\\
 \\
- &  & \text{The unconditional variance solves the Lyapunov equation below}\\
+ &  & \text{The unconditional variance solves the discrete Lyapunov equation below}\\
 V & = & exp\left(-K^{p}\Delta\right)Vexp\left(-K^{p}\Delta\right)^{'}+Q\\
-\\
-V & = & \left(\sum_{n=0}^{\infty}exp\left(-K^{p}\Delta n\right)Qexp\left(-K^{p}\Delta n\right)^{'}\right)\Delta\\
-\\
-\Rightarrow V & = & \int_{0}^{\infty}exp\left(K^{p}s\right)\Sigma\Sigma^{'}exp\left(K^{p}s\right)^{'}ds\\
 \\
  &  & \text{Equivalently we can write:}\\
 vec\left(V\right) & = & \left(exp\left(-K^{p}\Delta\right)\otimes exp\left(-K^{p}\Delta\right)^{'}\right)vec\left(V\right)+vec\left(Q\right)\\
 \\
-\Rightarrow vec\left(V\right) & = & \left(I-exp\left(-K^{p}\Delta\right)\otimes exp\left(-K^{p}\Delta\right)^{'}\right)^{-1}vec\left(Q\right)
+\Rightarrow vec\left(V\right) & = & \left(I-exp\left(-K^{p}\Delta\right)\otimes exp\left(-K^{p}\Delta\right)\right)^{-1}vec\left(Q\right)
 \end{eqnarray*}
 
 \end_inset
@@ -2529,6 +2764,27 @@ equivalently we can write
 \begin{eqnarray*}
 \hat{V}_{k|k-1} & = & exp\left(-K^{p}\Delta\right)\hat{V}_{k-1|k-1}exp\left(-K^{p}\Delta\right)^{'}+Q\\
 \\
+V=V_{\infty} & = & \left(\sum_{n=0}^{\infty}exp\left(-K^{p}\Delta n\right)Qexp\left(-K^{p}\Delta n\right)^{'}\right)\Delta\\
+\\
+\Rightarrow V & = & \int_{0}^{\infty}exp\left(K^{p}s\right)\Sigma\Sigma^{'}exp\left(K^{p}s\right)^{'}ds\\
+ &  & \text{Thus, the unconditional variance solves the continuous Lyapunov equation}\\
+0 & = & e^{-Kt}V+Ve^{-K't}+\Sigma\Sigma^{'}\\
+ &  & \text{Equivalently we can write:}\\
+vec\left(V\right) & = & \left(I\otimes exp\left(-K^{p}\Delta\right)+exp\left(-K^{p}\Delta\right)\otimes I\right)^{-1}(-vec\left(\Sigma\Sigma^{'}\right))
+\end{eqnarray*}
+
+\end_inset
+
+
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+\paragraph_spacing onehalf
+\begin_inset Formula 
+\begin{eqnarray*}
+\hat{V}_{k|k-1} & = & exp\left(-K^{p}\Delta\right)\hat{V}_{k-1|k-1}exp\left(-K^{p}\Delta\right)^{'}+Q\\
+\\
  &  & \text{The unconditional variance solves the Lyapunov equation below}\\
 V & = & exp\left(-K^{p}\Delta\right)Vexp\left(-K^{p}\Delta\right)^{'}+Q\\
 \\
@@ -2539,8 +2795,196 @@ vec\left(V\right) & = & \left(exp\left(-K^{p}\Delta\right)\otimes exp\left(-K^{p
 
 \end_inset
 
+
+\end_layout
+
+\end_inset
+
 Christensen, Lopez and Rudebusch (2010) initialize the error variance using
  the unconditional error variance.
+\end_layout
+
+\begin_layout Subsubsection
+On Lyapunov equations
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Formula 
+\begin{eqnarray*}
+Q\{h\} & = & \int_{0}^{h}e^{-Kt}Se^{-K't}dt\\
+\\
+ &  & \text{Let }\\
+V & = & \lim_{h\to\infty}Q\{h\}\\
+\\
+\Rightarrow V & = & \int_{0}^{\infty}e^{-Kt}Se^{-K't}dt
+\end{eqnarray*}
+
+\end_inset
+
+Thus 
+\begin_inset Formula $V$
+\end_inset
+
+ is the unique solution to a continuous Lyapunov equation of the form
+\begin_inset Formula 
+\begin{eqnarray*}
+e^{-Kt}V+Ve^{-K't}+S & = & 0
+\end{eqnarray*}
+
+\end_inset
+
+where
+\color blue
+ 
+\series bold
+
+\begin_inset Formula $S$
+\end_inset
+
+ is symmetric
+\series default
+\color inherit
+ and 
+\begin_inset Formula $K$
+\end_inset
+
+ and 
+\begin_inset Formula $S$
+\end_inset
+
+ are stable.
+\end_layout
+
+\begin_layout Standard
+\align center
+That is, the 
+\series bold
+\color blue
+real component of the eigenvalues of 
+\begin_inset Formula $K$
+\end_inset
+
+ and 
+\begin_inset Formula $S$
+\end_inset
+
+ are positive
+\series default
+\color inherit
+.
+\end_layout
+
+\begin_layout Standard
+\align center
+Indeed, by vectorizing we find
+\begin_inset Formula 
+\begin{eqnarray*}
+e^{-Kt}V+Ve^{-K't} & = & -S\\
+\\
+vec(e^{-Kt}V+Ve^{-K't}) & = & -vec(S)\\
+\\
+\left(I\otimes e^{-Kt}+e^{-Kt}\otimes I\right)vec(V) & = & -vec(S)\\
+\\
+\Rightarrow vec(V)=vec\left(\int_{0}^{\infty}e^{-Kt}Se^{-K't}dt\right) & = & \left(I\otimes e^{-Kt}+e^{-Kt}\otimes I\right)^{-1}\left(-vec(S)\right)\\
+\\
+\Rightarrow vec(Q(\infty)) & = & -\left(I\otimes e^{-Kt}+e^{-Kt}\otimes I\right)^{-1}vec(S)
+\end{eqnarray*}
+
+\end_inset
+
+We can also instead find a 
+\begin_inset Quotes eld
+\end_inset
+
+discrete
+\begin_inset Quotes erd
+\end_inset
+
+ solution
+\begin_inset Formula 
+\begin{eqnarray*}
+Q\{\Delta\} & = & \int_{0}^{\Delta}e^{-Kt}Se^{-K't}dt=e^{-K\Delta}Se^{-K'\Delta}\Delta\\
+\\
+V & = & \int_{0}^{\infty}e^{-Kt}Se^{-K't}dt\\
+\\
+V & = & \left(\sum_{m=1}^{\infty}e^{-K\Delta m}Se^{-K'\Delta m}\right)\Delta=\left(\sum_{m=0}^{\infty}e^{-K\Delta(m-1)}Q\{\Delta\}e^{-K'\Delta(m-1)}\right)=\sum_{n=0}^{\infty}e^{-K\Delta n}Q\{\Delta\}e^{-K'\Delta n}\\
+\\
+\Rightarrow V & = & \sum_{n=0}^{\infty}e^{-K\Delta n}Q\{\Delta\}e^{-K'\Delta n}
+\end{eqnarray*}
+
+\end_inset
+
+Thus 
+\begin_inset Formula $V$
+\end_inset
+
+ is the unique solution to a discrete Lyapunov equation of the form
+\begin_inset Formula 
+\begin{eqnarray*}
+V & = & e^{-K\Delta}Ve^{-K'\Delta}+Q\{\Delta\}
+\end{eqnarray*}
+
+\end_inset
+
+where
+\color blue
+ 
+\series bold
+
+\begin_inset Formula $S$
+\end_inset
+
+ is symmetric
+\series default
+\color inherit
+ and 
+\begin_inset Formula $K$
+\end_inset
+
+ and 
+\begin_inset Formula $S$
+\end_inset
+
+ are stable.
+\end_layout
+
+\begin_layout Standard
+\align center
+That is, the 
+\series bold
+\color blue
+real component of the eigenvalues of 
+\begin_inset Formula $K$
+\end_inset
+
+ and 
+\begin_inset Formula $S$
+\end_inset
+
+ are positive
+\series default
+\color inherit
+.
+\end_layout
+
+\begin_layout Standard
+\align center
+Indeed, by vectorizing we find
+\begin_inset Formula 
+\begin{eqnarray*}
+vec\left(V\right) & = & \left(e^{-K\Delta}\otimes e^{-K\Delta}\right)vec\left(V\right)+vec\left(Q\{\Delta\}\right)\\
+\\
+\Rightarrow vec\left(V\right) & = & \left(I-e^{-K\Delta}\otimes e^{-K\Delta}\right)^{-1}vec\left(Q\{\Delta\}\right)
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+See vectorizing rules in https://en.wikipedia.org/wiki/Vectorization_(mathematics)
 \end_layout
 
 \begin_layout Subsubsection

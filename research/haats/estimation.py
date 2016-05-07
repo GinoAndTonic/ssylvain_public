@@ -136,16 +136,16 @@ class Rolling(Estimation):
         self.Nfeval_inner = 1
         Nfeval_vec = np.array(Nfeval)
         cum_log_likelihood_vec = np.array(None)
-        str_form = '{0:9f}  '
+        str_form = '{0:<9f}  '
         str_form2 = np.array('Iter')
-        str_form3 = '{0:9s}  '
+        str_form3 = '{0:<9s}  '
         for iv in range(prmtr_0.size):
-            str_form = str_form + '  {' + str(iv+1) + ': 3.10f}'
+            str_form = str_form + '  {' + str(iv+1) + ':^+16f}'
             str_form2 = np.vstack((str_form2, 'prmtr('+str(iv+1)+')'))
-            str_form3 = str_form3 + '  {' + str(iv+1) + ':14s}'
-        str_form = str_form + '  {' + str(prmtr_0.size + 1) + ': 6.10f}'    # leave more space for likelihood
+            str_form3 = str_form3 + '  {' + str(iv+1) + ':^16s}'
+        str_form = str_form + '  {' + str(prmtr_0.size + 1) + ':>+16f}'    # leave more space for likelihood
         str_form2 = np.reshape(np.vstack((str_form2, '  cumloglik')), prmtr_0.size + 2, 0)
-        str_form3 = str_form3 + '  {' + str(prmtr_0.size + 1) + ':16s}'
+        str_form3 = str_form3 + '  {' + str(prmtr_0.size + 1) + ':>16s}'
 
         # These next four lines are constraints we could use in the optimization.
         cons = ineq_cons(num_states, US_num_maturities, fix_Phi, setdiag_Kp, Phi_prmtr)
@@ -204,7 +204,10 @@ class Rolling(Estimation):
         print('\n\n\n')
         print(str_form3.format(*tuple(str_form2)))
         print('new iterations begins__________________________________________')
+        tic = time.clock()
         optim_output = minimize(neg_cum_log_likelihood, prmtr_0,  method='Powell', options={'disp': 1})
+        toc = time.clock()
+        print('processing time: '+str(toc-tic))
         #if stationarity_assumption == 'no':
         #    optim_output = minimize(neg_cum_log_likelihood, prmtr_0,  method='Powell', options={'disp': 1})
         #elif stationarity_assumption == 'yes':

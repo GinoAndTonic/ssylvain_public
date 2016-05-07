@@ -3,6 +3,7 @@ import sys
 print(sys.argv)
 from import_data import *
 from estimation import *
+np.random.seed(222)
 plt.close("all")
 plt.close()
 plt.ion()
@@ -38,7 +39,7 @@ figures = []
 allow_missing_data = 0
 
 # set frequency of the data: daily, monthly, quarterly, yearly
-estim_freq = 'daily'
+estim_freq = 'weekly'
 
 fix_Phi = 1     # "1" if you want to fix the volatility of observed yields using covar of historical data
                 # "0" if you want to jointly estimate it with other model parameters
@@ -60,7 +61,7 @@ US_maturities = np.hstack((US_nominalmaturities, US_ilbmaturities))
 ############################################################
 
 # Set start and end dates for estimation
-sdate, edate = '2004-01-01', time.strftime("%Y-%m-%d") #'2010-01-01'
+sdate, edate = '2004-01-01', '2015-11-23'#time.strftime("%Y-%m-%d") #'2010-01-01'
 print("start date: %s" % sdate)
 print("end date: %s" % edate)
 

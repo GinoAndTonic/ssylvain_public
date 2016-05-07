@@ -33,7 +33,7 @@ class ImportData:
         #create dateframe
         tips_data = pd.DataFrame(
             pd.DataFrame(excelHandler.tables[0][18:]).values[1:,1:],#data
-            index=pd.to_datetime(pd.DataFrame(excelHandler.tables[0][18:]).values[1:,0]),#row labels; dates
+            index=pd.tseries.index.DatetimeIndex(    pd.DataFrame(excelHandler.tables[0][18:]).iloc[1:,0].str.strip().values    ),#row labels; dates
             columns=pd.DataFrame(excelHandler.tables[0][18:]).values[0,1:]#column labels
             )
         #clean up column names:
@@ -61,7 +61,7 @@ class ImportData:
         #create dateframe
         nominal_data = pd.DataFrame(
             pd.DataFrame(excelHandler.tables[0][9:]).values[1:,1:],#data
-            index=pd.to_datetime(pd.DataFrame(excelHandler.tables[0][9:]).values[1:,0]),#row labels; dates
+            index=pd.tseries.index.DatetimeIndex(    pd.DataFrame(excelHandler.tables[0][9:]).iloc[1:,0].str.strip().values    ),#row labels; dates
             columns=pd.DataFrame(excelHandler.tables[0][9:]).values[0,1:]#column labels
             )
         #clean up column names:
@@ -102,6 +102,7 @@ class ImportData:
         if os.path.exists(tips_f) & os.path.exists(nominal_f) :
             if np.array(time.strftime("%Y-%m-%d",(time.gmtime(os.path.getmtime(tips_f)))), dtype=np.datetime64) == np.array(time.strftime("%Y-%m-%d",(time.gmtime(os.path.getmtime(nominal_f)))), dtype=np.datetime64) >= edate:
                 tips_data, nominal_data = pd.read_csv(tips_f,index_col=0) , pd.read_csv(nominal_f,index_col=0)
+                tips_data.index, nominal_data.index = pd.tseries.index.DatetimeIndex(tips_data.index), pd.tseries.index.DatetimeIndex(nominal_data.index)
             else:
                 tips_data, nominal_data = ImportData.update_us_data()
         else:
