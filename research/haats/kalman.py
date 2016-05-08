@@ -177,39 +177,55 @@ class Kalman:  # define super-class
         return Ytt, Yttl, Xtt, Xttl, Vtt, Vttl, Gain_t, eta_t, np.reshape(np.array(cum_log_likelihood), 1, 0)
 
     def forecast(self, X, horizon=90):
-        #pre-allocating space for forecasts. we use 2 index columns for the dataframe:
-        #indices = [np.repeat(self.Y.index,horizon+1), np.tile(np.arange(horizon+1),self.Y.shape[0])]
+        '''Given state variable X, return predicted measurement Y. For each t we forecast out for h=0,...,H.
+        h=0 is the current (known) Y value'''
+        #pre-allocating space for forecasts. we use 2 index columns for the dataframe: date and horizon. For each date
+        #there is a corresponding horizon
         y_out = pd.DataFrame(
             np.empty((self.Y.shape[0]*(horizon+1), self.Y.shape[1]))*np.nan, columns=self.Y.columns)
         y_out['date'] = np.repeat(self.Y.index, horizon+1)
-        y_out['horizon'] = np.tile(self.Y.index + pd.TimedeltaIndex(np.arange(horizon+1)), self.Y.shape[0])
-        y_out.set_index(['date','horizon'])
-        # y_out = np.empty((X.shape[0], self.A0.size, horizon+1)) * np.nan
+        y_out['horizon'] = y_out['date'] + \
+                           pd.TimedeltaIndex(np.tile(np.arange(horizon + 1), self.Y.index.shape[0]).tolist(),unit=self.Y.index.freq._prefix)
+        y_out.set_index(['date','horizon'],inplace=True)
+        #y_out.sort_index(axis=0,)
+        # now we do double loop over dates and horizons to fill ouput data matrix.
+        # note that we will not yet fill in values for horizon=0; hence the h+1
         for t in np.arange(self.Y.shape[0]):     # loop over dates
-            for h in np.arange(horizon):     # loop over horizons
+            for h in range(horizon):     # loop over horizons
                     if h == 0:
-                        x = self.U0 + self.U1 * X.iloc[t, :].T
+                        x = self.U0 + self.U1 * np.mat(X.iloc[t, :]).T
                     else:
                         x = self.U0 + self.U1 * x
-                    # y_out[t, :, h+1] = np.array(self.A0 + self.A1 * x)[:,0]
-                    y_out.loc[(y_out.index[t], y_out.index[t] + pd.TimedeltaIndex(h+1)), :] = np.reshape(np.array(self.A0 + self.A1 * x)[:,0], \
-                                                                                                    y_out.loc[(y_out.index[t], y_out.index[t] + pd.TimedeltaIndex(h+1)), :].shape)
-
-        y_out.loc[(y_out.index[t], y_out.index[t]), :] = np.reshape(np.array(self.A0 + self.A1 * x)[:,0], \
-                                                                    y_out.loc[(y_out.index[t], y_out.index[t]), :].shape)
-        # y_out[:, :, 0] = self.Y.values
+                    # note that we will not yet fill in values for horizon=0; hence the h+1 on the next line
+                    loc_th = ( self.Y.index[t], (self.Y.index[t]+pd.TimedeltaIndex([h+1],unit=self.Y.index.freq._prefix))[0] ) # tuple for dual-index location
+                    size_th = y_out.loc[loc_th, :].shape # size of output at iteration t, h
+                    y_out.loc[loc_th, :] = np.reshape(np.array(self.A0 + self.A1 * x)[:,0], size_th)
+        # here is where we fill in values for h=0 for all t
+        y_out.iloc[np.arange(0, y_out.shape[0], horizon+1)] = np.reshape(self.Y.values, \
+                                                                         y_out.iloc[np.arange(0, y_out.shape[0], horizon + 1)].shape)
         return y_out
 
-    def rmse(self, y_fcst, m, horizon=90):  #RMSE calculations
+    def rmse(self, y_fcst):  #RMSE calculations
+
         T = self.Y.shape[0]
+        horizon = int(y_fcst.shape[0]/self.Y.shape[0]-1)
         #Pre-allocate space for squared-error and error dataframes:
-        forecast_se = pd.DataFrame(np.zeros((T-horizon, horizon)), index=self.Y.index[0:T-horizon-1])  #Square Error
-        forecast_e = pd.DataFrame(np.zeros((T-horizon, horizon)), index=self.Y.index[0:T-horizon-1])   #Error
-        for t in range(T-horizon):
-            forecast_e.iloc[t, :] = np.array(np.mat(self.Y.iloc[t:t+horizon, m].values).T - np.mat(y_fcst.loc[(y_fcst_m.index[t],), :].values))
-            forecast_se.iloc[t, :] = forecast_e.iloc[t, :]**2
-        forecast_rmse = np.mean(forecast_se.values, axis=0)**0.5
-        return forecast_e, forecast_se, np.mat(forecast_rmse).T
+        forecast_e ,forecast_se ,forecast_mse ,forecast_rmse ,forecast_mse_all ,forecast_rmse_all= \
+            y_fcst*np.nan, y_fcst*np.nan, self.Y*np.nan, self.Y*np.nan, self.Y.iloc[0,:]*np.nan, self.Y.iloc[0,:]*np.nan,   #Square Error and #Error
+        # compute forecast error:  difference between y(h) and forecast(h).
+        forecast_e = pd.DataFrame(\
+            (self.Y.reindex(y_fcst.index.get_level_values('horizon')) - y_fcst.reset_index('date', drop=True)).reset_index())
+        forecast_e['date'] = y_fcst.index.get_level_values('date')
+        forecast_e.set_index(['date', 'horizon'], inplace=True)
+        # compute squared forecast error:
+        forecast_se = forecast_e ** 2
+        # compute rmse for each date t by taking mean over horizons h=0,...,H
+        forecast_mse = forecast_se.reset_index().groupby('date').mean()
+        forecast_rmse = forecast_mse ** 0.5
+        # compute rmse across all dates and horizons
+        forecast_mse_all = forecast_se.mean()
+        forecast_rmse_all = forecast_mse_all ** 0.5
+        return forecast_e, forecast_se, forecast_mse, forecast_rmse, forecast_mse_all, forecast_rmse_all
 
     def smoother(self, Xtt, Xttl, Vtt, Vttl, A1, Gain_t, eta_t, U1, V0, X0, Q):
         # TODO: NEED TO WRITE KALMAN SMOOTHER CODE

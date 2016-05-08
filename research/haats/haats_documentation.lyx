@@ -311,9 +311,9 @@ The derivation below is based on Christensen, Diebold and Rudebusch (2007).
 \paragraph_spacing onehalf
 \begin_inset Formula 
 \begin{eqnarray*}
-P_{t}^{N}\{\tau\} & = & E_{t}\left[\frac{M_{t+\tau}^{N}}{M_{t}^{N}}\times1\right]\\
+P_{t}^{N}\{\tau\} & = & E_{t}\left[\frac{M_{t+\tau}^{N}}{M_{t}^{N}}\times1\right]=exp\left(-y_{t}^{N}\left\{ \tau\right\} \cdot\tau\right)\\
 \\
-P_{t}^{R}\{\tau\} & = & E_{t}\left[\frac{M_{t+\tau}^{R}}{M_{t}^{R}}\times1\right]\\
+P_{t}^{R}\{\tau\} & = & E_{t}\left[\frac{M_{t+\tau}^{R}}{M_{t}^{R}}\times1\right]=exp\left(-y_{t}^{R}\left\{ \tau\right\} \cdot\tau\right)\\
 \\
 y_{t}^{N}\{\tau\} & = & -\frac{1}{\tau}ln\left(P_{t}^{N}\{\tau\}\right)\\
 \\
@@ -327,7 +327,8 @@ y_{t}^{N}\{\tau\}-y_{t}^{R}\{\tau\} & = & \frac{1}{\tau}ln\left(\frac{P_{t}^{R}\
 \\
 \text{Price level} & = & \text{nominal consumption/real consumption}=\Pi_{t}\\
 \Pi_{t} & = & \frac{M_{t}^{R}}{M_{t}^{N}}\\
-\\
+d(f\left\{ x,y\right\} ) & = & f_{x}+f_{y}+\frac{1}{2}\left(f_{xx}+f_{yx}+f_{xy}+f_{yy}\right)\\
+d(f\left\{ x,y\right\} ) & = & f_{x}+f_{y}+\frac{1}{2}\left(f_{xx}+f_{yy}\right)+f_{xy}\\
 d\Pi_{t} & = & \frac{dM_{t}^{R}}{M_{t}^{N}}-\frac{M_{t}^{R}}{M_{t}^{N}}\left(\frac{dM_{t}^{N}}{M_{t}^{N}}\right)-\frac{dM_{t}^{R}}{M_{t}^{N}}\frac{dM_{t}^{N}}{M_{t}^{N}}+\frac{M_{t}^{R}}{M_{t}^{N}}\left(\frac{dM_{t}^{N}}{M_{t}^{N}}\right)^{2}\\
 \\
 \frac{d\Pi_{t}}{\Pi_{t}} & = & \frac{dM_{t}^{R}}{M_{t}^{R}}-\frac{dM_{t}^{N}}{M_{t}^{N}}-\frac{dM_{t}^{R}}{M_{t}^{N}}\frac{dM_{t}^{N}}{M_{t}^{N}}+\left(\frac{dM_{t}^{N}}{M_{t}^{N}}\right)^{2}\\
@@ -2065,12 +2066,12 @@ imply
 \begin_layout Standard
 \begin_inset Formula 
 \begin{eqnarray*}
-\rho^{N} & = & \left(\begin{array}{c}
+\rho_{1}^{N} & = & \left(\begin{array}{c}
 1\\
 1\\
 0\\
 0
-\end{array}\right)\quad\quad,\quad\quad\rho^{R}=\left(\begin{array}{c}
+\end{array}\right)\quad\quad,\quad\quad\rho_{1}^{R}=\left(\begin{array}{c}
 0\\
 \alpha^{R}\\
 0\\
@@ -2087,7 +2088,7 @@ K_{t}^{Q} & = & \left(\begin{array}{cccc}
 \end_inset
 
 We set 
-\begin_inset Formula $\rho_{0}=\left(\begin{array}{c}
+\begin_inset Formula $\rho_{0}^{R}=\rho_{0}^{N}=\left(\begin{array}{c}
 0\\
 0\\
 0\\

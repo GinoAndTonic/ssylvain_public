@@ -136,16 +136,16 @@ class Rolling(Estimation):
         self.Nfeval_inner = 1
         Nfeval_vec = np.array(Nfeval)
         cum_log_likelihood_vec = np.array(None)
-        str_form = '{0:<9f}  '
+        str_form = '{0: <9.0f}  '
         str_form2 = np.array('Iter')
-        str_form3 = '{0:<9s}  '
+        str_form3 = '{0: <9s}  '
         for iv in range(prmtr_0.size):
-            str_form = str_form + '  {' + str(iv+1) + ':^+16f}'
+            str_form = str_form + '  {' + str(iv+1) + ': ^+16.10f}'
             str_form2 = np.vstack((str_form2, 'prmtr('+str(iv+1)+')'))
-            str_form3 = str_form3 + '  {' + str(iv+1) + ':^16s}'
-        str_form = str_form + '  {' + str(prmtr_0.size + 1) + ':>+16f}'    # leave more space for likelihood
-        str_form2 = np.reshape(np.vstack((str_form2, '  cumloglik')), prmtr_0.size + 2, 0)
-        str_form3 = str_form3 + '  {' + str(prmtr_0.size + 1) + ':>16s}'
+            str_form3 = str_form3 + '  {' + str(iv+1) + ': ^16s}'
+        str_form = str_form + '  {' + str(prmtr_0.size + 1) + ': >+20.10f}'    # leave more space for likelihood
+        str_form2 = np.reshape(np.vstack((str_form2, 'cumloglik')), prmtr_0.size + 2, 0)
+        str_form3 = str_form3 + '  {' + str(prmtr_0.size + 1) + ': >20s}'
 
         # These next four lines are constraints we could use in the optimization.
         cons = ineq_cons(num_states, US_num_maturities, fix_Phi, setdiag_Kp, Phi_prmtr)
@@ -217,6 +217,8 @@ class Rolling(Estimation):
 
         prmtr_new = optim_output['x'] #collecting optimal parameters
 
+        ######################################################################
+
         # Extracting filtered states:
         if num_states == 4:
             a_new, Kp_new, lmda_new, Phi_new, sigma11_new, sigma22_new, sigma33_new, sigma44_new, Sigma_new, thetap_new = extract_vars(prmtr_ext(optim_output['x']), num_states, US_num_maturities)
@@ -227,14 +229,28 @@ class Rolling(Estimation):
         Ytt_new, Yttl_new, Xtt_new, Xttl_new, Vtt_new, Vttl_new, Gain_t_new, eta_t_new, cum_log_likelihood_new = kalman2.filter()
 
         # Computing Forecasts, RMSE, etc. :
-        yields_forecast = kalman2.forecast(Xtt_new, 90*(estim_freq=='daily')+12*(estim_freq=='weekly')+3*(estim_freq=='monthly'))
+        forecast_horizon = 90*(estim_freq=='daily')+12*(estim_freq=='weekly')+3*(estim_freq=='monthly')
+        yields_forecast = kalman2.forecast(Xtt_new, forecast_horizon)
+        forecast_e, forecast_se, forecast_mse, forecast_rmse, forecast_mse_all, forecast_rmse_all = kalman2.rmse(yields_forecast)
+
+        #Referencing individual dataframe columns in USnominals and USilbs objecs
         for m in range(US_nominalmaturities.size):
             USnominals[m].yields_forecast = yields_forecast.iloc[:,m]
-            USnominals[m].forecast_e, USnominals[m].forecast_se, USnominals[m].forecast_rmse = kalman2.rmse(USnominals[m].yields_forecast, m)
+            USnominals[m].forecast_e, USnominals[m].forecast_se, USnominals[m].forecast_mse, USnominals[m].forecast_rmse \
+                , USnominals[m].forecast_mse_all, USnominals[m].forecast_rmse_all = \
+                forecast_e.iloc[:,m], forecast_se.iloc[:,m], forecast_mse.iloc[:,m], forecast_rmse.iloc[:,m], \
+                forecast_mse_all.iloc[:,m], forecast_rmse_all.iloc[:,m]
 
         for m in range(US_ilbmaturities.size):
-            USilbs[m].yields_forecast = yields_forecast[:, US_nominalmaturities.size + m - 1, :]
-            USilbs[m].forecast_e, USilbs[m].forecast_se, USilbs[m].forecast_rmse = kalman2.rmse(USilbs[m].yields_forecast, m)
+            USilbs[m].yields_forecast = yields_forecast.iloc[:,US_nominalmaturities.size + m]
+            USilbs[m].forecast_e, USilbs[m].forecast_se, USilbs[m].forecast_mse, USilbs[m].forecast_rmse \
+                , USilbs[m].forecast_mse_all, USilbs[m].forecast_rmse_all  = \
+                forecast_e.iloc[:,US_nominalmaturities.size + m], forecast_se.iloc[:,US_nominalmaturities.size + m], \
+                forecast_mse.iloc[:,US_nominalmaturities.size + m], forecast_rmse.iloc[:,US_nominalmaturities.size + m], \
+                forecast_mse_all.iloc[:,US_nominalmaturities.size + m], forecast_rmse_all.iloc[:,US_nominalmaturities.size + m]
+
+
+        ######################################################################
 
         if num_states == 4:
             rho_n = np.mat(np.array([1, 1, 0, 0])).T

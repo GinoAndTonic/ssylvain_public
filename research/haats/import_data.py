@@ -1,6 +1,9 @@
 from __future__ import division
 import os
 import numpy as np
+#import seaborn as sns
+#sns.set("talk", font_scale=0.8, rc={"lines.linewidth": 1}) #see https://stanford.edu/~mwaskom/software/seaborn/tutorial/aesthetics.html
+# plt = sns.plt
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import sys
@@ -127,6 +130,8 @@ class ImportData:
             # use a more precise date string for the x axis locations in the toolbar
             figures['ax_fig1'].xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
             figures['ax_fig1'].set_title('US Nominal Bonds')
+            plt.axes.labelcolor='black'
+            plt.figsize=(8,8)
             plt.draw()
 
             plt.close()
@@ -141,6 +146,8 @@ class ImportData:
             # use a more precise date string for the x axis locations in the toolbar
             figures['ax_fig2'].xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
             figures['ax_fig2'].set_title('US InfLinkBonds Bonds')
+            plt.axes.labelcolor='black'
+            plt.figsize=(8,8)
             plt.draw()
 
         if save==1:

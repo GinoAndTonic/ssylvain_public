@@ -52,7 +52,10 @@ class Bonds(Asset):  # define child class
         self.yields_forecast = None
         self.forecast_se = None
         self.forecast_e = None
+        self.forecast_mse = None
         self.forecast_rmse = None
+        self.forecast_mse_all = None
+        self.forecast_rmse_all = None
 
     def setBondMaturity(self, maturity):
         self.maturity = maturity
