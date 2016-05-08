@@ -1491,7 +1491,55 @@ We can instead initialize the filter at the steady-state error variance
 \end_layout
 
 \begin_layout Subsection
-\paragraph_spacing onehalf
+Forecasts
+\end_layout
+
+\begin_layout Standard
+Given 
+\begin_inset Formula 
+\begin{eqnarray*}
+y_{t} & = & A_{0}+A_{1}X_{t}+\epsilon_{t}\\
+X_{t} & = & U_{0}+U_{1}X_{t-1}+\eta_{t}
+\end{eqnarray*}
+
+\end_inset
+
+Conditional on any date 
+\begin_inset Formula $t$
+\end_inset
+
+ we can forecast 
+\begin_inset Formula $y_{t}\left\{ h\right\} =E_{t}\left[y_{t+h}\right]$
+\end_inset
+
+ for any 
+\begin_inset Formula $h>0$
+\end_inset
+
+
+\begin_inset Formula 
+\begin{eqnarray*}
+X_{t+h} & = & U_{0}+U_{1}X_{t+h-1}+\eta_{t+h}\\
+X_{t+h} & = & U_{0}+U_{1}\left(U_{0}+U_{1}X_{t+h-2}+\eta_{t+h-1}\right)+\eta_{t+h}\\
+X_{t+h} & = & U_{0}+U_{1}U_{0}+U_{1}^{2}X_{t+h-2}+U_{1}\eta_{t+h-1}+\eta_{t+h}\\
+X_{t+h} & = & \sum_{j=0}^{h-1}U_{1}^{j}U_{0}+U_{1}^{h}X_{t}+\sum_{j=0}^{h-1}U_{1}^{j}\eta_{t+h-j}\\
+\\
+y_{t+h} & = & A_{0}+A_{1}\left(\sum_{j=0}^{h-1}U_{1}^{j}U_{0}+U_{1}^{h}X_{t}+\sum_{j=0}^{h-1}U_{1}^{j}\eta_{t+h-j}\right)+\epsilon_{t+h}\\
+ &  & \text{The forecast error is}\\
+y_{t+h}-y_{t}\left\{ h\right\}  & = & A_{1}\sum_{j=0}^{h-1}U_{1}^{j}\eta_{t+h-j}\\
+ &  & \text{The MSE is}\\
+diag\left(E_{t}\left[\left(y_{t+h}-y_{t}\left\{ h\right\} \right)\left(y_{t+h}-y_{t}\left\{ h\right\} \right)'\right]\right) & = & E_{t}\left[\left(A_{1}\sum_{j=0}^{h-1}U_{1}^{j}\eta_{t+h-j}\right)\left(\left(\sum_{j=0}^{h-1}\eta_{t+h-j}^{'}\left(U_{1}^{j}\right)^{'}\right)A_{1}^{'}\right)\right]\\
+\text{MSE} & = & diag\left(A_{1}\left(\sum_{j=0}^{h-1}U_{1}^{j}Q\left(U_{1}^{j}\right)^{'}\right)A_{1}^{'}\right)\\
+\\
+\\
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
 Data
 \end_layout
 

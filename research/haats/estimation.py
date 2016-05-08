@@ -230,7 +230,7 @@ class Rolling(Estimation):
 
         # Computing Forecasts, RMSE, etc. :
         forecast_horizon = 90*(estim_freq=='daily')+12*(estim_freq=='weekly')+3*(estim_freq=='monthly')
-        yields_forecast = kalman2.forecast(Xtt_new, forecast_horizon)
+        yields_forecast, yields_avgforecast = kalman2.forecast(Xtt_new, forecast_horizon)
         forecast_e, forecast_se, forecast_mse, forecast_rmse, forecast_mse_all, forecast_rmse_all = kalman2.rmse(yields_forecast)
 
         #Referencing individual dataframe columns in USnominals and USilbs objecs
