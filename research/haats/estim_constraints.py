@@ -7,7 +7,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import sys
 print(sys.argv)
-from xlrd import open_workbook
 from asset_class import *
 from kalman import *
 from extract_parameters import *

@@ -180,59 +180,46 @@ class Kalman:  # define super-class
 
         return Ytt, Yttl, Xtt, Xttl, Vtt, Vttl, Gain_t, eta_t, np.reshape(np.array(cum_log_likelihood), 1, 0)
 
-    def forecast(self, X, horizon=90, numpaths=1, numlabs=1, stoch=0):
+    def forecast(self, X, horizon=90):
         '''Given state variable X, return predicted measurement Y. For each t we forecast out for h=0,...,H.
         h=0 is the current (known) Y value. Since the covar matrix of errors for the state variables is generally
         not diagonal, we need to simulate many paths and then take the average'''
         tic = time.clock()
         #pre-allocating space for mean and std of forecast paths. we use 2 index columns for the dataframe: date and horizon. For each date
         #there is a corresponding horizon
-        y_avgfcst = pd.DataFrame(
-            np.empty((self.Y.shape[0]*(horizon+1), self.Y.shape[1]))*np.nan, columns=self.Y.columns)
+        T, m = self.Y.shape[0], self.Y.shape[1]
+        y_avgfcst = pd.DataFrame( np.empty((T*(horizon+1), m))*np.nan, columns=self.Y.columns )
         y_avgfcst['date'] = np.repeat(self.Y.index, horizon+1)
         y_avgfcst['horizon'] = y_avgfcst['date'] + \
-                           pd.TimedeltaIndex(np.tile(np.arange(horizon + 1), self.Y.index.shape[0]).tolist(),unit=self.Y.index.freq._prefix)
+                           pd.TimedeltaIndex(np.tile(np.arange(horizon + 1), T).tolist(),unit=self.Y.index.freq._prefix)
         y_avgfcst.set_index(['date','horizon'],inplace=True)
         y_stdfcst = y_avgfcst.copy()
-
-        pool = multiprocessing.Pool(processes=np.min([numlabs,numpaths,100]))
+        y_covfcst = pd.DataFrame(np.empty((T*(horizon+1), m**2))*np.nan, index=y_stdfcst.index,
+                                  columns=[str(y_stdfcst.columns[i])+'_'+str(y_stdfcst.columns[j]) for i in np.arange(m) for j in np.arange(m)])
 
         # now we do double loop over dates and horizons to fill ouput data matrix.
         # note that we will not yet fill in values for horizon=0; hence the h+1
-        for t in np.arange(self.Y.shape[0]):     # loop over dates
-
-            #pool.map only allows functions with one argument; need to have wrapper function
-            partial_simulation_ = partial(simulation_,self,X.iloc[t, :],horizon,stoch)
-
-            #ymat = np.empty((numpaths, horizon, self.Y.shape[1] ))*np.nan  # matrix to hold result for each simulation
-            ymat = np.array(pool.map(partial_simulation_,range(numpaths)))
-            # print(ymat.shape)
-            # ymat = np.array(Parallel(n_jobs=np.min([4,numpaths]), verbose=5)(delayed(simulation_)(self,X,horizon,n) for n in range(numpaths)))
-            print('done wiht date t='+str(t)+' forecasts')
-            # for n in np.arange(numpaths):   #loop over simulations
-            #     x = np.mat(X.iloc[t, :]).T  #initialize state for h = 0
-            #     for h in np.arange(horizon):     # loop over horizons
-            #         x = self.U0 + self.U1 * x + self.Q * np.random.randn(len(x),1)
-            #         print(n)
-            #         print(h)
-            #         ymat[n,h,:] = np.reshape(self.A0 + self.A1 * x + self.Phi * np.random.randn(self.Y.shape[1],1), self.Y.shape[1])
-            #         print(ymat[n,h,:])
-
-            for h in np.arange(horizon):  # loop over horizons  to fill output matrix with results
+        for t in np.arange(T):     # loop over dates
+            varsigma = self.Phi*0
+            x = np.mat(X.iloc[t, :]).T  #initialize state for h = 0
+            for h in np.arange(horizon):     # loop over horizons
+                varsigma = varsigma + self.A1 * (self.U1**h) * self.Q * (self.U1.T**h) * self.A1.T
+                x = self.U0 + self.U1 * x
                 # note that we will not yet fill in values for horizon=0; hence the h+1 on the next line
                 loc_th = ( self.Y.index[t], (self.Y.index[t]+pd.TimedeltaIndex([h+1], unit=self.Y.index.freq._prefix))[0] ) # tuple for dual-index location
                 size_th = y_avgfcst.loc[loc_th, :].shape # size of output at iteration t, h
-                y_avgfcst.loc[loc_th, :] = np.nanmean(ymat[:,h,:], axis=0)
-                y_stdfcst.loc[loc_th, :] = np.nanstd(ymat[:,h,:], axis=0, ddof=1)
-        pool.close()
-        pool.join()
+                y_avgfcst.loc[loc_th, :] = np.reshape(self.A0 + self.A1 * x + self.Phi * np.random.randn(m,1), m)
+                y_stdfcst.loc[loc_th, :] = np.reshape(np.diag(varsigma)**(0.5), m)
+                y_covfcst.loc[loc_th, :] = (varsigma.T).reshape(1,m**2)
+            # print('done with date t='+str(t)+' forecasts')
         # here is where we fill in values for h=0 for all t
         y_avgfcst.iloc[np.arange(0, y_avgfcst.shape[0], horizon+1)] = np.reshape(self.Y.values, \
                                                                          y_avgfcst.iloc[np.arange(0, y_avgfcst.shape[0], horizon + 1)].shape)
         y_stdfcst.iloc[np.arange(0, y_avgfcst.shape[0], horizon+1)] = 0
+        y_covfcst.iloc[np.arange(0, y_avgfcst.shape[0], horizon+1)] = 0
         toc = time.clock()
         print('processing time for forecast: '+str(toc-tic))
-        return y_avgfcst, y_stdfcst
+        return y_avgfcst, y_stdfcst, y_covfcst
 
     def rmse(self, y_fcst):  #RMSE calculations
         '''Returns error, squared error, mse(rmse): time series of mean(root-mean) squared error over horizons,
@@ -306,15 +293,3 @@ class Kalman:  # define super-class
             #V0T=reshape(v0T',1,n^2);
             #X0T=X0 +j0*(XtT(1,:)'-Xttl(1,:)');
         print('need to write smoother code')
-
-def simulation_(self,X,horizon,stoch,n):
-    #Set stoch = 0 to have deterministic simulations
-    out = np.empty((horizon, self.Y.shape[1],)) * np.nan  # matrix to hold result for each simulation
-    x = np.mat(X).T  # initialize state for h = 0
-    for h in np.arange(horizon):  # loop over horizons
-        x = self.U0 + self.U1 * x + stoch *  self.Q * np.random.randn(len(x), 1)
-        out[h, :] = np.reshape(self.A0 + self.A1 * x + stoch * self.Phi * np.random.randn(self.Y.shape[1], 1)
-                               ,self.Y.shape[1])
-        # print(out[h, :])
-    # print('done with simulation '+str(n))
-    return out

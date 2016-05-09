@@ -1527,11 +1527,13 @@ X_{t+h} & = & \sum_{j=0}^{h-1}U_{1}^{j}U_{0}+U_{1}^{h}X_{t}+\sum_{j=0}^{h-1}U_{1
 y_{t+h} & = & A_{0}+A_{1}\left(\sum_{j=0}^{h-1}U_{1}^{j}U_{0}+U_{1}^{h}X_{t}+\sum_{j=0}^{h-1}U_{1}^{j}\eta_{t+h-j}\right)+\epsilon_{t+h}\\
  &  & \text{The forecast error is}\\
 y_{t+h}-y_{t}\left\{ h\right\}  & = & A_{1}\sum_{j=0}^{h-1}U_{1}^{j}\eta_{t+h-j}\\
- &  & \text{The MSE is}\\
-diag\left(E_{t}\left[\left(y_{t+h}-y_{t}\left\{ h\right\} \right)\left(y_{t+h}-y_{t}\left\{ h\right\} \right)'\right]\right) & = & E_{t}\left[\left(A_{1}\sum_{j=0}^{h-1}U_{1}^{j}\eta_{t+h-j}\right)\left(\left(\sum_{j=0}^{h-1}\eta_{t+h-j}^{'}\left(U_{1}^{j}\right)^{'}\right)A_{1}^{'}\right)\right]\\
-\text{MSE} & = & diag\left(A_{1}\left(\sum_{j=0}^{h-1}U_{1}^{j}Q\left(U_{1}^{j}\right)^{'}\right)A_{1}^{'}\right)\\
+ &  & \text{The forecast error variance}\\
+\varsigma_{t}=E_{t}\left[\left(y_{t+h}-y_{t}\left\{ h\right\} \right)\left(y_{t+h}-y_{t}\left\{ h\right\} \right)'\right] & = & E_{t}\left[\left(A_{1}\sum_{j=0}^{h-1}U_{1}^{j}\eta_{t+h-j}\right)\left(\left(\sum_{j=0}^{h-1}\eta_{t+h-j}^{'}\left(U_{1}^{j}\right)^{'}\right)A_{1}^{'}\right)\right]\\
+\varsigma_{t}\left\{ h\right\}  & = & A_{1}\left(\sum_{j=0}^{h-1}U_{1}^{j}Q\left(U_{1}^{j}\right)^{'}\right)A_{1}^{'}\\
 \\
+\varsigma_{t}\left\{ h\right\}  & = & \varsigma_{t}\left\{ h-1\right\} +A_{1}U_{1}^{h-1}Q\left(U_{1}^{h-1}\right)^{'}A_{1}^{'}\\
 \\
+\varsigma_{t}\left\{ 1\right\}  & = & A_{1}QA_{1}^{'}
 \end{eqnarray*}
 
 \end_inset

@@ -230,24 +230,28 @@ class Rolling(Estimation):
 
         # Computing Forecasts, RMSE, etc. :
         forecast_horizon = 90*(estim_freq=='daily')+12*(estim_freq=='weekly')+3*(estim_freq=='monthly')
-        yields_forecast, yields_avgforecast = kalman2.forecast(Xtt_new, forecast_horizon)
+        yields_forecast, yields_forecast_std, yields_forecast_cov = kalman2.forecast(Xtt_new, forecast_horizon)
         forecast_e, forecast_se, forecast_mse, forecast_rmse, forecast_mse_all, forecast_rmse_all = kalman2.rmse(yields_forecast)
 
         #Referencing individual dataframe columns in USnominals and USilbs objecs
         for m in range(US_nominalmaturities.size):
             USnominals[m].yields_forecast = yields_forecast.iloc[:,m]
+            USnominals[m].yields_forecast_std = yields_forecast_std.iloc[:,m]
+            USnominals[m].yields_forecast_cov = yields_forecast_cov.iloc[:,m]
             USnominals[m].forecast_e, USnominals[m].forecast_se, USnominals[m].forecast_mse, USnominals[m].forecast_rmse \
                 , USnominals[m].forecast_mse_all, USnominals[m].forecast_rmse_all = \
                 forecast_e.iloc[:,m], forecast_se.iloc[:,m], forecast_mse.iloc[:,m], forecast_rmse.iloc[:,m], \
-                forecast_mse_all.iloc[:,m], forecast_rmse_all.iloc[:,m]
+                forecast_mse_all.iloc[0,m], forecast_rmse_all.iloc[0,m]
 
         for m in range(US_ilbmaturities.size):
             USilbs[m].yields_forecast = yields_forecast.iloc[:,US_nominalmaturities.size + m]
+            USilbs[m].yields_forecast_std = yields_forecast_std.iloc[:,US_nominalmaturities.size + m]
+            USilbs[m].yields_forecast_cov = yields_forecast_cov.iloc[:,US_nominalmaturities.size + m]
             USilbs[m].forecast_e, USilbs[m].forecast_se, USilbs[m].forecast_mse, USilbs[m].forecast_rmse \
                 , USilbs[m].forecast_mse_all, USilbs[m].forecast_rmse_all  = \
                 forecast_e.iloc[:,US_nominalmaturities.size + m], forecast_se.iloc[:,US_nominalmaturities.size + m], \
                 forecast_mse.iloc[:,US_nominalmaturities.size + m], forecast_rmse.iloc[:,US_nominalmaturities.size + m], \
-                forecast_mse_all.iloc[:,US_nominalmaturities.size + m], forecast_rmse_all.iloc[:,US_nominalmaturities.size + m]
+                forecast_mse_all.iloc[0,US_nominalmaturities.size + m], forecast_rmse_all.iloc[0,US_nominalmaturities.size + m]
 
 
         ######################################################################
@@ -260,16 +264,18 @@ class Rolling(Estimation):
             rho_r = np.mat(np.array([0, a_new, a_new, 0, 0, 1])).T
 
         # Compute expected inflation
-        bk_mats, exp_inf, irps, mttau, mttau_nn, prob_def, vttau, vttau_nn = self.expected_inflation(Kp_new, rho_n, rho_r, Sigma_new, thetap_new, Xtt_new)
+        self.bk_mats, self.exp_inf, self.irps, self.mttau, self.mttau_nn, self.prob_def, self.vttau, self.vttau_nn = \
+            self.expected_inflation(Kp_new, rho_n, rho_r, Sigma_new, thetap_new, Xtt_new)
 
         # Save results
         if save==1:
-            self.save_output(bk_mats, exp_inf, mttau, mttau_nn, prob_def, vttau, vttau_nn)
+            self.save_output(self.bk_mats, self.exp_inf, self.mttau, self.mttau_nn, self.prob_def, self.vttau, self.vttau_nn)
 
         # Plot results
         if plots==1:
-            self.plot_results(bk_mats, exp_inf, mttau, mttau_nn, prob_def, vttau, vttau_nn)
+            self.plot_results(self.bk_mats, self.exp_inf, self.mttau, self.mttau_nn, self.prob_def, self.vttau, self.vttau_nn)
 
+        self.USnominals, self.USilbs = USnominals, USilbs
         # return
 
     def expected_inflation(self, Kp_new, rho_n, rho_r, Sigma_new, thetap_new, Xtt_new):

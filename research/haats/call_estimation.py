@@ -25,10 +25,6 @@ windowsize = np.inf;
 
 np.set_printoptions(precision=32, suppress=True) #increase precision on  numeric values
 
-# global variables
-global a, Kp, lmda,lmda2,  Phi, sigma11, sigma22, sigma22_2, sigma33, sigma33_2,\
-    sigma44, Sigma, thetap, Nfeval, figures, cum_log_likelihood,\
-    Nfeval_vec, cum_log_likelihood_vec, doc, Nfeval_inner
 
 
 ################################################
