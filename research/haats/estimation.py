@@ -19,7 +19,11 @@ from scipy import integrate
 from estim_constraints import *
 from scipy.stats import norm
 from io import open
-
+import re
+#from IPython.core.debugger import Tracer; debug_here = Tracer()
+#import ipdb
+# import pdb #debugging within debugger
+# pdb.pm()
 
 class Estimation:
 
@@ -38,7 +42,8 @@ class Rolling(Estimation):
         Estimation.__init__(self)
 
     def run(self, data, US_ilbmaturities, US_nominalmaturities, \
-            estim_freq='daily', num_states=4, fix_Phi=1, setdiag_Kp=1, initV='unconditional', stationarity_assumption='yes', save=1, plots=1):
+            estim_freq='daily', num_states=4, fix_Phi=1, setdiag_Kp=1, initV='unconditional', stationarity_assumption='yes', save=0, plots=0 ,getexpinf=0,\
+            estimation_method='naive_mle'):
         US_num_maturities = len(US_ilbmaturities) + len(US_nominalmaturities)
 
         ########################################################
@@ -188,6 +193,7 @@ class Rolling(Estimation):
                     A0_out, A1_out, U0_out, U1_out, Q_out = extract_mats(prmtr_ext(prmtr), num_states, US_num_maturities, US_nominalmaturities, US_ilbmaturities, dt)
                     kalman1 = Kalman(Y, A0_out, A1_out, U0_out, U1_out, Q_out, Phi_out, initV, statevar_names=statevar_names)     # default uses X0, V0 = unconditional mean and error variance
                     Ytt, Yttl, Xtt, Xttl, Vtt, Vttl, Gain_t, eta_t, cum_log_likelihood = kalman1.filter()
+                    # pdb.set_trace()
                     plt.close("all")
                 except:
                     # print("Unexpected error:", sys.exc_info()[0])
@@ -241,7 +247,7 @@ class Rolling(Estimation):
             USnominals[m].forecast_e, USnominals[m].forecast_se, USnominals[m].forecast_mse, USnominals[m].forecast_rmse \
                 , USnominals[m].forecast_mse_all, USnominals[m].forecast_rmse_all = \
                 forecast_e.iloc[:,m], forecast_se.iloc[:,m], forecast_mse.iloc[:,m], forecast_rmse.iloc[:,m], \
-                forecast_mse_all.iloc[0,m], forecast_rmse_all.iloc[0,m]
+                forecast_mse_all.iloc[m], forecast_rmse_all.iloc[m]
 
         for m in range(US_ilbmaturities.size):
             USilbs[m].yields_forecast = yields_forecast.iloc[:,US_nominalmaturities.size + m]
@@ -251,7 +257,7 @@ class Rolling(Estimation):
                 , USilbs[m].forecast_mse_all, USilbs[m].forecast_rmse_all  = \
                 forecast_e.iloc[:,US_nominalmaturities.size + m], forecast_se.iloc[:,US_nominalmaturities.size + m], \
                 forecast_mse.iloc[:,US_nominalmaturities.size + m], forecast_rmse.iloc[:,US_nominalmaturities.size + m], \
-                forecast_mse_all.iloc[0,US_nominalmaturities.size + m], forecast_rmse_all.iloc[0,US_nominalmaturities.size + m]
+                forecast_mse_all.iloc[US_nominalmaturities.size + m], forecast_rmse_all.iloc[US_nominalmaturities.size + m]
 
 
         ######################################################################
@@ -263,9 +269,24 @@ class Rolling(Estimation):
             rho_n = np.mat(np.array([1, 1, 1, 0, 0, 0])).T
             rho_r = np.mat(np.array([0, a_new, a_new, 0, 0, 1])).T
 
+        # pdb.set_trace()
+            #save results to object:
+        self.dictionary_of_allresults = dict( (name,eval(name)) for name in np.unique(['prmtr_new','optim_output','num_states','Kp_new','rho_n','rho_r',\
+             'Sigma_new','thetap_new','USnominals','USilbs','rho_n','rho_r','USnominals','USilbs',\
+             'yields_forecast', 'yields_forecast_std', 'yields_forecast_cov','forecast_e', 'forecast_se', \
+             'forecast_mse', 'forecast_rmse', 'forecast_mse_all', 'forecast_rmse_all',\
+             'Ytt_new', 'Yttl_new', 'Xtt_new', 'Xttl_new', 'Vtt_new', 'Vttl_new', 'Gain_t_new', 'eta_t_new', 'cum_log_likelihood_new',\
+             'a_new', 'Kp_new', 'lmda_new', 'Phi_new', 'sigma11_new', 'sigma22_new', 'sigma33_new', 'sigma44_new', 'Sigma_new', 'thetap_new', \
+             'A0_new', 'A1_new', 'U0_new', 'U1_new','Q_new']).tolist() )
+        if num_states==6:
+            self.dictionary_of_allresults['lmda2_new'],self.dictionary_of_allresults['sigma22_2_new'],self.dictionary_of_allresults['sigma33_2_new'] = \
+                lmda2_new, sigma22_2_new, sigma33_2_new
+
+        self.num_states = num_states
         # Compute expected inflation
-        self.bk_mats, self.exp_inf, self.irps, self.mttau, self.mttau_nn, self.prob_def, self.vttau, self.vttau_nn = \
-            self.expected_inflation(Kp_new, rho_n, rho_r, Sigma_new, thetap_new, Xtt_new)
+        if getexpinf==1:
+            self.bk_mats, self.exp_inf, self.irps, self.mttau, self.mttau_nn, self.prob_def, self.vttau, self.vttau_nn = \
+                self.expected_inflation(Kp_new, rho_n, rho_r, Sigma_new, thetap_new, Xtt_new)
 
         # Save results
         if save==1:
@@ -275,12 +296,15 @@ class Rolling(Estimation):
         if plots==1:
             self.plot_results(self.bk_mats, self.exp_inf, self.mttau, self.mttau_nn, self.prob_def, self.vttau, self.vttau_nn)
 
-        self.USnominals, self.USilbs = USnominals, USilbs
         # return
 
-    def expected_inflation(self, Kp_new, rho_n, rho_r, Sigma_new, thetap_new, Xtt_new):
-        '''Compute excpected inflation'''
+    def em_mle(self, ):
+        '''E-M Algorithm with MLE '''
 
+
+    def expected_inflation(self, Kp_new, rho_n, rho_r, Sigma_new, thetap_new, Xtt_new):
+        '''Compute expected inflation'''
+        # pdb.set_trace()
         # Computing Expected Inflation:
         horizons = np.array(np.arange(100).T)  # horizon in years
         mttau = np.empty((self.Y.shape[0], self.num_states+1, horizons.size))

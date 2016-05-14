@@ -164,13 +164,14 @@ class ImportData:
             if plots == 1:
                 if not os.path.exists(r""+str.replace(os.getcwd(), '\\', '/')+"/output/figures"):
                     os.makedirs(r""+str.replace(os.getcwd(), '\\', '/')+"/output/figures") #make output directory if it doesn't exist
-                filename = r""+str.replace(os.getcwd(), '\\', '/')+"/output/figures" + \
-                            str(figures['fig1_name']) + ".eps"
-                figures['fig1'].savefig(filename, format="eps")
+                for format in ['eps','png']:
+                    filename = r""+str.replace(os.getcwd(), '\\', '/')+"/output/figures" + \
+                                str(figures['fig1_name']) + "." + format
+                    figures['fig1'].savefig(filename, format=format)
 
-                filename = r""+str.replace(os.getcwd(), '\\', '/')+"/output/figures" + \
-                            str(figures['fig2_name']) + ".eps"
-                figures['fig2'].savefig(filename, format="eps")
+                    filename = r""+str.replace(os.getcwd(), '\\', '/')+"/output/figures" + \
+                                str(figures['fig2_name']) + "." + format
+                    figures['fig2'].savefig(filename, format=format)
                 plt.close()
 
             #########################################################################################################################\

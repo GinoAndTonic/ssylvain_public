@@ -1274,7 +1274,7 @@ reference "sub:Kalman-filter-details"
  of the Appendix, the discretized state equation is
 \begin_inset Formula 
 \begin{eqnarray*}
-X_{i} & = & \left(I-exp\left(-K^{p}\Delta t_{i}\right)\right)\theta^{P}+exp\left(-K^{p}\Delta t_{i}\right)X_{t_{i}}+\eta_{i}\\
+X_{i} & = & \underbrace{\left(I-exp\left(-K^{p}\Delta t_{i}\right)\right)\theta^{P}}_{U_{0}}+\underbrace{exp\left(-K^{p}\Delta t_{i}\right)}_{U_{1}}X_{t_{i}}+\eta_{i}\\
  &  & \text{where}\\
 \Delta & = & t_{i}-t_{i-1}=\frac{1}{252}\quad\text{for daily data}\\
 \\
@@ -1393,9 +1393,9 @@ For stationarity (
 Predicted states and error variance
 \begin_inset Formula 
 \begin{eqnarray*}
-\hat{X}_{k|k-1} & = & \left(I-exp\left(-K^{p}\Delta\right)\right)\theta^{P}+exp\left(-K^{p}\Delta\right)\hat{X}_{k-1|k-1}\\
+\hat{X}_{k|k-1} & = & U_{0}+U_{1}\hat{X}_{k-1|k-1}\\
 \\
-\hat{V}_{k|k-1} & = & exp\left(-K^{p}\Delta\right)\hat{V}_{k-1|k-1}exp\left(-K^{p}\Delta\right)^{'}+Q
+\hat{V}_{k|k-1} & = & U_{1}\hat{V}_{k-1|k-1}U_{1}^{'}+Q
 \end{eqnarray*}
 
 \end_inset
@@ -1443,6 +1443,20 @@ where
 \end_inset
 
  is a vector containing the parameter set
+\end_layout
+
+\begin_layout Subsection
+E-M Algorithm
+\end_layout
+
+\begin_layout Standard
+To find the optimal parameters we use the EM algorithm.
+ We will use two versions of the EM algorithm, the first is implemented
+ with MLE and the second uses a Bayesian approach
+\end_layout
+
+\begin_layout Subsubsection
+MLE
 \end_layout
 
 \begin_layout Standard
@@ -2657,7 +2671,7 @@ The update steps are derived below.
 \end_inset
 
 ) given
-\begin_inset Formula $\hat{X}_{k|k}=\hat{X}_{k|k-1}-G_{k}\varepsilon_{k}$
+\begin_inset Formula $\hat{X}_{k|k}=\hat{X}_{k|k-1}+G_{k}\varepsilon_{k}$
 \end_inset
 
 .
@@ -2674,11 +2688,11 @@ The update steps are derived below.
 \begin{eqnarray*}
 \hat{V}_{k|k} & = & cov\left(X_{k}-\hat{X}_{k|k}\right)\\
 \\
- & = & cov\left(X_{k}-\left(\hat{X}_{k|k-1}-G_{k}\varepsilon_{k}\right)\right)\\
+ & = & cov\left(X_{k}-\left(\hat{X}_{k|k-1}+G_{k}\varepsilon_{k}\right)\right)\\
 \\
- & = & cov\left(X_{k}-\left(\hat{X}_{k|k-1}-G_{k}\left(y_{k}-A_{0}-A_{1}\hat{X}_{k|k-1}\right)\right)\right)\\
+ & = & cov\left(X_{k}-\left(\hat{X}_{k|k-1}+G_{k}\left(y_{k}-A_{0}-A_{1}\hat{X}_{k|k-1}\right)\right)\right)\\
 \\
- & = & cov\left(X_{k}-\left(\hat{X}_{k|k-1}-G_{k}\left(A_{0}+A_{1}X_{k}+\epsilon_{t}-A_{0}-A_{1}\hat{X}_{k|k-1}\right)\right)\right)\\
+ & = & cov\left(X_{k}-\left(\hat{X}_{k|k-1}+G_{k}\left(A_{0}+A_{1}X_{k}+\epsilon_{t}-A_{0}-A_{1}\hat{X}_{k|k-1}\right)\right)\right)\\
 \\
  & = & cov\left(\left(I-G_{k}A_{1}\right)\left(X_{k}-\hat{X}_{k|k-1}\right)-G_{k}\epsilon_{t}\right)\\
 \\

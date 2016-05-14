@@ -13,11 +13,14 @@ import multiprocessing as multiprocessing
 from joblib import Parallel, delayed
 from functools import partial
 import time
+from IPython.core.debugger import Tracer
+debug_here = Tracer()
 # plt.rc('text', usetex=True)   #need to install miktex
 plt.close("all")
 plt.close()
 plt.ion()
 __author__ = 'ssylvain'
+
 
 ''' REQUIRED INPUTS:
  1) the measurement: Y, it is a (T x m) matrix where each row is an observation and
@@ -63,7 +66,7 @@ class Kalman:  # define super-class
         self.Y, self.A0, self.A1, self.U0, self.U1, self.Q, self.Phi, self.initV, self.X0, self.V0, self.statevar_names = Y, A0, A1, U0, U1, \
                                                                                                      Q, Phi, initV, X0, V0, statevar_names
         n = self.U0.size
-        if self.X0 is None:
+        if self.X0 is None: # initialize X0 at unconditional mean
             self.X0 = np.mat(np.linalg.inv(np.identity(n) - self.U1)*self.U0)
         if self.V0 is None:
             if initV == 'steady_state':  # solve discrete Ricatti equation
@@ -244,52 +247,31 @@ class Kalman:  # define super-class
         forecast_rmse_all = forecast_mse_all ** 0.5
         return forecast_e, forecast_se, forecast_mse, forecast_rmse, forecast_mse_all, forecast_rmse_all
 
-    def smoother(self, Xtt, Xttl, Vtt, Vttl, A1, Gain_t, eta_t, U1, V0, X0, Q):
-        # TODO: NEED TO WRITE KALMAN SMOOTHER CODE
-        #n = U0.size
-        #T = Xtt.shape[0]
+    def smoother(self, Xtt, Xttl, Vtt, Vttl, Gain_t, eta_t):
+        n = self.U0.shape[0]
+        T = Xtt.shape[0]
+        XtT = Xtt * np.nan
+        VtT = Vtt * np.nan
+        VtlT = Vtt * np.nan
+        Jt = Vtt * np.nan
+        XtT.iloc[-1,:] = Xtt.iloc[-1,:];
+        VtT.iloc[-1,:] = Vtt.iloc[-1,:];
+        for t in np.arange(XtT.shape[0]-1,0,-1):
+            print(t)
+            vtt = np.reshape(np.mat(Vtt.iloc[t-1, :].values).T,(n,n))
+            vttl = np.reshape(np.mat(Vtt.iloc[t, :].values).T,(n,n))
+            vtT = np.reshape(np.mat(VtT.iloc[t, :].values).T,(n,n))
+            j = vtt * self.U1 * vttl
 
-        #XtT = Xtt * np.nan
-        #VtT = Vtt * np.nan
-        #VtlT = Vtt * np.nan
+            xtt = np.mat(Xtt.iloc[t-1, :].values).T
+            xttl = np.mat(Xttl.iloc[t, :].values).T
+            xtT = np.mat(XtT.iloc[t,:].values).T
 
-        #XtT[-1,:] = Xtt[-1,:];
-        #VtT[-1,:] = Vtt[-1,:];
+            xtT = xtt + j * (xtT - xttl)
+            vtT = vtt + j * (vtT - vttl) * j.T
 
-        #vtt_lag_temp=(np.reshape(Vtt[-1,:].T)(,n,n))).T;
-        #vtlT = (np.identity(n)-Gain_t[-1,:].T*A1)*U1*vtt_lag_temp;
-        #VtlT(end,:) = reshape(vtlT',1,n^2);
+            VtT.iloc[t-1, :] = (vtT.T).reshape(1,vtT.size)  # recording filterered variance along columns and dates along rows.
+            Jt.iloc[t-1, :] = (j.T).reshape(1,j.size)
+            XtT.iloc[t-1, :] = xtT.T
 
-        #v0=V0;
-        #v10=reshape(Vttl_ts(1,:)',n,n )';
-        #j0=v0*U1'*(v10^(-1));
-
-        #Jt=[];
-        #for tt=1:size(Xtt_ts,1)-1
-            #vtt=reshape(Vtt_ts(tt,:)',n,n )';
-            #vttl=reshape(Vttl_ts(tt+1,:)',n,n )';
-            #jt=vtt*U1'*(vttl^(-1));
-            #Jt= [Jt;reshape(jt',1,numel(jt))];
-
-        #for tt=size(Xtt_ts,1)-1:-1:1
-            #vtt=reshape(Vtt_ts(tt,:)',n,n )';
-            #vttl=reshape(Vttl_ts(tt+1,:)',n,n )';
-            #jt=reshape(Jt(tt,:)',n,n)';
-
-            #xtT=Xtt_ts(tt,:)'+jt*(XtT(tt+1,:)'-Xttl_ts(tt+1,:)');
-            #vtT=vtt'+jt*(reshape(VtT(tt+1,:)',n,n)'-vttl')*jt';
-            #XtT(tt,:) = xtT';
-            #VtT(tt,:) = reshape(vtT',1,n^2);
-
-            #if tt>1
-                #vtlT=vtt*(reshape(Jt(tt-1,:)',n,n)')'+jt*(reshape(VtlT(tt+1,:)',n,n )'-U1*vtt)*((reshape(Jt(tt-1,:)',n,n)')');
-            #else
-                #vtlT=vtt*(j0)'+jt*(reshape(VtlT(tt+1,:)',n,n )'-U1*vtt)*(j0');
-
-            #VtlT(tt,:)= reshape(vtlT',1,n^2);
-
-
-            #v0T=v0+j0*(reshape(VtT(1,:)',n,n)' - reshape(Vttl_ts(1,:)',n,n)' )*(j0');
-            #V0T=reshape(v0T',1,n^2);
-            #X0T=X0 +j0*(XtT(1,:)'-Xttl(1,:)');
-        print('need to write smoother code')
+        return XtT, VtT, Jt
