@@ -65,10 +65,16 @@ print("end date: %s" % edate)
 tips_data, nominal_data = ImportData.importUS_Data(US_ilbmaturities, US_nominalmaturities,plots=0,save=1)
 data = ImportData.extract_subset(tips_data, nominal_data, sdate, edate, allow_missing_data, estim_freq)
 
-estimation =Rolling()
-estimation.run(data, US_ilbmaturities, US_nominalmaturities, \
+estimation1 =Rolling()
+estimation1.run_setup(data, US_ilbmaturities, US_nominalmaturities, \
                 estim_freq=estim_freq, num_states=num_states,\
                 fix_Phi=fix_Phi, setdiag_Kp=setdiag_Kp, initV=initV)
+estimation1.fit('em_mle')
+estimation1.collect_results()
+estimation1.expected_inflation(estimation1.Kp_new, estimation1.rho_n, estimation1.rho_r, estimation1.Sigma_new, \
+                               estimation1.thetap_new, estimation1.Xtt_new) #do not use smoother here to avoid look-ahead bias
+estimation1.save_output()
+estimation1.plot_results()
 
 end_time = time.time()
 

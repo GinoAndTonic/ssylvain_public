@@ -1207,19 +1207,12 @@ reference "eq:key3"
 \end_inset
 
  parameters (depending on the number of bond maturities included).
- We want to run the model using data at a daily frequency.
- Notice that we can assume that 
-\begin_inset Formula $X_{t}$
-\end_inset
-
- is observed (or can be estimated) from PCA and then it is straight-forward
- to estimate the model parameters via MLE.
- To allow for the most flexibility we can assume that 
-\begin_inset Formula $X_{t}$
-\end_inset
-
- is not observed and then we can use a filtering method to estimate both
  
+\begin_inset Formula $X_{t}$
+\end_inset
+
+ is not observed .
+ We can use a filtering method to estimate both 
 \begin_inset Formula $X_{t}$
 \end_inset
 
@@ -1274,9 +1267,12 @@ reference "sub:Kalman-filter-details"
  of the Appendix, the discretized state equation is
 \begin_inset Formula 
 \begin{eqnarray*}
-X_{i} & = & \underbrace{\left(I-exp\left(-K^{p}\Delta t_{i}\right)\right)\theta^{P}}_{U_{0}}+\underbrace{exp\left(-K^{p}\Delta t_{i}\right)}_{U_{1}}X_{t_{i}}+\eta_{i}\\
+X_{i} & =U_{0} & +U_{1}X_{t_{i}}+\eta_{i}\\
  &  & \text{where}\\
 \Delta & = & t_{i}-t_{i-1}=\frac{1}{252}\quad\text{for daily data}\\
+\\
+U_{0} & = & \left(I-exp\left(-K^{p}\Delta t_{i}\right)\right)\theta^{P}\\
+U_{1} & = & exp\left(-K^{p}\Delta t_{i}\right)\\
 \\
 \eta_{i} & \sim & N(0,Q)\\
 \\
@@ -1338,12 +1334,44 @@ are appropriately defined and
 \begin{eqnarray*}
 y_{t} & = & A_{0}+A_{1}X_{t}+\epsilon_{t}\\
 \\
-\epsilon_{t} & \sim & N(0,\Phi)
+\epsilon_{t}^{N} & \sim & N(0,\Phi)\\
+\\
+A_{1} & = & \left(\begin{array}{c}
+A_{1}^{N}\\
+A_{1}^{R}
+\end{array}\right),\quad\quad A_{0}=\left(\begin{array}{c}
+A_{0}^{N}\\
+A_{0}^{R}
+\end{array}\right)\\
+\\
+A_{1}^{N}\left\{ \tau\right\}  & = & -\frac{1}{\tau}\left(\begin{array}{c}
+-\tau\\
+-\left(\frac{1-e^{-\lambda\tau}}{\lambda}\right)\\
+-\left(\frac{1-e^{-\lambda\tau}}{\lambda}-e^{-\lambda\tau}\tau\right)\\
+0
+\end{array}\right)\\
+A_{0}^{N}\left\{ \tau\right\}  & = & -\frac{\sigma_{11}^{2}}{2\tau}\left(\frac{\tau^{3}}{3}\right)\\
+ &  & -\frac{\sigma_{22}^{2}}{2\tau}\left(-\frac{-2\lambda\tau+e^{-2\lambda\tau}-4e^{-\lambda\tau}+3}{2\lambda^{3}}\right)\\
+ &  & -\frac{\sigma_{33}^{2}}{2\tau}\left(\frac{e^{-2\lambda\tau}\left(8e^{\lambda\tau}(\lambda\tau+2)-2\lambda\tau(\lambda\tau+3)+e^{2\lambda\tau}(4\lambda\tau-11)-5\right)}{4\lambda^{3}}\right)\\
+A_{1}^{R}\left\{ \tau\right\}  & = & -\frac{1}{\tau}\left(\begin{array}{c}
+0\\
+-\alpha^{R}\left(\frac{1-e^{-\lambda\tau}}{\lambda}\right)\\
+-\alpha^{R}\left(\frac{1-e^{-\lambda\tau}}{\lambda}-e^{-\lambda\tau}\tau\right)\\
+-\tau
+\end{array}\right)\\
+\\
+A_{0}^{R}\left\{ \tau\right\}  & = & -\frac{\sigma_{22}^{2}}{2\tau}(\alpha^{R})^{2}\left(-\frac{-2\lambda\tau+e^{-2\lambda\tau}-4e^{-\lambda\tau}+3}{2\lambda^{3}}\right)\\
+ &  & -\frac{\sigma_{33}^{2}}{2\tau}(\alpha^{R})^{2}\left(\frac{e^{-2\lambda\tau}\left(8e^{\lambda\tau}(\lambda\tau+2)-2\lambda\tau(\lambda\tau+3)+e^{2\lambda\tau}(4\lambda\tau-11)-5\right)}{4\lambda^{3}}\right)\\
+ &  & -\frac{\sigma_{44}^{2}}{2\tau}\left(\frac{\tau^{3}}{3}\right)
 \end{eqnarray*}
 
 \end_inset
 
+To avoid over-fitting the model we assume that 
+\begin_inset Formula $\Phi$
+\end_inset
 
+is diagonal.
 \end_layout
 
 \begin_layout Subsubsection
@@ -1452,7 +1480,8 @@ E-M Algorithm
 \begin_layout Standard
 To find the optimal parameters we use the EM algorithm.
  We will use two versions of the EM algorithm, the first is implemented
- with MLE and the second uses a Bayesian approach
+ with MLE and the second uses a Bayesian approach.
+ 
 \end_layout
 
 \begin_layout Subsubsection
@@ -1460,11 +1489,43 @@ MLE
 \end_layout
 
 \begin_layout Standard
+To avoid over-fitting we set 
+\begin_inset Formula $X_{0}=\theta^{p}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
 \paragraph_spacing onehalf
-MLE:
+Start with a guess for the set of parameters,
+\begin_inset Formula $\hat{\Omega}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+Run the Kalman filter
+\end_layout
+
+\begin_layout Enumerate
+Run the Kalman smoother
+\end_layout
+
+\begin_layout Enumerate
+Compute the expected log-likelihood 
 \begin_inset Formula 
 \begin{eqnarray*}
-\max_{\mho} &  & \sum_{k=0}^{K}\mathcal{L}_{k}\left\{ \mho\right\} 
+\mathcal{L}\left\{ \mho\right\}  & = & E\left[ln\left(\left(\prod_{t=1}^{T}p\left(Y_{t}|X_{t},\mho\right)\right)\left(\prod_{t=1}^{T}p\left(X_{t}|X_{t-1},\mho\right)\right)\right)\bigg|X^{(T)}\right]\\
+\\
+ &  & \text{the increment is}\\
+ &  & \text{and }\forall k\{1,...,T\}\text{ we have:}\\
+\mathcal{L}_{k}\left\{ \mho\right\}  & = & -\left(\frac{E_{X^{(T)}}\left[\left(y_{k}-A_{0}-A_{1}X_{k,T}\right)^{'}\Phi^{-1}\left(y_{k}-A_{0}-A_{1}X_{k,T}\right)\right]}{2}+\frac{\left(2\sum_{i}\tau_{i}\right)}{2}ln\left(2\pi\right)+\frac{1}{2}ln\left(|\Phi|\right)\right)\\
+ &  & -\left(\frac{E_{X^{(T)}}\left[\left(X_{k,k}-U_{0}-U_{1}X_{k-1,k-1}\right)^{'}Q^{-1}\left(X_{k,k}-U_{0}-U_{1}X_{k-1,k-1}\right)\right]}{2}+\frac{4}{2}ln\left(2\pi\right)+\frac{1}{2}ln\left(|Q|\right)\right)\\
+\\
+\\
+\\
 \end{eqnarray*}
 
 \end_inset
@@ -2753,11 +2814,6 @@ S_{k}=cov(\varepsilon_{k}) & = & \Phi+A_{1}\hat{V}_{k|k-1}A_{1}
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Standard
-\paragraph_spacing onehalf
 
 \end_layout
 

@@ -10,20 +10,19 @@ import matplotlib as mplt
 import pylab as plab
 import sys
 print(sys.argv)
-from kalman import *
-from extract_parameters import *
+import itertools
+# from IPython.core.debugger import Tracer; debug_here = Tracer() #this is the approach that works for ipython debugging
+import pdb
 from math import exp
 from scipy.optimize import minimize, fmin_slsqp
 from scipy.linalg import expm
 from scipy import integrate
-from estim_constraints import *
 from scipy.stats import norm
 from io import open
 import re
-#from IPython.core.debugger import Tracer; debug_here = Tracer()
-#import ipdb
-# import pdb #debugging within debugger
-# pdb.pm()
+from kalman import *
+from extract_parameters import *
+from estim_constraints import *
 
 class Estimation:
 
@@ -41,9 +40,9 @@ class Rolling(Estimation):
     def __init__(self):
         Estimation.__init__(self)
 
-    def run(self, data, US_ilbmaturities, US_nominalmaturities, \
-            estim_freq='daily', num_states=4, fix_Phi=1, setdiag_Kp=1, initV='unconditional', stationarity_assumption='yes', save=0, plots=0 ,getexpinf=0,\
-            estimation_method='naive_mle'):
+    def run_setup(self, data, US_ilbmaturities, US_nominalmaturities, \
+            estim_freq='daily', num_states=4, fix_Phi=1, setdiag_Kp=1, initV='unconditional', stationarity_assumption='yes'):
+        '''Set up initial guess parameters and other ingredients needed for estimation'''
         US_num_maturities = len(US_ilbmaturities) + len(US_nominalmaturities)
 
         ########################################################
@@ -76,65 +75,57 @@ class Rolling(Estimation):
         for m in range(US_nominalmaturities.size):
             USnominals[m].setZeroYieldsTS(data['US_NB'][[m]]/100)
             USnominals[m].setZeroYieldsDates(data['US_NB'].index)
-
         # Horizontal stacking of yields data:
         Y = pd.concat([data['US_NB'], data['US_ILB']], axis=1)/100
         self.Y = Y
         ########################################################
 
-
-
+        # debug_here()
         ########################################################
         #Initialize parameters
+        prmtr_dict = {} #dictionary to save parameters
+        prmtr_size_dict = {} #dictionary to save parameters sizes
 
         # See haats_documentation.pdf and haats_documentation.lyx
         # initializing parameters
-        # using numbers from Christensen, Diebold, Rudebusch (2010)
-        a = 0.677
-        # Kp = np.array([1.305, 0, 0, -1.613, 1.559, 0.828, -1.044, 0, 0, 0, 0.884, 0, -1.531, -0.364, 0, 1.645])     # reshape(num_states, num_states)
+        # using some of the numbers from Christensen, Diebold, Rudebusch (2010) to initialize some parameters
+        a = [0.677]
         Kp = np.reshape(np.identity(num_states),(num_states**2))
-        lmda = 0.5319
-        sigmas = np.array([0.0047, 0.00756, 0.02926, 0.00413])
-        thetap = np.array([0.06317, -0.1991, -0.00969, 0.03455])
+        lmda = [0.5319]
+        sigmas = [0.0047, 0.00756, 0.02926, 0.00413]
+        thetap = [0.06317, -0.1991, -0.00969, 0.03455]
+
         if num_states == 6:
             statevar_names = ['LN','S1','S2','C1','C2','LR']
-            Kp = np.reshape(np.identity(num_states),(num_states**2))
-            lmda2 = 0.5319/2
-            sigmas = np.array([0.0047, 0.00756, 0.00756, 0.02926, 0.02926, 0.00413])
-            thetap = np.array([0.06317, -0.1991, -0.1991, -0.00969, -0.00969, 0.03455])
+            lmda2 = [0.5319/2]
+            sigmas = [0.0047, 0.00756, 0.00756, 0.02926, 0.02926, 0.00413]
+            thetap = [0.06317, -0.1991, -0.1991, -0.00969, -0.00969, 0.03455]
         else:
             statevar_names = ['LN','S','C','LR']
+
         Phi_prmtr = np.log(np.diag(np.cov(Y.values.T)))   # estimate Phi
         if fix_Phi == 0:
-            # repopulate initial parameter vector:
-            prmtr_0 = np.array([a])
-            if setdiag_Kp==1:
-                prmtr_0 = np.append(prmtr_0, np.diag(np.reshape(Kp,(num_states,num_states))))
-            else:
-                prmtr_0 = np.append(prmtr_0, Kp)
-            prmtr_0 = np.append(prmtr_0, np.log(lmda ))  #  to impose non-negativity
-            if num_states == 6:
-                    prmtr_0 = np.append(prmtr_0, np.log(lmda2 ))  #  to impose non-negativity
-            prmtr_0 = np.append(prmtr_0, Phi_prmtr)  #  to impose non-negativity
-            prmtr_0 = np.append(prmtr_0, np.log(sigmas )) #  to impose non-negativity
-            prmtr_0 = np.append(prmtr_0, thetap)
-        else:
-            # populate initial parameter vector:
-            prmtr_0 = np.array([a])
-            if setdiag_Kp==1:
-                prmtr_0 = np.append(prmtr_0, np.diag(np.reshape(Kp,(num_states,num_states))))
-            else:
-                prmtr_0 = np.append(prmtr_0, Kp)
-            prmtr_0 = np.append(prmtr_0, np.log(lmda ))  #  to impose non-negativity
-            if num_states ==6:
-                prmtr_0 = np.append(prmtr_0, np.log(lmda2))  #  to impose non-negativity
-            prmtr_0 = np.append(prmtr_0, np.log(sigmas )) #  to impose non-negativity
-            prmtr_0 = np.append(prmtr_0, thetap)
+            prmtr_dict['Phi'] =  Phi_prmtr.tolist()  #  here we have to estimate the Phi
 
-        def prmtr_ext(prmtr):
-            '''function to insert parameters for Phi if provided into list of parameters. It also pads the list of parameters
-            with the parameters which are already known and need not be estimated'''
-            return prmtr_ext0(prmtr, num_states, Phi_prmtr, fix_Phi, setdiag_Kp)
+        prmtr_dict['a'] = a
+        prmtr_dict['lmda'] = np.log(lmda ).tolist()  #  to impose non-negativity
+
+        if setdiag_Kp == 1:
+            prmtr_dict['Kp'] = np.diag(np.reshape(Kp, (num_states, num_states))).tolist() #here Kp is diagonal
+        else:
+            prmtr_dict['Kp'] = Kp.tolist()
+
+        if num_states == 6:
+            prmtr_dict['lmda2'] = np.log(lmda2).tolist()  # to impose non-negativity
+
+        prmtr_dict['sigmas'] = np.log(sigmas)  # to impose non-negativity
+        prmtr_dict['thetap'] = thetap
+        # debug_here()
+
+        prmtr_0 = np.array(  list(itertools.chain.from_iterable(prmtr_dict.values()))  )#notice that the the values are sorted according the alphabetic order of the keys
+        for k in prmtr_dict.keys():
+            prmtr_size_dict[k] = len(prmtr_dict[k])
+        # debug_here()
 
         # this is to display the results in the console
         Nfeval = 1
@@ -153,153 +144,272 @@ class Rolling(Estimation):
         str_form3 = str_form3 + '  {' + str(prmtr_0.size + 1) + ': >20s}'
 
         # These next four lines are constraints we could use in the optimization.
-        cons = ineq_cons(num_states, US_num_maturities, fix_Phi, setdiag_Kp, Phi_prmtr)
-        ieconsls = ineq_cons_ls(num_states, US_num_maturities, fix_Phi, setdiag_Kp, Phi_prmtr)
-        bnds_lvl = prmtr_bounds_lvl(num_states, US_num_maturities)
-        bnds_exp = prmtr_bounds_exp(num_states, US_num_maturities)
+        self.cons = ineq_cons(num_states, prmtr_size_dict, Phi_prmtr)
+        # self.ieconsls = ineq_cons_ls(num_states, prmtr_size_dict, Phi_prmtr)
+        # self.bnds_lvl = prmtr_bounds_lvl(num_states, prmtr_size_dict, Phi_prmtr)
+        # self.bnds_exp = prmtr_bounds_exp(num_states, prmtr_size_dict, Phi_prmtr)
+        # debug_here()
 
-        # refining the initial guess, look for initial guess for X0 by doing a first pass at Kalman filter and taking the
-        # mean of the filtered state
-        if 0:
-            for ref in range(50):
-                if num_states == 4:
-                    a_ref, Kp_ref, lmda_ref, Phi_ref, sigma11_ref, sigma22_ref, sigma33_ref, sigma44_ref, Sigma_ref, thetap_ref = extract_vars(prmtr_ext(prmtr_0), num_states, US_num_maturities)
-                elif num_states == 6:
-                    a_ref, Kp_ref, lmda_ref, lmda2_ref, Phi_ref, sigma11_ref, sigma22_ref, sigma22_2_ref, sigma33_ref, sigma33_2_ref, sigma44_ref, Sigma_ref, thetap_ref = extract_vars(prmtr_ext(prmtr_0), num_states, US_num_maturities)
-                try:
-                    A0_ref, A1_ref, U0_ref, U1_ref, Q_ref = extract_mats(prmtr_ext(prmtr_0), num_states, US_num_maturities, US_nominalmaturities, US_ilbmaturities, dt)
-                    kalman1 = Kalman(Y, A0_ref, A1_ref, U0_ref, U1_ref, Q_ref, Phi_ref, initV)     # default uses X0, V0 = unconditional mean and error variance
-                    Ytt_ref, Yttl_ref, Xtt_ref, Xttl_ref, Vtt_ref, Vttl_ref, Gain_t_ref, eta_t_ref, cum_log_likelihood_ref = kalman1.filter()
-                except:
-                    print('initial guess is no good')
-                    break
-                prmtr_0[-num_states:] = np.array(np.mean(Xtt_ref.values[5:,:],0).T)[:,0]
-
-        ########################################################
+        self.str_form, self.str_form2 , self.str_form3  = str_form, str_form2, str_form3
+        self.num_states, self.US_num_maturities, self.US_nominalmaturities, self.US_ilbmaturities, self.dt, self.prmtr_size_dict = \
+            num_states, US_num_maturities, US_nominalmaturities, US_ilbmaturities, dt, prmtr_size_dict
+        self.Phi_prmtr, self.stationarity_assumption, self.initV = Phi_prmtr, stationarity_assumption, initV
+        self.prmtr_0 = prmtr_0
+        self.USilbs, self.USnominals = USilbs, USnominals
+        self.statevar_names = statevar_names
 
 
 
-        # objective function:
-        def neg_cum_log_likelihood(prmtr):
-            # try:
+    def fit(self, estimation_method='em_mle', tolerance=1e-4, maxiter=10 ):
+        '''Running Estimation Fit'''
+
+        # print(self.str_form3.format(*tuple(self.str_form2)))
+        print('new fit begins__________________________________________')
+        tic = time.clock()
+
+        tol, prmtr_new, iter_ = np.inf, self.prmtr_0, 0
+
+        #Let us record the path of the parameters and objective as we iterate:
+        fit_path_cols = [[k+str(ki) for ki in range(self.prmtr_size_dict[k])] for k in self.prmtr_size_dict.keys()]
+        fit_path_cols = np.array(  list(itertools.chain.from_iterable(fit_path_cols))  )
+        fit_path_inner_cols = np.hstack((['sub_objective'], fit_path_cols))
+        fit_path_cols = np.hstack((['objective','criteria'],fit_path_cols))
+        self.fit_path_inner = pd.DataFrame(np.hstack((np.mat([np.nan]), np.mat(prmtr_new))),columns=fit_path_inner_cols)
+        self.fit_path_inner.index.rename('sub_iter', inplace=1)
+        self.fit_path = pd.DataFrame(np.hstack((np.mat([np.nan,np.nan]), np.mat(prmtr_new))),columns=fit_path_cols)
+        self.fit_path.index.rename('iter', inplace=1)
+        optim_output = None
+
+        while tol>tolerance and iter_<=maxiter:
+            A0_out, A1_out, U0_out, U1_out, Q_out, Phi_out = extract_mats(prmtr_new, self.num_states, self.US_num_maturities, self.US_nominalmaturities, self.US_ilbmaturities, self.dt, self.prmtr_size_dict, self.Phi_prmtr)
+
+            kalman1 = Kalman(self.Y, A0_out, A1_out, U0_out, U1_out, Q_out, Phi_out, self.initV, statevar_names=self.statevar_names)  # default uses X0, V0 = unconditional mean and error variance
+
+            Ytt, Yttl, Xtt, Xttl, Vtt, Vttl, Gain_t, eta_t, cum_log_likelihood = kalman1.filter()
+
+            XtT, VtT, Jt = kalman1.smoother(Xtt, Xttl, Vtt, Vttl, Gain_t, eta_t)
+
+            if estimation_method=='em_mle':
+                prmtr_update, optim_output = self.em_mle(XtT, self.Y, prmtr_new, self.num_states, self.stationarity_assumption, self.US_num_maturities, self.US_ilbmaturities, \
+                                                         self.US_nominalmaturities, self.dt, self.Phi_prmtr, self.prmtr_size_dict, kalman1.X0)
+            elif estimation_method=='em_bayesian':
+                prmtr_update, optim_output = self.em_bayesian(XtT, self.Y, prmtr_new, self.num_states, self.stationarity_assumption, self.US_num_maturities, self.US_ilbmaturities, \
+                                                         self.US_nominalmaturities, self.dt, self.Phi_prmtr, self.prmtr_size_dict, kalman1.X0)
+
+            tol = np.sum(np.array(prmtr_new-prmtr_update)**2)
+            prmtr_new = prmtr_update
+            out_n = np.hstack((self.Nfeval_inner, prmtr_update.tolist(), np.array(-optim_output['fun']).tolist()))
+            # print(self.str_form.format(*tuple(out_n)))  # use * to unpack tuple
+            self.Nfeval_inner += 1
+            self.fit_path.loc[self.fit_path.index.values[-1]+1] = np.hstack((prmtr_new.tolist(), np.array([optim_output['fun'],tol]).tolist()))
+            print(self.fit_path.tail(1).to_string())
+
+
+        toc = time.clock()
+        try:
+            os.system("clear")
+        except:
+            try:
+                os.system("cls")
+            except:
+                print('')
+        print('processing time for fit: ' + str(toc - tic))
+        self.prmtr, self.optim_output = prmtr_new, optim_output
+        return prmtr_new, optim_output
+
+
+    def em_mle(self, X, Y, prmtr, num_states, stationarity_assumption, US_num_maturities, US_ilbmaturities,
+               US_nominalmaturities, dt, \
+               Phi_prmtr, prmtr_size_dict, X0,method='Nelder-Mead',maxiter=500,maxfev=500):
+        '''E-M Algorithm with MLE '''
+        print('\n\n\n\n\n\n\n\n\n\n\n')
+        global Nfeval_inner, fit_path_inner
+        Nfeval_inner = self.Nfeval_inner #let's track the number of inner iterations
+
+        # Let us record the path of the parameters and objective as we iterate:
+        fit_path_inner = pd.DataFrame(np.hstack((np.mat(np.nan), np.mat(prmtr))), columns=self.fit_path_inner.columns)
+
+        def objective_function(prmtr_):
+            '''Given vector of parameters it returns the negative cumulative log-likelihood'''
+            # os.system('clear')#clear console
+            global Nfeval_inner, fit_path_inner
+            #First, given parameter vector, build parameter matrices:
             if num_states == 4:
-                a_out, Kp_out, lmda_out, Phi_out, sigma11_out, sigma22_out, sigma33_out, sigma44_out, Sigma_out, thetap_out = extract_vars(prmtr_ext(prmtr), num_states, US_num_maturities)
+                a, Kp, lmda, Phi, sigma11, sigma22, sigma33, sigma44, Sigma, thetap = extract_vars(prmtr_, num_states, prmtr_size_dict, Phi_prmtr)
             elif num_states == 6:
-                a_out, Kp_out, lmda_out, lmda2_out, Phi_out, sigma11_out, sigma22_out, sigma22_2_out, sigma33_out, sigma33_2_out, sigma44_out, Sigma_out, thetap_out = extract_vars(prmtr_ext(prmtr), num_states, US_num_maturities)
-            if (min(np.real(np.linalg.eig(np.array(Kp_out))[0])) < 0) & (stationarity_assumption == 'yes'):
-                cum_log_likelihood = -np.inf
+                a, Kp, lmda, lmda2, Phi, sigma11, sigma22, sigma22_2, sigma33, sigma33_2, sigma44, Sigma, thetap = extract_vars( \
+                    prmtr_, num_states, prmtr_size_dict, Phi_prmtr)
+            # try:
+            #     min(np.real(np.linalg.eig(np.array(Kp))[0])) > 0
+            # except:
+            #     print('bad')
+            if (min(np.real(np.linalg.eig(np.array(Kp))[0])) < 0) & ( stationarity_assumption == 'yes'):  # imposing restriction on Kp; need positive eig vals
+                cum_log_likelihood = np.mat([-np.inf])
             else:
+                1
                 try:
-                    A0_out, A1_out, U0_out, U1_out, Q_out = extract_mats(prmtr_ext(prmtr), num_states, US_num_maturities, US_nominalmaturities, US_ilbmaturities, dt)
-                    kalman1 = Kalman(Y, A0_out, A1_out, U0_out, U1_out, Q_out, Phi_out, initV, statevar_names=statevar_names)     # default uses X0, V0 = unconditional mean and error variance
-                    Ytt, Yttl, Xtt, Xttl, Vtt, Vttl, Gain_t, eta_t, cum_log_likelihood = kalman1.filter()
-                    # pdb.set_trace()
-                    plt.close("all")
+                    A0, A1, U0, U1, Q, Phi = extract_mats(prmtr_, num_states, US_num_maturities, US_nominalmaturities, US_ilbmaturities, dt,\
+                                                          prmtr_size_dict, Phi_prmtr)
+                    #Then compute cumulative log likelihood
+                    cum_log_likelihood = np.mat([0])
+                    #Adding likelihood for Y:
+                    increment = np.trace((-(np.mat(Y.values).T - np.repeat(A0,Y.shape[0],axis=1) - A1 * np.mat(X.values).T).T) \
+                                * np.linalg.inv(Phi) * \
+                                (np.mat(Y.values).T - A0 - A1 * np.mat(X.values).T) )/ 2 \
+                                - (Y.shape[1] / 2) * np.log(2 * np.pi) - (1 / 2) * np.log(np.linalg.det(Phi))
+                    cum_log_likelihood = cum_log_likelihood + increment
+
+                    #Adding likelihood for X:
+                    increment = np.trace((-(np.mat(X.values).T - np.repeat(U0,X.shape[0],axis=1) - U1 * np.vstack((X0.T,X.iloc[0:-1, :].values)).T).T) \
+                                * np.linalg.inv(Q) * \
+                                (np.mat(X.values).T - np.repeat(U0, X.shape[0], axis=1) - U1 * np.vstack((X0.T, X.iloc[0:-1, :].values)).T)  ) / 2 \
+                                - (X.shape[1] / 2) * np.log(2 * np.pi) - (1 / 2) * np.log(np.linalg.det(Q))
+                    cum_log_likelihood = cum_log_likelihood + increment
                 except:
                     # print("Unexpected error:", sys.exc_info()[0])
-                    cum_log_likelihood = -np.inf
-            out_n = np.hstack((self.Nfeval_inner, prmtr, cum_log_likelihood))
-            print(str_form.format(*tuple(out_n)))    # use * to unpack tuple
-            self.Nfeval_inner += 1
-            return (-1) * cum_log_likelihood    # we will minimize the negative of the likelihood
+                    cum_log_likelihood =  np.mat([-np.inf])
+
+            Nfeval_inner += 1
+            # debug_here()
+            fit_path_inner.loc[fit_path_inner.index.values[-1]+1] = np.hstack((prmtr_.tolist(), np.array(cum_log_likelihood)[0].tolist()))
+            # print(fit_path_inner.iloc[-1,:])
+            print(fit_path_inner.tail(1).to_string())
+
+            return (-1) * np.reshape(np.array(cum_log_likelihood), 1, 0)  #important to reshape to scalar
+
+        # try:
+        #     debug_here()
+        # except:
+        #     0
+        #See http://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html#scipy.optimize.minimize for description of optimizer
+        # tic = time.clock()
+        optim_output = minimize(objective_function, prmtr, method=method, options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev}) #Nelder-Mead works well
+        # toc = time.clock()
+        # print('Nelder-Mead: '+str(toc-tic))
+
+        # optim_output = minimize(objective_function, prmtr, method='trust-ncg', options={'disp': 1}) #jacobian required
+        # optim_output = minimize(objective_function, prmtr, method='dogleg', options={'disp': 1}) # requires the gradient and Hessian
+        # optim_output = minimize(objective_function, prmtr, method='CG', options={'disp': 1}) #lead to nans in prmtr
+        # optim_output = minimize(objective_function, prmtr, method='Newton-CG', options={'disp': 1}) # Jacobian is required
+        # optim_output = minimize(objective_function, prmtr, method='TNC', options={'disp': 1}) #lead to nans in prmtr
+        # optim_output = minimize(objective_function, prmtr, method='Powell', options={'disp': 1}) #too slow
+        # optim_output = minimize(objective_function, prmtr, method='COBYLA', options={'disp': 1})
+        # optim_output = minimize(objective_function, prmtr, method='BFGS', options={'disp': 1}) #this could work but can lead to error with nan in prmtr
+        # optim_output = minimize(objective_function, prmtr, method='SLSQP', options={'disp': 1}) #this could work but can lead to error with nan in prmtr
+        # optim_output = minimize(objective_function, prmtr, method='SLSQP', constraints = self.cons, options={'disp': 1})# only COBYLA and SLSQP allow constraints;  #this could work but can lead to error with nan in prmtr
+
+        self.Nfeval_inner = Nfeval_inner
+        self.fit_path_inner = self.fit_path_inner.append(fit_path_inner)
+        try:
+            os.system("clear")
+        except:
+            try:
+                os.system("cls")
+            except:
+                print('')
+        return optim_output['x'], optim_output
 
 
 
-        ######################################################################
-        # Running optimization:
-        print('\n\n\n')
-        print(str_form3.format(*tuple(str_form2)))
-        print('new iterations begins__________________________________________')
-        tic = time.clock()
-        optim_output = minimize(neg_cum_log_likelihood, prmtr_0,  method='Powell', options={'disp': 1})
-        toc = time.clock()
-        print('processing time: '+str(toc-tic))
-        #if stationarity_assumption == 'no':
-        #    optim_output = minimize(neg_cum_log_likelihood, prmtr_0,  method='Powell', options={'disp': 1})
-        #elif stationarity_assumption == 'yes':
-        #    optim_output = minimize(neg_cum_log_likelihood, prmtr_0, method='Powell', options={'disp': 1})
-        ######################################################################
+    def em_bayesian(self, X, Y, prmtr, num_states, stationarity_assumption, US_num_maturities, US_ilbmaturities,
+                    US_nominalmaturities, dt, \
+                    Phi_prmtr, fix_Phi, setdiag_Kp):
+        '''E-M Algorithm with Bayesian approach '''
 
 
-        prmtr_new = optim_output['x'] #collecting optimal parameters
 
-        ######################################################################
+    def collect_results(self):
+        prmtr, optim_output = self.prmtr, self.optim_output
 
         # Extracting filtered states:
         if num_states == 4:
-            a_new, Kp_new, lmda_new, Phi_new, sigma11_new, sigma22_new, sigma33_new, sigma44_new, Sigma_new, thetap_new = extract_vars(prmtr_ext(optim_output['x']), num_states, US_num_maturities)
+            a_new, Kp_new, lmda_new, Phi_new, sigma11_new, sigma22_new, sigma33_new, sigma44_new, Sigma_new, thetap_new = extract_vars(
+                prmtr, self.num_states, self.prmtr_size_dict)
         elif num_states == 6:
-            a_new, Kp_new, lmda_new, lmda2_new, Phi_new, sigma11_new, sigma22_new, sigma22_2_new, sigma33_new, sigma33_2_new, sigma44_new, Sigma_new, thetap_new = extract_vars(prmtr_ext(optim_output['x']), num_states, US_num_maturities)
-        A0_new, A1_new, U0_new, U1_new, Q_new = extract_mats(prmtr_ext(optim_output['x']), num_states, US_num_maturities, US_nominalmaturities, US_ilbmaturities, dt)
+            a_new, Kp_new, lmda_new, lmda2_new, Phi_new, sigma11_new, sigma22_new, sigma22_2_new, sigma33_new, sigma33_2_new, sigma44_new, Sigma_new, thetap_new = extract_vars(
+                prmtr, self.num_states, self.prmtr_size_dict)
+        A0_new, A1_new, U0_new, U1_new, Q_new = extract_mats(prmtr, self.num_states, self.US_num_maturities,
+                                                             self.US_nominalmaturities, self.US_ilbmaturities, self.dt)
         kalman2 = Kalman(Y, A0_new, A1_new, U0_new, U1_new, Q_new, Phi_new, initV)
         Ytt_new, Yttl_new, Xtt_new, Xttl_new, Vtt_new, Vttl_new, Gain_t_new, eta_t_new, cum_log_likelihood_new = kalman2.filter()
+        XtT_new, VtT_new, Jt_new = kalman2.smoother(Xtt_new, Xttl_new, Vtt_new, Vttl_new, Gain_t_new, eta_t_new)
 
         # Computing Forecasts, RMSE, etc. :
-        forecast_horizon = 90*(estim_freq=='daily')+12*(estim_freq=='weekly')+3*(estim_freq=='monthly')
+        forecast_horizon = 90 * (estim_freq == 'daily') + 12 * (estim_freq == 'weekly') + 3 * (estim_freq == 'monthly')
         yields_forecast, yields_forecast_std, yields_forecast_cov = kalman2.forecast(Xtt_new, forecast_horizon)
-        forecast_e, forecast_se, forecast_mse, forecast_rmse, forecast_mse_all, forecast_rmse_all = kalman2.rmse(yields_forecast)
+        forecast_e, forecast_se, forecast_mse, forecast_rmse, forecast_mse_all, forecast_rmse_all = kalman2.rmse(
+            yields_forecast)
 
-        #Referencing individual dataframe columns in USnominals and USilbs objecs
-        for m in range(US_nominalmaturities.size):
-            USnominals[m].yields_forecast = yields_forecast.iloc[:,m]
-            USnominals[m].yields_forecast_std = yields_forecast_std.iloc[:,m]
-            USnominals[m].yields_forecast_cov = yields_forecast_cov.iloc[:,m]
-            USnominals[m].forecast_e, USnominals[m].forecast_se, USnominals[m].forecast_mse, USnominals[m].forecast_rmse \
-                , USnominals[m].forecast_mse_all, USnominals[m].forecast_rmse_all = \
-                forecast_e.iloc[:,m], forecast_se.iloc[:,m], forecast_mse.iloc[:,m], forecast_rmse.iloc[:,m], \
+        # Referencing individual dataframe columns in USnominals and USilbs objecs
+        for m in range(self.US_nominalmaturities.size):
+            self.USnominals[m].yields_forecast = yields_forecast.iloc[:, m]
+            self.USnominals[m].yields_forecast_std = yields_forecast_std.iloc[:, m]
+            self.USnominals[m].yields_forecast_cov = yields_forecast_cov.iloc[:, m]
+            self.USnominals[m].forecast_e, self.USnominals[m].forecast_se, self.USnominals[m].forecast_mse, self.USnominals[m].forecast_rmse \
+                , self.USnominals[m].forecast_mse_all, self.USnominals[m].forecast_rmse_all = \
+                forecast_e.iloc[:, m], forecast_se.iloc[:, m], forecast_mse.iloc[:, m], forecast_rmse.iloc[:, m], \
                 forecast_mse_all.iloc[m], forecast_rmse_all.iloc[m]
 
         for m in range(US_ilbmaturities.size):
-            USilbs[m].yields_forecast = yields_forecast.iloc[:,US_nominalmaturities.size + m]
-            USilbs[m].yields_forecast_std = yields_forecast_std.iloc[:,US_nominalmaturities.size + m]
-            USilbs[m].yields_forecast_cov = yields_forecast_cov.iloc[:,US_nominalmaturities.size + m]
-            USilbs[m].forecast_e, USilbs[m].forecast_se, USilbs[m].forecast_mse, USilbs[m].forecast_rmse \
-                , USilbs[m].forecast_mse_all, USilbs[m].forecast_rmse_all  = \
-                forecast_e.iloc[:,US_nominalmaturities.size + m], forecast_se.iloc[:,US_nominalmaturities.size + m], \
-                forecast_mse.iloc[:,US_nominalmaturities.size + m], forecast_rmse.iloc[:,US_nominalmaturities.size + m], \
+            self.USilbs[m].yields_forecast = yields_forecast.iloc[:, US_nominalmaturities.size + m]
+            self.USilbs[m].yields_forecast_std = yields_forecast_std.iloc[:, US_nominalmaturities.size + m]
+            self.USilbs[m].yields_forecast_cov = yields_forecast_cov.iloc[:, US_nominalmaturities.size + m]
+            self.USilbs[m].forecast_e, self.USilbs[m].forecast_se, self.USilbs[m].forecast_mse, self.USilbs[m].forecast_rmse \
+                , self.USilbs[m].forecast_mse_all, self.USilbs[m].forecast_rmse_all = \
+                forecast_e.iloc[:, US_nominalmaturities.size + m], forecast_se.iloc[:, US_nominalmaturities.size + m], \
+                forecast_mse.iloc[:, US_nominalmaturities.size + m], forecast_rmse.iloc[:, US_nominalmaturities.size + m], \
                 forecast_mse_all.iloc[US_nominalmaturities.size + m], forecast_rmse_all.iloc[US_nominalmaturities.size + m]
-
 
         ######################################################################
 
-        if num_states == 4:
-            rho_n = np.mat(np.array([1, 1, 0, 0])).T
-            rho_r = np.mat(np.array([0, a_new, 0, 1])).T
+        if self.num_states == 4:
+            self.rho_n = np.mat(np.array([1, 1, 0, 0])).T
+            self.rho_r = np.mat(np.array([0, a_new, 0, 1])).T
         elif num_states == 6:
-            rho_n = np.mat(np.array([1, 1, 1, 0, 0, 0])).T
-            rho_r = np.mat(np.array([0, a_new, a_new, 0, 0, 1])).T
+            self.rho_n = np.mat(np.array([1, 1, 1, 0, 0, 0])).T
+            self.rho_r = np.mat(np.array([0, a_new, a_new, 0, 0, 1])).T
 
-        # pdb.set_trace()
-            #save results to object:
-        self.dictionary_of_allresults = dict( (name,eval(name)) for name in np.unique(['prmtr_new','optim_output','num_states','Kp_new','rho_n','rho_r',\
-             'Sigma_new','thetap_new','USnominals','USilbs','rho_n','rho_r','USnominals','USilbs',\
-             'yields_forecast', 'yields_forecast_std', 'yields_forecast_cov','forecast_e', 'forecast_se', \
-             'forecast_mse', 'forecast_rmse', 'forecast_mse_all', 'forecast_rmse_all',\
-             'Ytt_new', 'Yttl_new', 'Xtt_new', 'Xttl_new', 'Vtt_new', 'Vttl_new', 'Gain_t_new', 'eta_t_new', 'cum_log_likelihood_new',\
-             'a_new', 'Kp_new', 'lmda_new', 'Phi_new', 'sigma11_new', 'sigma22_new', 'sigma33_new', 'sigma44_new', 'Sigma_new', 'thetap_new', \
-             'A0_new', 'A1_new', 'U0_new', 'U1_new','Q_new']).tolist() )
-        if num_states==6:
-            self.dictionary_of_allresults['lmda2_new'],self.dictionary_of_allresults['sigma22_2_new'],self.dictionary_of_allresults['sigma33_2_new'] = \
+            # pdb.set_trace()
+            # save results to object:
+        self.dictionary_of_allresults = dict(
+            (name, eval(name)) for name in np.unique(['prmtr', 'optim_output', 'num_states', 'Kp_new', 'rho_n', 'rho_r', \
+                                                      'Sigma_new', 'thetap_new', 'USnominals', 'USilbs', 'rho_n', 'rho_r',
+                                                      'USnominals', 'USilbs', \
+                                                      'yields_forecast', 'yields_forecast_std', 'yields_forecast_cov',
+                                                      'forecast_e', 'forecast_se', \
+                                                      'forecast_mse', 'forecast_rmse', 'forecast_mse_all',
+                                                      'forecast_rmse_all', \
+                                                      'Ytt_new', 'Yttl_new', 'Xtt_new', 'Xttl_new', 'Vtt_new', 'Vttl_new',
+                                                      'Gain_t_new', 'eta_t_new', 'cum_log_likelihood_new', \
+                                                      'a_new', 'Kp_new', 'lmda_new', 'Phi_new', 'sigma11_new',
+                                                      'sigma22_new', 'sigma33_new', 'sigma44_new', 'Sigma_new',
+                                                      'thetap_new', \
+                                                      'A0_new', 'A1_new', 'U0_new', 'U1_new', 'Q_new']).tolist())
+        if num_states == 6:
+            self.dictionary_of_allresults['lmda2_new'], self.dictionary_of_allresults['sigma22_2_new'], \
+            self.dictionary_of_allresults['sigma33_2_new'] = \
                 lmda2_new, sigma22_2_new, sigma33_2_new
 
-        self.num_states = num_states
-        # Compute expected inflation
-        if getexpinf==1:
-            self.bk_mats, self.exp_inf, self.irps, self.mttau, self.mttau_nn, self.prob_def, self.vttau, self.vttau_nn = \
-                self.expected_inflation(Kp_new, rho_n, rho_r, Sigma_new, thetap_new, Xtt_new)
 
-        # Save results
-        if save==1:
-            self.save_output(self.bk_mats, self.exp_inf, self.mttau, self.mttau_nn, self.prob_def, self.vttau, self.vttau_nn)
 
-        # Plot results
-        if plots==1:
-            self.plot_results(self.bk_mats, self.exp_inf, self.mttau, self.mttau_nn, self.prob_def, self.vttau, self.vttau_nn)
+    # self.num_states = num_states
+    # # Compute expected inflation
+    # if getexpinf == 1:
+    #     self.bk_mats, self.exp_inf, self.irps, self.mttau, self.mttau_nn, self.prob_def, self.vttau, self.vttau_nn = \
+    #         self.expected_inflation(Kp_new, rho_n, rho_r, Sigma_new, thetap_new, Xtt_new)
+    #
+    # # Save results
+    # if save == 1:
+    #     self.save_output(self.bk_mats, self.exp_inf, self.mttau, self.mttau_nn, self.prob_def, self.vttau,
+    #                      self.vttau_nn)
+    #
+    # # Plot results
+    # if plots == 1:
+    #     self.plot_results(self.bk_mats, self.exp_inf, self.mttau, self.mttau_nn, self.prob_def, self.vttau,
+    #                       self.vttau_nn)
+    #
+    # # return
 
-        # return
-
-    def em_mle(self, ):
-        '''E-M Algorithm with MLE '''
 
 
     def expected_inflation(self, Kp_new, rho_n, rho_r, Sigma_new, thetap_new, Xtt_new):
@@ -359,179 +469,230 @@ class Rolling(Estimation):
         prob_def[:, 0] = 0
         prob_def = pd.DataFrame(np.mat(prob_def),index=self.Y.index)
 
+        self.bk_mats, self.exp_inf, self.irps, self.mttau, self.mttau_nn, self.prob_def, self.vttau, self.vttau_nn = \
+            bk_mats, exp_inf, irps, mttau, mttau_nn, prob_def, vttau, vttau_nn
+
         return bk_mats, exp_inf, irps, mttau, mttau_nn, prob_def, vttau, vttau_nn
 
+    # if estimation_method == 'naive_test':
+    #     # objective function:
+    #     def neg_cum_log_likelihood(prmtr):
+    #         # try:
+    #         if num_states == 4:
+    #             a_out, Kp_out, lmda_out, Phi_out, sigma11_out, sigma22_out, sigma33_out, sigma44_out, Sigma_out, thetap_out = extract_vars(
+    #                 prmtr, num_states, prmtr_size_dict)
+    #         elif num_states == 6:
+    #             a_out, Kp_out, lmda_out, lmda2_out, Phi_out, sigma11_out, sigma22_out, sigma22_2_out, sigma33_out, sigma33_2_out, sigma44_out, Sigma_out, thetap_out = extract_vars(
+    #                 prmtr, num_states, prmtr_size_dict)
+    #         if (min(np.real(np.linalg.eig(np.array(Kp_out))[0])) < 0) & (stationarity_assumption == 'yes'):
+    #             cum_log_likelihood = -np.inf
+    #         else:
+    #             try:
+    #                 A0_out, A1_out, U0_out, U1_out, Q_out = extract_mats(prmtr_ext(prmtr), num_states,
+    #                                                                      US_num_maturities, US_nominalmaturities,
+    #                                                                      US_ilbmaturities, dt)
+    #                 kalman1 = Kalman(Y, A0_out, A1_out, U0_out, U1_out, Q_out, Phi_out, initV,
+    #                                  statevar_names=statevar_names)  # default uses X0, V0 = unconditional mean and error variance
+    #                 Ytt, Yttl, Xtt, Xttl, Vtt, Vttl, Gain_t, eta_t, cum_log_likelihood = kalman1.filter()
+    #                 # pdb.set_trace()
+    #                 plt.close("all")
+    #             except:
+    #                 # print("Unexpected error:", sys.exc_info()[0])
+    #                 cum_log_likelihood = -np.inf
+    #         out_n = np.hstack((self.Nfeval_inner, prmtr, cum_log_likelihood))
+    #         print(str_form.format(*tuple(out_n)))  # use * to unpack tuple
+    #         self.Nfeval_inner += 1
+    #         return (-1) * cum_log_likelihood  # we will minimize the negative of the likelihood
+    #
+    #     ######################################################################
+    #     # Running optimization:
+    #     print('\n\n\n')
+    #     print(str_form3.format(*tuple(str_form2)))
+    #     print('new iterations begins__________________________________________')
+    #     tic = time.clock()
+    #     optim_output = minimize(neg_cum_log_likelihood, prmtr_0, method='Powell', options={'disp': 1})
+    #     toc = time.clock()
+    #     print('processing time: ' + str(toc - tic))
+    #     # if stationarity_assumption == 'no':
+    #     #    optim_output = minimize(neg_cum_log_likelihood, prmtr_0,  method='Powell', options={'disp': 1})
+    #     # elif stationarity_assumption == 'yes':
+    #     #    optim_output = minimize(neg_cum_log_likelihood, prmtr_0, method='Powell', options={'disp': 1})
+    #     ######################################################################
+
+
+
     def save_output(self, bk_mats, prmtr_new, exp_inf, mttau, mttau_nn, prob_def, vttau, vttau_nn):
-
-        # recording output
-        datadate = np.array([np.union1d(dates['US_NB'], dates['US_ILB']).astype(DT.datetime)[tt].year*10000+np.union1d(dates['US_NB'], dates['US_ILB']).astype(DT.datetime)[tt].month*100+np.union1d(dates['US_NB'], dates['US_ILB']).astype(DT.datetime)[tt].day for tt in np.arange(0,np.union1d(dates['US_NB'], dates['US_ILB']).shape[0])])
-        datadate = np.hstack((0, datadate))
-
-        if self.num_states ==4:
-            lmda2_new=0
-        # TODO: NEED TO FIX THIS CODE BELOW FOR SAVING THE OUTPUT AS TXT FILES. IT IS CURRENTLY NOT STARTING NEW LINE AFTER THE HEADERS.
-        # creating txt files to record latest observation of each time series of key results
-        my_matrix = np.array(['prob_def','irps','bk_evens','exp_inf','Y','Ytt_new','Yttl_new','Xtt_new','Xttl_new','Vtt_new','Vttl_new','prmtr_new','Kp_new','thetap_new','Sigma_new','a_new','lmda_new','lmda2_new','Phi_new','Q_new','U0_new','U1_new','A0_new','A1_new','V0','X0'])
-        if os.path.isfile(r'Z:\GMO\Research\AffineTermStructure\code\python_haats\txt_files\prob_def_'+estim_freq+'.txt')==False:  # if files do not exist, creat new ones with appropriate headers
-            header_prob_def, header_exp_inf = (tuple(['dates'])+tuple([',horizon: '+str(vv)+'yr' for vv in horizons])+tuple(['\n']) for vvv in range(2))
-            header_Y, header_Ytt_new,  header_Yttl_new = (tuple(['dates'])+tuple([',Nominal: '+str(US_nominalmaturities[vv])+'yr' for vv in range(US_nominalmaturities.size)])\
-                                                 + tuple([',ILB: '+str(US_ilbmaturities[vv])+'yr' for vv in range(US_ilbmaturities.size)])+tuple(['\n']) for vvv in range(3))
-            header_irps, header_bk_evens = (tuple(['dates'])+tuple([','+str(vv)+'yr' for vv in bk_mats])+tuple(['\n']) for vvv in range(2))
-            if self.num_states==4:
-                header_Xtt_new,  header_Xttl_new, header_thetap_new, header_X0  = (tuple(['dates,Ln,S,C,Lr'])+tuple(['\n']) for vvv in range(4))
-            if self.num_states==6:
-                header_Xtt_new,  header_Xttl_new, header_thetap_new, header_X0  = (tuple(['dates,Ln,S1,S2,C1,C2,Lr'])+tuple(['\n']) for vvv in range(4))
-            header_Vtt_new,  header_Vttl_new, header_V0 = (((tuple(['dates'])+tuple(np.reshape([[',V('+str(vv)+';'+str(vv2)+')'  for vv in range(num_states)] for vv2 in range(num_states)],(num_states**2)))+tuple(['\n']) )) for vvv in range(3))
-            header_prmtr_new = tuple(['dates'])+tuple([',prmtr('+str(vv)+')' for vv in range(prmtr_new.size)])+tuple(['\n'])
-            header_Kp_new = tuple(['dates'])+tuple(np.reshape([[',Kp('+str(vv)+';'+str(vv2)+')'  for vv in range(num_states)] for vv2 in range(num_states)],(num_states**2)))+tuple(['\n'])
-            header_Sigma_new = tuple(['dates'])+tuple(np.reshape([[',Sigma('+str(vv)+';'+str(vv2)+')'  for vv in range(num_states)] for vv2 in range(num_states)],(num_states**2)))+tuple(['\n'])
-            header_a_new, header_lmda_new, header_lmda2_new  = tuple(['dates,a'])+tuple(['\n']), tuple(['dates,lmda'])+tuple(['\n']), tuple(['dates,lmda2'])+tuple(['\n'])
-            header_Phi_new = tuple(['dates'])+tuple(np.reshape([[',Sigma('+str(vv)+';'+str(vv2)+')'  for vv in range(US_num_maturities)] for vv2 in range(US_num_maturities)],(US_num_maturities**2)))+tuple(['\n'])
-            header_Q_new = tuple(['dates'])+tuple(np.reshape([[',Q('+str(vv)+';'+str(vv2)+')'  for vv in range(num_states)] for vv2 in range(num_states)],(num_states**2)))+tuple(['\n'])
-            header_U0_new = tuple(['dates'])+tuple([',U0('+str(vv)+')' for vv in range(num_states)])+tuple(['\n'])
-            header_U1_new = tuple(['dates'])+tuple(np.reshape([[',U1('+str(vv)+';'+str(vv2)+')'  for vv in range(num_states)] for vv2 in range(num_states)],(num_states**2)))+tuple(['\n'])
-            header_A0_new = tuple(['dates'])+tuple([',A0('+str(vv)+')' for vv in range(US_num_maturities)])+tuple(['\n'])
-            header_A1_new = tuple(['dates'])+tuple(np.reshape([[',A1('+str(vv2)+';'+str(vv)+')'  for vv in range(num_states )] for vv2 in range(US_num_maturities)],(num_states*US_num_maturities)))+tuple(['\n'])
-            header_US_nominal_yields_forecast, header_US_ilb_yields_forecast = tuple(['dates'])+tuple([','+str(vv)+' period' for vv in range(yields_forecast.shape[2])])+tuple(['\n']), tuple(['dates'])+tuple([','+str(vv)+' period' for vv in range(yields_forecast.shape[2])])+tuple(['\n'])
-            header_US_nominal_forecast_e, header_US_ilb_forecast_e = tuple(['dates'])+tuple([','+str(vv)+' period' for vv in range(yields_forecast.shape[2])])+tuple(['\n']), tuple(['dates'])+tuple([','+str(vv)+' period' for vv in range(yields_forecast.shape[2])])+tuple(['\n'])
-            header_US_nominal_forecast_se, header_US_ilb_forecast_se = tuple(['dates'])+tuple([','+str(vv)+' period' for vv in range(yields_forecast.shape[2])])+tuple(['\n']), tuple(['dates'])+tuple([','+str(vv)+' period' for vv in range(yields_forecast.shape[2])])+tuple(['\n'])
-            header_US_nominal_forecast_rmse, header_US_ilb_forecast_rmse = (tuple(['dates'])+tuple([',rmse'])+tuple(['\n']) for vvv in range(2))
-            for f in np.arange(my_matrix.size):
-                try: #python 2
-                    f_handle = open(r'Z:\GMO\Research\AffineTermStructure\code\python_haats\txt_files'+'\\'+my_matrix[f] +'_'+estim_freq+'.txt', 'w' )
-                    f_handle.write(np.array(eval('header_'+my_matrix[f])))
-                except: #python 3
-                    f_handle = open(r'Z:\GMO\Research\AffineTermStructure\code\python_haats\txt_files'+'\\'+my_matrix[f] +'_'+estim_freq+'.txt', 'wb' )
-                    np.savetxt(f_handle, np.array(eval('header_'+my_matrix[f])), fmt='%s', delimiter=',')
-                f_handle.close()
-            for nn in ['nominal','ilb']:
-                for m in range(eval('US_'+nn+'maturities.size')):
-                    for ss in ['yields_forecast','forecast_e' ,'forecast_se','forecast_rmse' ]:
-                        try: #python 2
-                            f_handle = open(r'Z:\GMO\Research\AffineTermStructure\code\python_haats\txt_files\US'+nn+'s_'+ss+'_'+str(eval('US_'+nn+'maturities[m]'))+'yrMat_'+estim_freq+'.txt','w')
-                            f_handle.write(np.array(eval('header_US_'+nn+'_'+ss)))
-                        except: #python 3
-                            f_handle = open(r'Z:\GMO\Research\AffineTermStructure\code\python_haats\txt_files\US'+nn+'s_'+ss+'_'+str(eval('US_'+nn+'maturities[m]'))+'yrMat_'+estim_freq+'.txt','wb')
-                            np.savetxt(f_handle, np.array(eval('header_US_'+nn+'_'+ss)), fmt='%s', delimiter=',')
-                        f_handle.close()
-        # append latest observation of each time series of key results:
-        my_matrix = np.array(['prob_def','irps','bk_evens','exp_inf','Y','Ytt_new','Yttl_new','Xtt_new','Xttl_new','Vtt_new','Vttl_new'])
-        for f in np.arange(my_matrix.size):
-            try: #python 2
-                f_handle = open(r'Z:\GMO\Research\AffineTermStructure\code\python_haats\txt_files'+'\\'+my_matrix[f] +'_'+estim_freq+'.txt' , 'a')
-                np.savetxt(f_handle, np.mat(np.hstack((datadate[-1], np.reshape(np.array(eval(my_matrix[f]))[-1],(np.array(eval(my_matrix[f]))[-1].size))))), delimiter=',')
-            except: #python 3
-                f_handle = open(r'Z:\GMO\Research\AffineTermStructure\code\python_haats\txt_files'+'\\'+my_matrix[f] +'_'+estim_freq+'.txt' ,'ab')
-                np.savetxt(f_handle, np.mat(np.hstack((datadate[-1], np.reshape(np.array(eval(my_matrix[f]))[-1],(np.array(eval(my_matrix[f]))[-1].size))))), delimiter=',')
-            f_handle.close()
-
-        my_matrix = np.array(['prmtr_new','Kp_new','thetap_new','Sigma_new','a_new','lmda_new','lmda2_new','Phi_new','Q_new','U0_new','U1_new','A0_new','A1_new','V0','X0'])
-        for f in np.arange(my_matrix.size):
-            if (my_matrix[f] == 'V0') | (my_matrix[f]== 'X0'):
-                try: #python 2
-                    f_handle = open(r'Z:\GMO\Research\AffineTermStructure\code\python_haats\txt_files'+'\\'+my_matrix[f] +'_'+estim_freq+'.txt' , 'a')
-                    np.savetxt(f_handle, np.mat(np.hstack((datadate[-1], np.reshape(np.array(eval('kalman2.'+my_matrix[f])),(np.array(eval('kalman2.'+my_matrix[f])).size))))), delimiter=',')
-                except: #python 3
-                    f_handle = open(r'Z:\GMO\Research\AffineTermStructure\code\python_haats\txt_files'+'\\'+my_matrix[f] +'_'+estim_freq+'.txt' , 'ab')
-                    np.savetxt(f_handle, np.mat(np.hstack((datadate[-1], np.reshape(np.array(eval('kalman2.'+my_matrix[f])),(np.array(eval('kalman2.'+my_matrix[f])).size))))), delimiter=',')
-                f_handle.close()
-            else:
-                try: #python 2
-                    f_handle = open(r'Z:\GMO\Research\AffineTermStructure\code\python_haats\txt_files'+'\\'+my_matrix[f] +'_'+estim_freq+'.txt' , 'a')
-                    np.savetxt(f_handle, np.mat(np.hstack((datadate[-1], np.reshape(np.array(eval(my_matrix[f])),(np.array(eval(my_matrix[f])).size))))), delimiter=',')
-                except: #python 3
-                    f_handle = open(r'Z:\GMO\Research\AffineTermStructure\code\python_haats\txt_files'+'\\'+my_matrix[f] +'_'+estim_freq+'.txt' , 'ab')
-                    np.savetxt(f_handle, np.mat(np.hstack((datadate[-1], np.reshape(np.array(eval(my_matrix[f])),(np.array(eval(my_matrix[f])).size))))), delimiter=',')
-                f_handle.close()
-
-        for nn in ['nominal','ilb']:
-            for m in range(eval('US_'+nn+'maturities.size')):
-                for ss in ['yields_forecast','forecast_e' ,'forecast_se','forecast_rmse' ]:
-                    try: #python 2
-                        f_handle = open(r'Z:\GMO\Research\AffineTermStructure\code\python_haats\txt_files\US'+nn+'s_'+ss+'_'+str(eval('US_'+nn+'maturities[m]'))+'yrMat_'+estim_freq+'.txt','a')
-                        np.savetxt(f_handle, np.mat(np.hstack((datadate[-1], np.reshape(np.array(eval('US'+nn+'s[m].'+ss))[-1],(np.array(eval('US'+nn+'s[m].'+ss))[-1].size))))), delimiter=',')
-                    except: #python 3
-                        f_handle = open(r'Z:\GMO\Research\AffineTermStructure\code\python_haats\txt_files\US'+nn+'s_'+ss+'_'+str(eval('US_'+nn+'maturities[m]'))+'yrMat_'+estim_freq+'.txt','ab')
-                        np.savetxt(f_handle, np.mat(np.hstack((datadate[-1], np.reshape(np.array(eval('US'+nn+'s[m].'+ss))[-1],(np.array(eval('US'+nn+'s[m].'+ss))[-1].size))))), delimiter=',')
-                    f_handle.close()
-
-
+        return 1
+    #     # recording output
+    #     datadate = np.array([np.union1d(dates['US_NB'], dates['US_ILB']).astype(DT.datetime)[tt].year*10000+np.union1d(dates['US_NB'], dates['US_ILB']).astype(DT.datetime)[tt].month*100+np.union1d(dates['US_NB'], dates['US_ILB']).astype(DT.datetime)[tt].day for tt in np.arange(0,np.union1d(dates['US_NB'], dates['US_ILB']).shape[0])])
+    #     datadate = np.hstack((0, datadate))
+    #
+    #     if self.num_states ==4:
+    #         lmda2_new=0
+    #     # TODO: NEED TO FIX THIS CODE BELOW FOR SAVING THE OUTPUT AS TXT FILES. IT IS CURRENTLY NOT STARTING NEW LINE AFTER THE HEADERS.
+    #     # creating txt files to record latest observation of each time series of key results
+    #     my_matrix = np.array(['prob_def','irps','bk_evens','exp_inf','Y','Ytt_new','Yttl_new','Xtt_new','Xttl_new','Vtt_new','Vttl_new','prmtr_new','Kp_new','thetap_new','Sigma_new','a_new','lmda_new','lmda2_new','Phi_new','Q_new','U0_new','U1_new','A0_new','A1_new','V0','X0'])
+    #     if os.path.isfile(r'Z:\GMO\Research\AffineTermStructure\code\python_haats\txt_files\prob_def_'+estim_freq+'.txt')==False:  # if files do not exist, creat new ones with appropriate headers
+    #         header_prob_def, header_exp_inf = (tuple(['dates'])+tuple([',horizon: '+str(vv)+'yr' for vv in horizons])+tuple(['\n']) for vvv in range(2))
+    #         header_Y, header_Ytt_new,  header_Yttl_new = (tuple(['dates'])+tuple([',Nominal: '+str(US_nominalmaturities[vv])+'yr' for vv in range(US_nominalmaturities.size)])\
+    #                                              + tuple([',ILB: '+str(US_ilbmaturities[vv])+'yr' for vv in range(US_ilbmaturities.size)])+tuple(['\n']) for vvv in range(3))
+    #         header_irps, header_bk_evens = (tuple(['dates'])+tuple([','+str(vv)+'yr' for vv in bk_mats])+tuple(['\n']) for vvv in range(2))
+    #         if self.num_states==4:
+    #             header_Xtt_new,  header_Xttl_new, header_thetap_new, header_X0  = (tuple(['dates,Ln,S,C,Lr'])+tuple(['\n']) for vvv in range(4))
+    #         if self.num_states==6:
+    #             header_Xtt_new,  header_Xttl_new, header_thetap_new, header_X0  = (tuple(['dates,Ln,S1,S2,C1,C2,Lr'])+tuple(['\n']) for vvv in range(4))
+    #         header_Vtt_new,  header_Vttl_new, header_V0 = (((tuple(['dates'])+tuple(np.reshape([[',V('+str(vv)+';'+str(vv2)+')'  for vv in range(num_states)] for vv2 in range(num_states)],(num_states**2)))+tuple(['\n']) )) for vvv in range(3))
+    #         header_prmtr_new = tuple(['dates'])+tuple([',prmtr('+str(vv)+')' for vv in range(prmtr_new.size)])+tuple(['\n'])
+    #         header_Kp_new = tuple(['dates'])+tuple(np.reshape([[',Kp('+str(vv)+';'+str(vv2)+')'  for vv in range(num_states)] for vv2 in range(num_states)],(num_states**2)))+tuple(['\n'])
+    #         header_Sigma_new = tuple(['dates'])+tuple(np.reshape([[',Sigma('+str(vv)+';'+str(vv2)+')'  for vv in range(num_states)] for vv2 in range(num_states)],(num_states**2)))+tuple(['\n'])
+    #         header_a_new, header_lmda_new, header_lmda2_new  = tuple(['dates,a'])+tuple(['\n']), tuple(['dates,lmda'])+tuple(['\n']), tuple(['dates,lmda2'])+tuple(['\n'])
+    #         header_Phi_new = tuple(['dates'])+tuple(np.reshape([[',Sigma('+str(vv)+';'+str(vv2)+')'  for vv in range(US_num_maturities)] for vv2 in range(US_num_maturities)],(US_num_maturities**2)))+tuple(['\n'])
+    #         header_Q_new = tuple(['dates'])+tuple(np.reshape([[',Q('+str(vv)+';'+str(vv2)+')'  for vv in range(num_states)] for vv2 in range(num_states)],(num_states**2)))+tuple(['\n'])
+    #         header_U0_new = tuple(['dates'])+tuple([',U0('+str(vv)+')' for vv in range(num_states)])+tuple(['\n'])
+    #         header_U1_new = tuple(['dates'])+tuple(np.reshape([[',U1('+str(vv)+';'+str(vv2)+')'  for vv in range(num_states)] for vv2 in range(num_states)],(num_states**2)))+tuple(['\n'])
+    #         header_A0_new = tuple(['dates'])+tuple([',A0('+str(vv)+')' for vv in range(US_num_maturities)])+tuple(['\n'])
+    #         header_A1_new = tuple(['dates'])+tuple(np.reshape([[',A1('+str(vv2)+';'+str(vv)+')'  for vv in range(num_states )] for vv2 in range(US_num_maturities)],(num_states*US_num_maturities)))+tuple(['\n'])
+    #         header_US_nominal_yields_forecast, header_US_ilb_yields_forecast = tuple(['dates'])+tuple([','+str(vv)+' period' for vv in range(yields_forecast.shape[2])])+tuple(['\n']), tuple(['dates'])+tuple([','+str(vv)+' period' for vv in range(yields_forecast.shape[2])])+tuple(['\n'])
+    #         header_US_nominal_forecast_e, header_US_ilb_forecast_e = tuple(['dates'])+tuple([','+str(vv)+' period' for vv in range(yields_forecast.shape[2])])+tuple(['\n']), tuple(['dates'])+tuple([','+str(vv)+' period' for vv in range(yields_forecast.shape[2])])+tuple(['\n'])
+    #         header_US_nominal_forecast_se, header_US_ilb_forecast_se = tuple(['dates'])+tuple([','+str(vv)+' period' for vv in range(yields_forecast.shape[2])])+tuple(['\n']), tuple(['dates'])+tuple([','+str(vv)+' period' for vv in range(yields_forecast.shape[2])])+tuple(['\n'])
+    #         header_US_nominal_forecast_rmse, header_US_ilb_forecast_rmse = (tuple(['dates'])+tuple([',rmse'])+tuple(['\n']) for vvv in range(2))
+    #         for f in np.arange(my_matrix.size):
+    #             try: #python 2
+    #                 f_handle = open(r'Z:\GMO\Research\AffineTermStructure\code\python_haats\txt_files'+'\\'+my_matrix[f] +'_'+estim_freq+'.txt', 'w' )
+    #                 f_handle.write(np.array(eval('header_'+my_matrix[f])))
+    #             except: #python 3
+    #                 f_handle = open(r'Z:\GMO\Research\AffineTermStructure\code\python_haats\txt_files'+'\\'+my_matrix[f] +'_'+estim_freq+'.txt', 'wb' )
+    #                 np.savetxt(f_handle, np.array(eval('header_'+my_matrix[f])), fmt='%s', delimiter=',')
+    #             f_handle.close()
+    #         for nn in ['nominal','ilb']:
+    #             for m in range(eval('US_'+nn+'maturities.size')):
+    #                 for ss in ['yields_forecast','forecast_e' ,'forecast_se','forecast_rmse' ]:
+    #                     try: #python 2
+    #                         f_handle = open(r'Z:\GMO\Research\AffineTermStructure\code\python_haats\txt_files\US'+nn+'s_'+ss+'_'+str(eval('US_'+nn+'maturities[m]'))+'yrMat_'+estim_freq+'.txt','w')
+    #                         f_handle.write(np.array(eval('header_US_'+nn+'_'+ss)))
+    #                     except: #python 3
+    #                         f_handle = open(r'Z:\GMO\Research\AffineTermStructure\code\python_haats\txt_files\US'+nn+'s_'+ss+'_'+str(eval('US_'+nn+'maturities[m]'))+'yrMat_'+estim_freq+'.txt','wb')
+    #                         np.savetxt(f_handle, np.array(eval('header_US_'+nn+'_'+ss)), fmt='%s', delimiter=',')
+    #                     f_handle.close()
+    #     # append latest observation of each time series of key results:
+    #     my_matrix = np.array(['prob_def','irps','bk_evens','exp_inf','Y','Ytt_new','Yttl_new','Xtt_new','Xttl_new','Vtt_new','Vttl_new'])
+    #     for f in np.arange(my_matrix.size):
+    #         try: #python 2
+    #             f_handle = open(r'Z:\GMO\Research\AffineTermStructure\code\python_haats\txt_files'+'\\'+my_matrix[f] +'_'+estim_freq+'.txt' , 'a')
+    #             np.savetxt(f_handle, np.mat(np.hstack((datadate[-1], np.reshape(np.array(eval(my_matrix[f]))[-1],(np.array(eval(my_matrix[f]))[-1].size))))), delimiter=',')
+    #         except: #python 3
+    #             f_handle = open(r'Z:\GMO\Research\AffineTermStructure\code\python_haats\txt_files'+'\\'+my_matrix[f] +'_'+estim_freq+'.txt' ,'ab')
+    #             np.savetxt(f_handle, np.mat(np.hstack((datadate[-1], np.reshape(np.array(eval(my_matrix[f]))[-1],(np.array(eval(my_matrix[f]))[-1].size))))), delimiter=',')
+    #         f_handle.close()
+    #
+    #     my_matrix = np.array(['prmtr_new','Kp_new','thetap_new','Sigma_new','a_new','lmda_new','lmda2_new','Phi_new','Q_new','U0_new','U1_new','A0_new','A1_new','V0','X0'])
+    #     for f in np.arange(my_matrix.size):
+    #         if (my_matrix[f] == 'V0') | (my_matrix[f]== 'X0'):
+    #             try: #python 2
+    #                 f_handle = open(r'Z:\GMO\Research\AffineTermStructure\code\python_haats\txt_files'+'\\'+my_matrix[f] +'_'+estim_freq+'.txt' , 'a')
+    #                 np.savetxt(f_handle, np.mat(np.hstack((datadate[-1], np.reshape(np.array(eval('kalman2.'+my_matrix[f])),(np.array(eval('kalman2.'+my_matrix[f])).size))))), delimiter=',')
+    #             except: #python 3
+    #                 f_handle = open(r'Z:\GMO\Research\AffineTermStructure\code\python_haats\txt_files'+'\\'+my_matrix[f] +'_'+estim_freq+'.txt' , 'ab')
+    #                 np.savetxt(f_handle, np.mat(np.hstack((datadate[-1], np.reshape(np.array(eval('kalman2.'+my_matrix[f])),(np.array(eval('kalman2.'+my_matrix[f])).size))))), delimiter=',')
+    #             f_handle.close()
+    #         else:
+    #             try: #python 2
+    #                 f_handle = open(r'Z:\GMO\Research\AffineTermStructure\code\python_haats\txt_files'+'\\'+my_matrix[f] +'_'+estim_freq+'.txt' , 'a')
+    #                 np.savetxt(f_handle, np.mat(np.hstack((datadate[-1], np.reshape(np.array(eval(my_matrix[f])),(np.array(eval(my_matrix[f])).size))))), delimiter=',')
+    #             except: #python 3
+    #                 f_handle = open(r'Z:\GMO\Research\AffineTermStructure\code\python_haats\txt_files'+'\\'+my_matrix[f] +'_'+estim_freq+'.txt' , 'ab')
+    #                 np.savetxt(f_handle, np.mat(np.hstack((datadate[-1], np.reshape(np.array(eval(my_matrix[f])),(np.array(eval(my_matrix[f])).size))))), delimiter=',')
+    #             f_handle.close()
+    #
+    #     for nn in ['nominal','ilb']:
+    #         for m in range(eval('US_'+nn+'maturities.size')):
+    #             for ss in ['yields_forecast','forecast_e' ,'forecast_se','forecast_rmse' ]:
+    #                 try: #python 2
+    #                     f_handle = open(r'Z:\GMO\Research\AffineTermStructure\code\python_haats\txt_files\US'+nn+'s_'+ss+'_'+str(eval('US_'+nn+'maturities[m]'))+'yrMat_'+estim_freq+'.txt','a')
+    #                     np.savetxt(f_handle, np.mat(np.hstack((datadate[-1], np.reshape(np.array(eval('US'+nn+'s[m].'+ss))[-1],(np.array(eval('US'+nn+'s[m].'+ss))[-1].size))))), delimiter=',')
+    #                 except: #python 3
+    #                     f_handle = open(r'Z:\GMO\Research\AffineTermStructure\code\python_haats\txt_files\US'+nn+'s_'+ss+'_'+str(eval('US_'+nn+'maturities[m]'))+'yrMat_'+estim_freq+'.txt','ab')
+    #                     np.savetxt(f_handle, np.mat(np.hstack((datadate[-1], np.reshape(np.array(eval('US'+nn+'s[m].'+ss))[-1],(np.array(eval('US'+nn+'s[m].'+ss))[-1].size))))), delimiter=',')
+    #                 f_handle.close()
+    #
+    #
     def plot_results(self,Ytt, Yttl, Xtt, Xttl, Vtt, Vttl, Gain_t, eta_t, figures,US_ilbmaturities, US_nominalmaturities):
-        for vv in ['Ytt', 'Yttl', 'Xtt', 'Xttl', 'Vtt', 'Vttl', 'Gain_t', 'eta_t']:
-            plt.close()
-            fig, ax = plt.subplots()
-            ax.plot(eval(vv))
-            ax.set_title(vv)
-            plt.draw()
-            figures[vv] = fig
-            figures['ax_'+vv] = ax
-            figures[vv+'_name'] = '\\vv'
-            filename = r"S:\PMG\MAS\MAPS\Research\ssylvain\MAS Projects\Inflation\InflationRiskPremia\python" + \
-                str(figures[vv+'_name']) + ".eps"
-            # plt.savefig(filename, format="eps")
-        plt.close()
-        fig, ax = plt.subplots()
-        ax.plot(self.Y)
-        ax.set_title('Y')
-        figures['Y'] = fig
-        figures['ax_Y'] = ax
-        figures['Y_name'] = '\\Y'
-        plt.draw()
-
-        plt.close()
-        fig, ax = plt.subplots(2,sharex=True)
-        ax[0].plot(self.Y[:,range(US_nominalmaturities.size)],\
-                   label=[r'mat: '+str(US_nominalmaturities[vvv]) for vvv in range(US_nominalmaturities.size)])
-        plt.gca().set_color_cycle(None)     # reset color cycle
-        ax[0].plot(Ytt[:,range(US_nominalmaturities.size)], '--',\
-                   label=[r'mat: '+str(US_nominalmaturities[vvv]) for vvv in range(US_nominalmaturities.size)])
-        ax[0].set_title('Realized and Model Nominal Yields')
-        # handles, labels = figures['ax_YvYtt'].get_legend_handles_labels()
-        # figures['ax_YvYtt'].legend(handles, [r'mat: '+str(np.hstack((US_maturities,US_maturities))[vvv]) for vvv in range(Y.shape[1])])
-        ax[1].plot(self.Y[:,US_nominalmaturities.size+np.arange(US_ilbmaturities.size)],\
-                   label=[r'mat: '+str(US_ilbmaturities[vvv]) for vvv in range(US_ilbmaturities.size)])
-        plt.gca().set_color_cycle(None)     # reset color cycle
-        ax[1].plot(Ytt[:,US_nominalmaturities.size+np.arange(US_ilbmaturities.size)], '--',\
-                   label=[r'mat: '+str(US_ilbmaturities[vvv]) for vvv in range(US_ilbmaturities.size)])
-        ax[1].set_title('Realized and Model ILB Yields')
-        figures['YvYtt'] = fig
-        figures['ax_YvYtt'] = ax
-        figures['YvYtt_name'] = '\\YvYtt'
-        plt.draw()
-
-        plt.close()
-        fig, ax = plt.subplots(2, sharex=True)
-        ax[0].plot(self.Y[:,range(US_nominalmaturities.size)] - Ytt[:,range(US_nominalmaturities.size)],\
-                   label=[r'mat: '+str(US_nominalmaturities[vvv]) for vvv in range(US_nominalmaturities.size)])
-        ax[0].set_title('Realized vs. Model Nominal Yields')
-        ax[1].plot(self.Y[:,US_nominalmaturities.size+np.arange(US_ilbmaturities.size)] - \
-                   Ytt[:,US_nominalmaturities.size+np.arange(US_ilbmaturities.size)],\
-                   label=[r'mat: '+str(US_ilbmaturities[vvv]) for vvv in range(US_ilbmaturities.size)])
-        ax[1].set_title('Realized vs. Model ILB Yields')
-        figures['Y_min_Ytt'] = fig
-        figures['ax_Y_min_Ytt'] = ax
-        figures['Y_min_Ytt_name'] = '\\Y_min_Ytt'
-        plt.draw()
-
-        thetap = np.mat(np.linalg.inv(np.identity(self.U0.size) - self.U1)*self.U0)
-        thetap_vec = np.tile(thetap.T, (Xtt.shape[0], 1))
-
-        plt.close()
-        fig, ax = plt.subplots(2, sharex=False)
-        ax[0].plot(Xtt, label=[""])
-        ax[0].set_color_cycle(None)     # reset color cycle
-        ax[0].plot(thetap_vec, '--', label=[""])
-        ax[0].set_title('State Variables')
-        handles, labels = ax[0].get_legend_handles_labels()
-        if Xtt.shape[1] == 4:
-            ax[0].legend(handles, [r'L^N_t', r'S_t', r'C_t', r'L^R_t', r'\theta_1', r'\theta_2', r'\theta_3', r'\theta_4'])
-        elif Xtt.shape[1] == 5:
-            ax[0].legend(handles, [r'L^N_t', r'S_t', r'C_t', r'L^R_t', r'\xi_t', r'\theta_1', r'\theta_2', r'\theta_3', r'\theta_4', r'\theta_5'])
-        else:
-            ax[0].legend(handles, [r'L^N_t', r'S^{(1)}_t', r'S^{(2)}_t', r'C^{(1)}_t', r'C^{(2)}_t', r'L^R_t', r'\theta_1', r'\theta_2', r'\theta_3', r'\theta_4', r'\theta_5', r'\theta_6'])
-        ax[1].plot(eta_t)
-        ax[1].set_title('State Variables Stochastic Error (\eta_t)')
-        figures['XttvThetap'] = fig
-        figures['ax_XttvThetap'] = ax
-        figures['XttvThetap_name'] = '\\XttvThetap'
-        plt.draw()
+        return 1
+    #     for vv in ['Ytt', 'Yttl', 'Xtt', 'Xttl', 'Vtt', 'Vttl', 'Gain_t', 'eta_t']:
+    #         plt.close()
+    #         fig, ax = plt.subplots()
+    #         ax.plot(eval(vv))
+    #         ax.set_title(vv)
+    #         plt.draw()
+    #         figures[vv] = fig
+    #         figures['ax_'+vv] = ax
+    #         figures[vv+'_name'] = '\\vv'
+    #         filename = r"S:\PMG\MAS\MAPS\Research\ssylvain\MAS Projects\Inflation\InflationRiskPremia\python" + \
+    #             str(figures[vv+'_name']) + ".eps"
+    #         # plt.savefig(filename, format="eps")
+    #     plt.close()
+    #     fig, ax = plt.subplots()
+    #     ax.plot(self.Y)
+    #     ax.set_title('Y')
+    #     figures['Y'] = fig
+    #     figures['ax_Y'] = ax
+    #     figures['Y_name'] = '\\Y'
+    #     plt.draw()
+    #
+    #     plt.close()
+    #     fig, ax = plt.subplots(2,sharex=True)
+    #     ax[0].plot(self.Y[:,range(US_nominalmaturities.size)],\
+    #                label=[r'mat: '+str(US_nominalmaturities[vvv]) for vvv in range(US_nominalmaturities.size)])
+    #     plt.gca().set_color_cycle(None)     # reset color cycle
+    #     ax[0].plot(Ytt[:,range(US_nominalmaturities.size)], '--',\
+    #                label=[r'mat: '+str(US_nominalmaturities[vvv]) for vvv in range(US_nominalmaturities.size)])
+    #     ax[0].set_title('Realized and Model Nominal Yields')
+    #     # handles, labels = figures['ax_YvYtt'].get_legend_handles_labels()
+    #     # figures['ax_YvYtt'].legend(handles, [r'mat: '+str(np.hstack((US_maturities,US_maturities))[vvv]) for vvv in range(Y.shape[1])])
+    #     ax[1].plot(self.Y[:,US_nominalmaturities.size+np.arange(US_ilbmaturities.size)],\
+    #                label=[r'mat: '+str(US_ilbmaturities[vvv]) for vvv in range(US_ilbmaturities.size)])
+    #     plt.gca().set_color_cycle(None)     # reset color cycle
+    #     ax[1].plot(Ytt[:,US_nominalmaturities.size+np.arange(US_ilbmaturities.size)], '--',\
+    #                label=[r'mat: '+str(US_ilbmaturities[vvv]) for vvv in range(US_ilbmaturities.size)])
+    #     ax[1].set_title('Realized and Model ILB Yields')
+    #     figures['YvYtt'] = fig
+    #     figures['ax_YvYtt'] = ax
+    #     figures['YvYtt_name'] = '\\YvYtt'
+    #     plt.draw()
+    #
+    #     plt.close()
+    #     fig, ax = plt.subplots(2, sharex=True)
+    #     ax[0].plot(self.Y[:,range(US_nominalmaturities.size)] - Ytt[:,range(US_nominalmaturities.size)],\
+    #                label=[r'mat: '+str(US_nominalmaturities[vvv]) for vvv in range(US_nominalmaturities.size)])
+    #     ax[0].set_title('Realized vs. Model Nominal Yields')
+    #     ax[1].plot(self.Y[:,US_nominalmaturities.size+np.arange(US_ilbmaturities.size)] - \
+    #                Ytt[:,US_nominalmaturities.size+np.arange(US_ilbmaturities.size)],\
+    #                label=[r'mat: '+str(US_ilbmaturities[vvv]) for vvv in range(US_ilbmaturities.size)])
+    #     ax[1].set_title('Realized vs. Model ILB Yields')
+    #     figures['Y_min_Ytt'] = fig
+    #     figures['ax_Y_min_Ytt'] = ax
+    #     figures['Y_min_Ytt_name'] = '\\Y_min_Ytt'
+    #     plt.draw()
+    #
+    #     thetap = np.mat(np.linalg.inv(np.identity(self.U0.size) - self.U1)*self.U0)
+    #     thetap_vec = np.tile(thetap.T, (Xtt.shape[0], 1))
+    #
+    #     plt.close()
+    #     fig, ax = plt.subplots(2, sharex=False)
+    #     ax[0].plot(Xtt, label=[""])
+    #     ax[0].set_color_cycle(None)     # reset color cycle
+    #     ax[0].plot(thetap_vec, '--', label=[""])
+    #     ax[0].set_title('State Variables')
+    #     handles, labels = ax[0].get_legend_handles_labels()
+    #     if Xtt.shape[1] == 4:
+    #         ax[0].legend(handles, [r'L^N_t', r'S_t', r'C_t', r'L^R_t', r'\theta_1', r'\theta_2', r'\theta_3', r'\theta_4'])
+    #     elif Xtt.shape[1] == 5:
+    #         ax[0].legend(handles, [r'L^N_t', r'S_t', r'C_t', r'L^R_t', r'\xi_t', r'\theta_1', r'\theta_2', r'\theta_3', r'\theta_4', r'\theta_5'])
+    #     else:
+    #         ax[0].legend(handles, [r'L^N_t', r'S^{(1)}_t', r'S^{(2)}_t', r'C^{(1)}_t', r'C^{(2)}_t', r'L^R_t', r'\theta_1', r'\theta_2', r'\theta_3', r'\theta_4', r'\theta_5', r'\theta_6'])
+    #     ax[1].plot(eta_t)
+    #     ax[1].set_title('State Variables Stochastic Error (\eta_t)')
+    #     figures['XttvThetap'] = fig
+    #     figures['ax_XttvThetap'] = ax
+    #     figures['XttvThetap_name'] = '\\XttvThetap'
+    #     plt.draw()

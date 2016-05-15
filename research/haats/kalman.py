@@ -13,8 +13,6 @@ import multiprocessing as multiprocessing
 from joblib import Parallel, delayed
 from functools import partial
 import time
-from IPython.core.debugger import Tracer
-debug_here = Tracer()
 # plt.rc('text', usetex=True)   #need to install miktex
 plt.close("all")
 plt.close()
@@ -248,6 +246,7 @@ class Kalman:  # define super-class
         return forecast_e, forecast_se, forecast_mse, forecast_rmse, forecast_mse_all, forecast_rmse_all
 
     def smoother(self, Xtt, Xttl, Vtt, Vttl, Gain_t, eta_t):
+        '''Kalman smoother'''
         n = self.U0.shape[0]
         T = Xtt.shape[0]
         XtT = Xtt * np.nan
@@ -257,7 +256,6 @@ class Kalman:  # define super-class
         XtT.iloc[-1,:] = Xtt.iloc[-1,:];
         VtT.iloc[-1,:] = Vtt.iloc[-1,:];
         for t in np.arange(XtT.shape[0]-1,0,-1):
-            print(t)
             vtt = np.reshape(np.mat(Vtt.iloc[t-1, :].values).T,(n,n))
             vttl = np.reshape(np.mat(Vtt.iloc[t, :].values).T,(n,n))
             vtT = np.reshape(np.mat(VtT.iloc[t, :].values).T,(n,n))

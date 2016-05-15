@@ -4,99 +4,91 @@ from scipy import integrate
 from math import exp
 from scipy.linalg import expm
 import numpy as np
+import itertools
+# from IPython.core.debugger import Tracer; debug_here = Tracer()
+# import pdb
+# import ipdb
 __author__ = 'ssylvain'
 
 
-def prmtr_ext0(prmtr, num_states, Phi_prmtr, fix_Phi=1, setdiag_Kp=0):
-    '''function to insert parameters for Phi if provided into list of parameters. It also pads the list of parameters
-    with the parameters which are already known and need not be estimated'''
-    if fix_Phi == 0: #here will not estimate Phi
-        if setdiag_Kp==1: #here Kp is diagonal
-            prmtr_ext = prmtr
-            prmtr_ext = np.append(prmtr_ext[0], np.reshape(np.diag(prmtr_ext[1:num_states+1]),(num_states**2)))
-            prmtr_ext = np.append(prmtr_ext, prmtr[num_states+1:])
-        else:
-            prmtr_ext = prmtr
-    else:
-        prmtr_ext = prmtr
-        prmtr_ext = np.append(prmtr_ext[:-num_states-num_states], Phi_prmtr)
-        prmtr_ext = np.append(prmtr_ext, prmtr[-num_states-num_states:])
-        if setdiag_Kp==1:
-            prmtr_ext2 = prmtr_ext
-            prmtr_ext2 = np.append(prmtr_ext2[0], np.reshape(np.diag(prmtr_ext2[1:num_states+1]),(num_states**2)))
-            prmtr_ext2 = np.append(prmtr_ext2, prmtr_ext[num_states+1:])
-            prmtr_ext = prmtr_ext2
-    return prmtr_ext
+def build_prmtr_dict(prmtr, prmtr_size_dict):
+    '''given prmtr and prmtr_size_dict, return the prmtr_dict'''
+    prmtr_dict={}
+    loc = 0
+    for k in prmtr_size_dict.keys():
+        prmtr_dict[k] = prmtr[loc:loc+prmtr_size_dict[k]]
+        loc = loc+prmtr_size_dict[k]
+    return prmtr_dict
 
-
-def param_mapping(prmtr, num_states, US_num_maturities):
+def param_mapping(num_states, prmtr_dict):
     '''here we use use exp() to map some variables and guarantee positivity'''
-    prmtr_new = np.empty((prmtr.size)) * np.nan
+    prmtr_dict_new = prmtr_dict.copy()
 
-    prmtr_new[0] = prmtr[0]     # a is unconstrained
+    prmtr_dict_new['lmda'] = np.exp(prmtr_dict_new['lmda'])     # lmda has lower bound 0
 
-    for vv in (np.arange(num_states**2)+1).tolist():     # Kp is unconstrained
-        prmtr_new[vv] = prmtr[vv]
-
-    prmtr_new[num_states**2+1] = np.exp(prmtr[num_states**2+1])     # lmda has lower bound 1e-16
     if num_states ==6:
-        N6 = 1
-        prmtr_new[num_states**2+1+N6] = np.exp(prmtr[num_states**2+1+N6])     # lmda has lower bound 1e-16
-    else:
-        N6 = 0
+        prmtr_dict_new['lmda2'] = np.exp(prmtr_dict_new['lmda2'])     # lmda2 has lower bound 0
 
-    for vv in (np.arange(US_num_maturities)+num_states**2+1+N6+1).tolist():     # Phi has lower bound 1e-16
-        prmtr_new[vv] = np.exp(prmtr[vv])
+    if 'Phi' in prmtr_dict_new.keys():
+        prmtr_dict_new['Phi'] = np.exp(prmtr_dict_new['Phi']) # Phi has lower bound 0
 
-    for vv in (np.arange(num_states)+US_num_maturities+num_states**2+1+N6+1).tolist():    # Sigma has lower bound 1e-16
-        prmtr_new[vv] = np.exp(prmtr[vv])
+    prmtr_dict_new['sigmas'] = np.exp(prmtr_dict_new['sigmas']) # Sigma has lower bound 1e-16
 
-    for vv in (np.arange(num_states)+num_states+US_num_maturities+num_states**2+1+N6+1).tolist():     # Theta is unconstrained
-        prmtr_new[vv] = prmtr[vv]
-    return prmtr_new
+    # prmtr_dict_new['Kp'] = prmtr_dict_new['Kp']  #Kp is unconstrained
+    # prmtr_dict_new['a'] = prmtr_dict_new['a']  # a is unconstrained
+    # prmtr_dict_new['thetap'] =  prmtr_dict_new['theta'] # Theta is unconstrained
 
+    return np.array(list(itertools.chain.from_iterable(prmtr_dict_new.values())))
 
-def extract_vars(prmtr, num_states, US_num_maturities):
+def extract_vars(prmtr, num_states, prmtr_size_dict, Phi_prmtr=None):
     '''assign parameter list to parameter names'''
-    prmtr_new = param_mapping(prmtr, num_states, US_num_maturities)
-    lst = prmtr_new.tolist()
-    try:
-        thetap = np.array([lst.pop() for pp in range(num_states)])[::-1]
-        thetap = np.mat(thetap).T
-        if num_states == 4:
-            sigma44, sigma33, sigma22, sigma11 = (np.array(lst.pop()) for pp in range(num_states))
-            Sigma = np.mat(np.diag([sigma11, sigma22, sigma33, sigma44]))
-        elif num_states == 6:
-            sigma44, sigma33_2, sigma33, sigma22_2, sigma22, sigma11 = (np.array(lst.pop()) for pp in range(num_states))
-            Sigma = np.mat(np.diag([sigma11, sigma22, sigma22_2, sigma33, sigma33_2, sigma44]))
-        Phi = np.mat(np.diag(np.array([lst.pop() for pp in range(US_num_maturities)])[::-1]))
-        if num_states == 6:
-            lmda2 = np.array(lst.pop())
-        lmda = np.array(lst.pop())
-        Kp = np.mat((np.array([lst.pop() for pp in range(num_states**2)])[::-1])).reshape(num_states, num_states)
-        a = np.array(lst.pop())
-    except:
-        err_param = sys.exc_info()[0]
-        print(err_param)
-        if num_states == 4:
-            a, Kp, lmda, Phi, sigma11, sigma22,sigma33, sigma44, Sigma, thetap = np.array(prmtr[0]), -np.mat(np.identity(num_states)),\
-                                        -1, -np.mat(np.identity(US_num_maturities)), -1, -1, -1, -1, \
-                                        -np.mat(np.identity(num_states)), thetap
-        elif num_states == 6:
-            a, Kp, lmda, lmda2, Phi, sigma11, sigma22, sigma22_2, sigma33, sigma33_2, sigma44, Sigma, thetap = np.array(prmtr[0]), -np.mat(np.identity(num_states)),\
-                                        -1, -1, -np.mat(np.identity(US_num_maturities)), -1, -1, -1, -1,  -1, -1,\
-                                        -np.mat(np.identity(num_states)), thetap
+    prmtr_dict_unmapped = build_prmtr_dict(prmtr, prmtr_size_dict)
+    prmtr_mapped = param_mapping(num_states, prmtr_dict_unmapped)
+    prmtr_dict = build_prmtr_dict(prmtr_mapped, prmtr_size_dict)
+
+    a, Kp, lmda, sigmas, thetap = prmtr_dict['a'], prmtr_dict['Kp'], prmtr_dict['lmda'], prmtr_dict['sigmas'], prmtr_dict['thetap']
+
+    if 'Phi' in prmtr_dict.keys():
+        Phi = prmtr_dict['Phi']
+        Phi = np.mat(np.diag(np.array(Phi)))
+    else:
+        try:
+            Phi = np.mat(np.diag(np.exp(Phi_prmtr)))  #here just pad with pre-specified value
+        except:
+            Phi = None
+            # print('Need to provided values for Phi since it is assumed to be fixed:', sys.exc_info()[0])
+            # raise
+
+    if 'lmda2' in prmtr_dict.keys():
+        lmda2 = prmtr_dict['lmda2']
+        lmda2 = np.array(lmda2)
+
+    thetap = np.mat(np.array(thetap)).T
+
+    if num_states == 4:
+        sigma11, sigma22, sigma33, sigma44  = np.array(sigmas)
+    else:
+        sigma11, sigma22, sigma22_2, sigma33, sigma33_2, sigma44  = np.array(sigmas)
+    Sigma = np.mat(np.diag(np.array(sigmas)))
+
+    lmda = np.array(lmda)
+    a = np.array(a)
+    if len(Kp)==num_states:
+        Kp = np.mat(np.diag(np.array(Kp)))
+    else:
+        Kp = np.mat(np.array(Kp)).reshape(num_states, num_states)
+
     if num_states == 4:
         return a, Kp, lmda, Phi, sigma11, sigma22, sigma33, sigma44, Sigma, thetap
     elif num_states == 6:
         return a, Kp, lmda, lmda2, Phi, sigma11, sigma22, sigma22_2, sigma33, sigma33_2, sigma44, Sigma, thetap
 
 
-def a1(bondtype, maturity, prmtr, num_states, US_num_maturities):
+def a1(bondtype, maturity, prmtr, num_states, prmtr_size_dict):
     '''building A_1 matrix of parameters'''
     tau = maturity
     if num_states == 4:
-        a, Kp, lmda, Phi, sigma11, sigma22, sigma33, sigma44, Sigma, thetap = extract_vars(prmtr, num_states, US_num_maturities)
+        a, Kp, lmda, Phi, sigma11, sigma22, sigma33, sigma44, Sigma, thetap = extract_vars(prmtr, num_states, prmtr_size_dict)
         if bondtype == 'NominalBonds':
             out = np.float32(-(1 / tau) * np.array([-tau,
                                                 -((1 - np.exp(-(lmda * tau))) / lmda),
@@ -111,7 +103,7 @@ def a1(bondtype, maturity, prmtr, num_states, US_num_maturities):
                                                 -tau / a])
                          )
     elif num_states == 6:
-        a, Kp, lmda, lmda2, Phi, sigma11, sigma22, sigma22_2, sigma33, sigma33_2, sigma44, Sigma, thetap = extract_vars(prmtr, num_states, US_num_maturities)
+        a, Kp, lmda, lmda2, Phi, sigma11, sigma22, sigma22_2, sigma33, sigma33_2, sigma44, Sigma, thetap = extract_vars(prmtr, num_states, prmtr_size_dict)
         if bondtype == 'NominalBonds':
             out = np.float32(-(1 / tau) * np.array([-tau,
                                                 -((1 - np.exp(-(lmda * tau))) / lmda),
@@ -132,11 +124,11 @@ def a1(bondtype, maturity, prmtr, num_states, US_num_maturities):
     return out
 
 
-def a0(bondtype, maturity, prmtr, num_states, US_num_maturities):
+def a0(bondtype, maturity, prmtr, num_states, prmtr_size_dict):
     '''building A_0 matrix of parameters'''
     tau = maturity
     if num_states == 4:
-        a, Kp, lmda, Phi, sigma11, sigma22, sigma33, sigma44 , Sigma, thetap = extract_vars(prmtr, num_states, US_num_maturities)
+        a, Kp, lmda, Phi, sigma11, sigma22, sigma33, sigma44 , Sigma, thetap = extract_vars(prmtr, num_states, prmtr_size_dict)
         if bondtype == 'NominalBonds':
             out = np.float32(np.array([(-(sigma11 ** 2 * tau ** 2) / 6
                                     + (sigma22 ** 2 * (3 + np.exp(-2 * lmda * tau) - 4 / np.exp(lmda * tau) - 2 * lmda * tau)) / (
@@ -155,7 +147,7 @@ def a0(bondtype, maturity, prmtr, num_states, US_num_maturities):
                                      2 * lmda * tau) * (-11 + 4 * lmda * tau))) / (8 * np.exp(2 * lmda * tau) * lmda ** 3 * tau))])
                          )
     elif num_states == 6:
-        a, Kp, lmda, lmda2, Phi, sigma11, sigma22, sigma22_2, sigma33, sigma33_2, sigma44, Sigma, thetap = extract_vars(prmtr, num_states, US_num_maturities)
+        a, Kp, lmda, lmda2, Phi, sigma11, sigma22, sigma22_2, sigma33, sigma33_2, sigma44, Sigma, thetap = extract_vars(prmtr, num_states, prmtr_size_dict)
         if bondtype == 'NominalBonds':
             out = np.float32(np.array([(-(sigma11 ** 2 * tau ** 2) / 6
                                     + (sigma22 ** 2 * (3 + np.exp(-2 * lmda * tau) - 4 / np.exp(lmda * tau) - 2 * lmda * tau)) / (
@@ -188,12 +180,12 @@ def a0(bondtype, maturity, prmtr, num_states, US_num_maturities):
     return out
 
 
-def q(dt, prmtr, num_states, US_num_maturities):
+def q(dt, prmtr, num_states, prmtr_size_dict):
     '''computing Q matrix'''
     if num_states == 4:
-        a, Kp, lmda, Phi, sigma11, sigma22, sigma33, sigma44, Sigma, thetap = extract_vars(prmtr, num_states, US_num_maturities)
+        a, Kp, lmda, Phi, sigma11, sigma22, sigma33, sigma44, Sigma, thetap = extract_vars(prmtr, num_states, prmtr_size_dict)
     elif num_states == 6:
-        a, Kp, lmda, lmda2, Phi, sigma11, sigma22, sigma22_2, sigma33, sigma33_2, sigma44, Sigma, thetap = extract_vars(prmtr, num_states, US_num_maturities)
+        a, Kp, lmda, lmda2, Phi, sigma11, sigma22, sigma22_2, sigma33, sigma33_2, sigma44, Sigma, thetap = extract_vars(prmtr, num_states, prmtr_size_dict)
     qout = np.empty((num_states,num_states)) * np.nan
     tempfunc = lambda x, r, c: (expm(-Kp * x)*Sigma*(Sigma.transpose())*(expm(-Kp * x).transpose()))[r, c]
     for r in range(num_states):
@@ -202,25 +194,26 @@ def q(dt, prmtr, num_states, US_num_maturities):
     return qout
 
 
-def extract_mats(prmtr, num_states, US_num_maturities, US_nominalmaturities, US_ilbmaturities, dt):
+def extract_mats(prmtr, num_states, US_num_maturities, US_nominalmaturities, US_ilbmaturities, dt, prmtr_size_dict, Phi_prmtr):
     '''building all needed matricees of parameters'''
     if num_states == 4:
-        a, Kp, lmda, Phi, sigma11, sigma22, sigma33, sigma44, Sigma, thetap = extract_vars(prmtr, num_states, US_num_maturities)
+        a, Kp, lmda, Phi, sigma11, sigma22, sigma33, sigma44, Sigma, thetap = extract_vars(prmtr, num_states, prmtr_size_dict, Phi_prmtr)
     elif num_states == 6:
-        a, Kp, lmda, lmda2, Phi, sigma11, sigma22, sigma22_2, sigma33, sigma33_2, sigma44, Sigma, thetap = extract_vars(prmtr, num_states, US_num_maturities)
-    A1N = np.array([a1('NominalBonds', mm, prmtr, num_states, US_num_maturities) for mm in US_nominalmaturities]).reshape(US_nominalmaturities.size, num_states)
-    A1R = np.array([a1('InfLinkBonds', mm, prmtr, num_states, US_num_maturities) for mm in US_ilbmaturities]).reshape(US_ilbmaturities.size, num_states)
-    A0N = np.array([a0('NominalBonds', mm, prmtr, num_states, US_num_maturities) for mm in US_nominalmaturities]).reshape(US_nominalmaturities.size, 1)
-    A0R = np.array([a0('InfLinkBonds', mm, prmtr, num_states, US_num_maturities) for mm in US_ilbmaturities]).reshape(US_ilbmaturities.size, 1)
+        a, Kp, lmda, lmda2, Phi, sigma11, sigma22, sigma22_2, sigma33, sigma33_2, sigma44, Sigma, thetap = extract_vars(prmtr, num_states, prmtr_size_dict, Phi_prmtr)
+    A1N = np.array([a1('NominalBonds', mm, prmtr, num_states, prmtr_size_dict) for mm in US_nominalmaturities]).reshape(US_nominalmaturities.size, num_states)
+    A1R = np.array([a1('InfLinkBonds', mm, prmtr, num_states, prmtr_size_dict) for mm in US_ilbmaturities]).reshape(US_ilbmaturities.size, num_states)
+    A0N = np.array([a0('NominalBonds', mm, prmtr, num_states, prmtr_size_dict) for mm in US_nominalmaturities]).reshape(US_nominalmaturities.size, 1)
+    A0R = np.array([a0('InfLinkBonds', mm, prmtr, num_states, prmtr_size_dict) for mm in US_ilbmaturities]).reshape(US_ilbmaturities.size, 1)
     A0 = np.mat(np.vstack((A0N, A0R)))
     A1 = np.mat(np.vstack((A1N, A1R)))
     U1 = np.mat(expm(-Kp*dt))
     U0 = np.mat((np.identity(num_states) - U1)*thetap)
-    Q = q(dt, prmtr, num_states, US_num_maturities)
-    return A0, A1, U0, U1, Q
+    Q = q(dt, prmtr, num_states, prmtr_size_dict)
+    return A0, A1, U0, U1, Q, Phi
 
 
 def v0teqns(t, v0t, Kp, rho_n, rho_r, Sigma, thetap):
+    '''Variance ODE for expected inflation calculation'''
     K = np.mat(np.vstack((np.hstack((Kp, np.zeros((Kp.shape[0],1)))), np.zeros((1,Kp.shape[0]+1))))) * np.mat(np.vstack((thetap, 0)))
     theta = np.mat(np.vstack((np.hstack((-Kp, np.zeros((Kp.shape[0],1)))), np.hstack(((rho_n-rho_r).T, np.zeros((1,1))))     ))  )
     Sigma_bar = np.mat(np.vstack((np.hstack((Sigma, np.zeros((Sigma.shape[0],1)))), np.zeros((1, Sigma.shape[0]+1)) )))
@@ -239,6 +232,7 @@ def v0teqns(t, v0t, Kp, rho_n, rho_r, Sigma, thetap):
 
 
 def m0teqns(t, m0t, Kp, rho_n, rho_r, Sigma, thetap):
+    '''Mean ODE for expected inflation calculation'''
     K = np.mat(np.vstack((np.hstack((Kp, np.zeros((Kp.shape[0],1)))), np.zeros((1,Kp.shape[0]+1))))) * np.mat(np.vstack((thetap, 0)))
     theta = np.mat(np.vstack((np.hstack((-Kp, np.zeros((Kp.shape[0],1)))), np.hstack(((rho_n-rho_r).T, np.zeros((1,1))))     ))  )
     Sigma_bar = np.mat(np.vstack((np.hstack((Sigma, np.zeros((Sigma.shape[0],1)))), np.zeros((1, Sigma.shape[0]+1)) )))
