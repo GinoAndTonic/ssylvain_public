@@ -23,7 +23,7 @@ import re
 from kalman import *
 from extract_parameters import *
 from estim_constraints import *
-import pymc as pymc1
+import pymc as pymc2
 
 class Estimation:
 
@@ -187,7 +187,7 @@ class Rolling(Estimation):
 
             kalman1 = Kalman(self.Y, A0_out, A1_out, U0_out, U1_out, Q_out, Phi_out, self.initV, statevar_names=self.statevar_names)  # default uses X0, V0 = unconditional mean and error variance
 
-            Ytt, Yttl, Xtt, Xttl, Vtt, Vttl, Gain_t, eta_t, cum_log_likelihood = kalman1.filter()
+            Ytt, Yttl, Xtt, Xttl, Vtt, Vttl, Gain_t, eta_t = kalman1.filter()
 
             XtT, VtT, Jt = kalman1.smoother(Xtt, Xttl, Vtt, Vttl, Gain_t, eta_t)
 
@@ -319,9 +319,22 @@ class Rolling(Estimation):
     def em_bayesian(self, X, Y, prmtr, num_states, stationarity_assumption, US_num_maturities, US_ilbmaturities,
                US_nominalmaturities, dt, \
                Phi_prmtr, prmtr_size_dict, X0,method='Nelder-Mead',maxiter=500,maxfev=500,ftol=0.01,xtol=0.001,
-                    priors={'a':''}, burnin=500):
+                    priors=None, burnin=500):
         '''E-M Algorithm with Bayesian approach '''
         print('\n\n\n\n\n\n\n\n\n\n\n')
+
+        # Set priors
+        if priors is None:
+            priors = {}
+            for k in self.prmtr_size_dict.keys():
+                for i in range(prmtr_size_dict[k]):
+                    if k in ['a','lmbda','lmbda2','Kp']:
+                        priors[k+'['+str(i)+']'] = pymc2.Uniform(k+'['+str(i)+']', lower=0.3, upper=0.99)
+                    elif k in ['thetap']:
+                        priors[k+'['+str(i)+']'] = pymc2.Normal(k+'['+str(i)+']', mu=0, tau=1/0.01)
+
+                    elif k in ['Phi','sigmas']:
+
 
         priors
 
@@ -396,8 +409,6 @@ class Rolling(Estimation):
         if self.num_states == 6:
             self.lmda2_new, self.sigma22_2_new, self.sigma33_2_new =  lmda2_new, sigma22_2_new, sigma33_2_new
 
-
-
     def expected_inflation(self):
         '''Compute expected inflation'''
         Kp_new, rho_n, rho_r, Sigma_new, thetap_new, Xtt_new, rho_n, rho_r = self.Kp_new, self.rho_n, self.rho_r, \
@@ -405,57 +416,62 @@ class Rolling(Estimation):
 
         # Computing Expected Inflation:
         horizons = np.array(np.arange(100).T)  # horizon in years
-        mttau = np.empty((self.Y.shape[0], self.num_states+1, horizons.size))
-        vttau = np.empty((self.Y.shape[0], (self.num_states+1)**2, horizons.size))
+        mttau = np.empty((self.Y.shape[0], self.num_states + 1, horizons.size))
+        vttau = np.empty((self.Y.shape[0], (self.num_states + 1) ** 2, horizons.size))
 
         # First we solve ODE for Covariance matrix of augmented states
         v_ode_out = integrate.ode(v0teqns).set_integrator('dopri5', verbosity=1)
-        v_ode_out.set_initial_value(np.zeros(((self.num_states+1)**2,1))[:, 0], horizons[0]).set_f_params(Kp_new, rho_n, rho_r, Sigma_new, thetap_new)
-        t_out, v_out = np.array([0]), np.zeros(((self.num_states+1)**2,1)).T
+        v_ode_out.set_initial_value(np.zeros(((self.num_states + 1) ** 2, 1))[:, 0], horizons[0]).set_f_params(Kp_new,
+                                                                                                               rho_n,
+                                                                                                               rho_r,
+                                                                                                               Sigma_new,
+                                                                                                               thetap_new)
+        t_out, v_out = np.array([0]), np.zeros(((self.num_states + 1) ** 2, 1)).T
         while v_ode_out.successful() and v_ode_out.t < horizons[-1]:
-            v_ode_out.integrate(v_ode_out.t+1)
+            v_ode_out.integrate(v_ode_out.t + 1)
             t_out = np.vstack((t_out, v_ode_out.t))
             v_out = np.vstack((v_out, v_ode_out.y))
 
         # Then we solve ODE for Mean of augmented states
         for tt in np.arange(0, self.Y.shape[0]):
             m_ode_out = integrate.ode(m0teqns).set_integrator('dopri5', verbosity=1)
-            m_ode_out.set_initial_value(np.array(np.hstack((Xtt_new.values,np.zeros((Xtt_new.shape[0],1))))[tt,:])[0,:],\
+            m_ode_out.set_initial_value(np.array(np.hstack((Xtt_new.values, np.zeros((Xtt_new.shape[0], 1)))))[tt, :], \
                                         horizons[0]).set_f_params(Kp_new, rho_n, rho_r, Sigma_new, thetap_new)
-            t_out2, m_out = np.array([0]), np.array(np.hstack((Xtt_new.values,np.zeros((Xtt_new.shape[0],1)))))[tt,:]
+            t_out2, m_out = np.array([0]), np.array(np.hstack((Xtt_new.values, np.zeros((Xtt_new.shape[0], 1)))))[tt, :]
             while m_ode_out.successful() and m_ode_out.t < horizons[-1]:
-                m_ode_out.integrate(m_ode_out.t+1)
+                m_ode_out.integrate(m_ode_out.t + 1)
                 t_out2 = np.vstack((t_out2, m_ode_out.t))
                 m_out = np.vstack((m_out, m_ode_out.y))
-            mttau[tt,:,:] = m_out.T
-            vttau[tt,:,:] = v_out.T
+            mttau[tt, :, :] = m_out.T
+            vttau[tt, :, :] = v_out.T
 
         # Lastly, we are only interested in the column corresponding to variable that is not among the original state variables; so we extract it out
-        mttau_nn =  np.mat(mttau[:,-1,:])
-        vttau_nn =  np.mat(vttau[:,-1,:])
+        mttau_nn = np.mat(mttau[:, -1, :])
+        vttau_nn = np.mat(vttau[:, -1, :])
 
         # Now we can compute the expected inflation
-        exp_inf = -mttau_nn+0.5*vttau_nn
-        exp_inf = np.array(np.tile(-1.0/horizons.T,(Xtt_new.shape[0],1)))*np.array(exp_inf)
-        exp_inf[:, 0] = np.array(  ((rho_n-rho_r).T) * (np.mat(thetap_new)) )[0,0]
-        exp_inf = pd.DataFrame(np.mat(exp_inf),index=self.Y.index)
+        exp_inf = -mttau_nn + 0.5 * vttau_nn
+        exp_inf = np.array(np.tile(-1.0 / horizons.T, (Xtt_new.shape[0], 1))) * np.array(exp_inf)
+        exp_inf[:, 0] = np.array(((rho_n - rho_r).T) * (np.mat(thetap_new)))[0, 0]
+        exp_inf = pd.DataFrame(np.mat(exp_inf), index=self.Y.index)
 
         # Now we can compute the break-evens
         bk_mats = np.unique(np.vstack((self.US_nominalmaturities, self.US_ilbmaturities)))
         bk_evens = pd.DataFrame(
-                        (np.array([self.Y[:,np.in1d(self.US_nominalmaturities, m)].values # Nominal bond with maturity = m
-                            -(self.Y[:, self.US_nominalmaturities.size:].values)[:,np.in1d(self.US_ilbmaturities, m)]  # ILB with maturity = m
-                            for m in bk_mats])[:,:,0]).T
-                        ,index=self.Y.index, columns=bk_mats)
+            (np.array([self.Y[:, np.in1d(self.US_nominalmaturities, m)].values  # Nominal bond with maturity = m
+                       - (self.Y[:, self.US_nominalmaturities.size:].values)[:, np.in1d(self.US_ilbmaturities, m)]
+                       # ILB with maturity = m
+                       for m in bk_mats])[:, :, 0]).T
+            , index=self.Y.index, columns=bk_mats)
 
         # %now we can compute the IRPs
-        irps = bk_evens - exp_inf.iloc[:,bk_mats-1]
+        irps = bk_evens - exp_inf.iloc[:, bk_mats - 1]
 
         # lastly we compute the deflation probabilities
-        prob_def = -np.array(mttau_nn)/(np.array(vttau_nn)**0.5)
+        prob_def = -np.array(mttau_nn) / (np.array(vttau_nn) ** 0.5)
         prob_def = norm.cdf(prob_def)
         prob_def[:, 0] = 0
-        prob_def = pd.DataFrame(np.mat(prob_def),index=self.Y.index)
+        prob_def = pd.DataFrame(np.mat(prob_def), index=self.Y.index)
 
         self.bk_mats, self.exp_inf, self.irps, self.mttau, self.mttau_nn, self.prob_def, self.vttau, self.vttau_nn = \
             bk_mats, exp_inf, irps, mttau, mttau_nn, prob_def, vttau, vttau_nn
