@@ -78,9 +78,11 @@ class Kalman:  # define super-class
         Kalman.kalmanCount += 1
         # print("Calling Kalman constructor")
 
+
     def __del__(self):
         class_name = self.__class__.__name__
         # print(class_name, "destroyed")
+
 
     def filter(self):
         T = self.Y.shape[0]
@@ -140,20 +142,6 @@ class Kalman:  # define super-class
             else:
                 vtt = vttl - Gain * A1 * vttl
 
-            # STEP3: Calculate likelihood and store results
-            if np.linalg.det(S) < 0:     # this is to avoid complex numbers from log(det(S))
-                cum_log_likelihood = -np.inf
-                # return np.mat(Ytt), np.mat(Yttl), np.mat(Xtt), np.mat(Xttl), np.mat(Vtt), np.mat(Vttl), np.mat(Gain_t), cum_log_likelihood
-                break
-            else:
-                increment = -(y - A0 - A1 * xttl).T * \
-                            np.linalg.inv(S)*(y - A0 - A1 * xttl)/2  \
-                            - (y.size/2) * np.log(2 * np.pi) - (1/2) * np.log(np.linalg.det(S))
-
-            # meed to burn first 2 observations in case initialization is introducing too much bias:
-            #if t > 1:
-            cum_log_likelihood += increment
-
             Ytt.iloc[t, m_ind] = (A0 + A1 * xtt).T
             Yttl.iloc[t, m_ind] = (A0 + A1 * xttl).T
 
@@ -171,15 +159,9 @@ class Kalman:  # define super-class
                 eta_t.iloc[t, :] = (U0 + U1 * X0 - X0).T
             else:
                 eta_t.iloc[t, :] = (U0 + U1 * xtt - np.mat(Xtt.iloc[t-1, :].values).T).T
-        # [XttT, VttT, VttlT, Jt, V0T, X0T] = smoother(Xtt, Xttl, Vtt, Vttl, A1, Gain_t, U1, V0, X0, Q)
-        # v0T = V0T.reshape(n, n)
-        # cum_log_likelihood += (X0-X0T).T*np.linalg.inv(v0T)*(X0-X0T)/2 - (n/2)*np.log(2*np.pi) -(1/2)*np.log(np.linalg.det(v0T))   # adding date zero likelihood
 
-        # remove burn in periods:
-        # Ytt[0:1,:] = np.nan
-        # Yttl[0:1,:] = np.nan
+        return Ytt, Yttl, Xtt, Xttl, Vtt, Vttl, Gain_t, eta_t
 
-        return Ytt, Yttl, Xtt, Xttl, Vtt, Vttl, Gain_t, eta_t, np.reshape(np.array(cum_log_likelihood), 1, 0)
 
     def forecast(self, X, horizon=90):
         '''Given state variable X, return predicted measurement Y. For each t we forecast out for h=0,...,H.
@@ -222,6 +204,7 @@ class Kalman:  # define super-class
         print('processing time for forecast: '+str(toc-tic))
         return y_avgfcst, y_stdfcst, y_covfcst
 
+
     def rmse(self, y_fcst):  #RMSE calculations
         '''Returns error, squared error, mse(rmse): time series of mean(root-mean) squared error over horizons,
         mse(rmse): scalars for mean(root-mean) squared error over all dates and horizons'''
@@ -244,6 +227,7 @@ class Kalman:  # define super-class
         forecast_mse_all = forecast_se.mean()
         forecast_rmse_all = forecast_mse_all ** 0.5
         return forecast_e, forecast_se, forecast_mse, forecast_rmse, forecast_mse_all, forecast_rmse_all
+
 
     def smoother(self, Xtt, Xttl, Vtt, Vttl, Gain_t, eta_t):
         '''Kalman smoother'''

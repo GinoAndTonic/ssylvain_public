@@ -194,7 +194,7 @@ def q(dt, prmtr, num_states, prmtr_size_dict):
     return qout
 
 
-def extract_mats(prmtr, num_states, US_num_maturities, US_nominalmaturities, US_ilbmaturities, dt, prmtr_size_dict, Phi_prmtr):
+def extract_mats(prmtr, num_states, US_nominalmaturities, US_ilbmaturities, dt, prmtr_size_dict, Phi_prmtr):
     '''building all needed matricees of parameters'''
     if num_states == 4:
         a, Kp, lmda, Phi, sigma11, sigma22, sigma33, sigma44, Sigma, thetap = extract_vars(prmtr, num_states, prmtr_size_dict, Phi_prmtr)

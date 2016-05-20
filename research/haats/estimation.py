@@ -23,6 +23,7 @@ import re
 from kalman import *
 from extract_parameters import *
 from estim_constraints import *
+import pymc as pymc1
 
 class Estimation:
 
@@ -157,10 +158,10 @@ class Rolling(Estimation):
         self.prmtr_0 = prmtr_0
         self.USilbs, self.USnominals = USilbs, USnominals
         self.statevar_names = statevar_names
+        self.estim_freq = estim_freq
 
 
-
-    def fit(self, estimation_method='em_mle', tolerance=1e-4, maxiter=10 ):
+    def fit(self, estimation_method='em_mle', tolerance=1e-4, maxiter=10 , toltype='max_abs'):
         '''Running Estimation Fit'''
 
         # print(self.str_form3.format(*tuple(self.str_form2)))
@@ -170,18 +171,19 @@ class Rolling(Estimation):
         tol, prmtr_new, iter_ = np.inf, self.prmtr_0, 0
 
         #Let us record the path of the parameters and objective as we iterate:
-        fit_path_cols = [[k+str(ki) for ki in range(self.prmtr_size_dict[k])] for k in self.prmtr_size_dict.keys()]
+        fit_path_cols = [[k+'['+str(ki) +']' for ki in range(self.prmtr_size_dict[k])] for k in self.prmtr_size_dict.keys()]
         fit_path_cols = np.array(  list(itertools.chain.from_iterable(fit_path_cols))  )
         fit_path_inner_cols = np.hstack((['sub_objective'], fit_path_cols))
         fit_path_cols = np.hstack((['objective','criteria'],fit_path_cols))
-        self.fit_path_inner = pd.DataFrame(np.hstack((np.mat([np.nan]), np.mat(prmtr_new))),columns=fit_path_inner_cols)
-        self.fit_path_inner.index.rename('sub_iter', inplace=1)
+        self.fit_path_inner = pd.DataFrame(np.hstack((np.mat([np.nan]), np.mat(prmtr_new))),columns=fit_path_inner_cols,\
+                                           index=[[0],[0]])
+        self.fit_path_inner.index.rename(['iter','sub_iter'], inplace=1)
         self.fit_path = pd.DataFrame(np.hstack((np.mat([np.nan,np.nan]), np.mat(prmtr_new))),columns=fit_path_cols)
         self.fit_path.index.rename('iter', inplace=1)
         optim_output = None
 
         while tol>tolerance and iter_<=maxiter:
-            A0_out, A1_out, U0_out, U1_out, Q_out, Phi_out = extract_mats(prmtr_new, self.num_states, self.US_num_maturities, self.US_nominalmaturities, self.US_ilbmaturities, self.dt, self.prmtr_size_dict, self.Phi_prmtr)
+            A0_out, A1_out, U0_out, U1_out, Q_out, Phi_out = extract_mats(prmtr_new, self.num_states, self.US_nominalmaturities, self.US_ilbmaturities, self.dt, self.prmtr_size_dict, self.Phi_prmtr)
 
             kalman1 = Kalman(self.Y, A0_out, A1_out, U0_out, U1_out, Q_out, Phi_out, self.initV, statevar_names=self.statevar_names)  # default uses X0, V0 = unconditional mean and error variance
 
@@ -196,14 +198,14 @@ class Rolling(Estimation):
                 prmtr_update, optim_output = self.em_bayesian(XtT, self.Y, prmtr_new, self.num_states, self.stationarity_assumption, self.US_num_maturities, self.US_ilbmaturities, \
                                                          self.US_nominalmaturities, self.dt, self.Phi_prmtr, self.prmtr_size_dict, kalman1.X0)
 
-            tol = np.sum(np.array(prmtr_new-prmtr_update)**2)
+            tol = np.max(np.abs(prmtr_new - prmtr_update)) if toltype=='max_abs' else np.sum(np.array(prmtr_new-prmtr_update)**2) if toltype=='l2_norm' else np.sum(np.abs(prmtr_new-prmtr_update))
             prmtr_new = prmtr_update
-            out_n = np.hstack((self.Nfeval_inner, prmtr_update.tolist(), np.array(-optim_output['fun']).tolist()))
+            # out_n = np.hstack((self.Nfeval_inner, prmtr_update.tolist(), np.array(optim_output['fun']).tolist()))
             # print(self.str_form.format(*tuple(out_n)))  # use * to unpack tuple
             self.Nfeval_inner += 1
-            self.fit_path.loc[self.fit_path.index.values[-1]+1] = np.hstack((prmtr_new.tolist(), np.array([optim_output['fun'],tol]).tolist()))
+            self.fit_path.loc[self.fit_path.index.values[-1]+1] = np.hstack((np.array([optim_output['fun'],tol]).tolist(), prmtr_new.tolist()))
             print(self.fit_path.tail(1).to_string())
-
+            iter_ +=1
 
         toc = time.clock()
         try:
@@ -220,14 +222,16 @@ class Rolling(Estimation):
 
     def em_mle(self, X, Y, prmtr, num_states, stationarity_assumption, US_num_maturities, US_ilbmaturities,
                US_nominalmaturities, dt, \
-               Phi_prmtr, prmtr_size_dict, X0,method='Nelder-Mead',maxiter=500,maxfev=500):
+               Phi_prmtr, prmtr_size_dict, X0,method='Nelder-Mead',maxiter=500,maxfev=500,ftol=0.01,xtol=0.001):
         '''E-M Algorithm with MLE '''
         print('\n\n\n\n\n\n\n\n\n\n\n')
         global Nfeval_inner, fit_path_inner
         Nfeval_inner = self.Nfeval_inner #let's track the number of inner iterations
 
         # Let us record the path of the parameters and objective as we iterate:
-        fit_path_inner = pd.DataFrame(np.hstack((np.mat(np.nan), np.mat(prmtr))), columns=self.fit_path_inner.columns)
+        fit_path_inner = pd.DataFrame(np.hstack((np.mat(np.nan), np.mat(prmtr))), columns=self.fit_path_inner.columns, \
+                                      index=[[self.fit_path.index.values[-1]],[0]])
+        fit_path_inner.index.rename(['iter','sub_iter'], inplace=1)
 
         def objective_function(prmtr_):
             '''Given vector of parameters it returns the negative cumulative log-likelihood'''
@@ -248,7 +252,7 @@ class Rolling(Estimation):
             else:
                 1
                 try:
-                    A0, A1, U0, U1, Q, Phi = extract_mats(prmtr_, num_states, US_num_maturities, US_nominalmaturities, US_ilbmaturities, dt,\
+                    A0, A1, U0, U1, Q, Phi = extract_mats(prmtr_, num_states, US_nominalmaturities, US_ilbmaturities, dt,\
                                                           prmtr_size_dict, Phi_prmtr)
                     #Then compute cumulative log likelihood
                     cum_log_likelihood = np.mat([0])
@@ -271,7 +275,8 @@ class Rolling(Estimation):
 
             Nfeval_inner += 1
             # debug_here()
-            fit_path_inner.loc[fit_path_inner.index.values[-1]+1] = np.hstack((prmtr_.tolist(), np.array(cum_log_likelihood)[0].tolist()))
+            fit_path_inner.ix[(fit_path_inner.index.values[-1][0], fit_path_inner.index.values[-1][1]+1),:] = \
+                np.hstack(( np.array((-1)*cum_log_likelihood)[0].tolist(), prmtr_.tolist() ))
             # print(fit_path_inner.iloc[-1,:])
             print(fit_path_inner.tail(1).to_string())
 
@@ -283,20 +288,20 @@ class Rolling(Estimation):
         #     0
         #See http://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html#scipy.optimize.minimize for description of optimizer
         # tic = time.clock()
-        optim_output = minimize(objective_function, prmtr, method=method, options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev}) #Nelder-Mead works well
+        optim_output = minimize(objective_function, prmtr, method=method, options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev, 'xtol':xtol, 'ftol':ftol}) #Nelder-Mead works well
         # toc = time.clock()
         # print('Nelder-Mead: '+str(toc-tic))
 
-        # optim_output = minimize(objective_function, prmtr, method='trust-ncg', options={'disp': 1}) #jacobian required
-        # optim_output = minimize(objective_function, prmtr, method='dogleg', options={'disp': 1}) # requires the gradient and Hessian
-        # optim_output = minimize(objective_function, prmtr, method='CG', options={'disp': 1}) #lead to nans in prmtr
-        # optim_output = minimize(objective_function, prmtr, method='Newton-CG', options={'disp': 1}) # Jacobian is required
-        # optim_output = minimize(objective_function, prmtr, method='TNC', options={'disp': 1}) #lead to nans in prmtr
-        # optim_output = minimize(objective_function, prmtr, method='Powell', options={'disp': 1}) #too slow
-        # optim_output = minimize(objective_function, prmtr, method='COBYLA', options={'disp': 1})
-        # optim_output = minimize(objective_function, prmtr, method='BFGS', options={'disp': 1}) #this could work but can lead to error with nan in prmtr
-        # optim_output = minimize(objective_function, prmtr, method='SLSQP', options={'disp': 1}) #this could work but can lead to error with nan in prmtr
-        # optim_output = minimize(objective_function, prmtr, method='SLSQP', constraints = self.cons, options={'disp': 1})# only COBYLA and SLSQP allow constraints;  #this could work but can lead to error with nan in prmtr
+        # optim_output = minimize(objective_function, prmtr, method='trust-ncg', options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev}) #jacobian required
+        # optim_output = minimize(objective_function, prmtr, method='dogleg', options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev}) # requires the gradient and Hessian
+        # optim_output = minimize(objective_function, prmtr, method='CG', options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev}) #lead to nans in prmtr
+        # optim_output = minimize(objective_function, prmtr, method='Newton-CG', options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev}) # Jacobian is required
+        # optim_output = minimize(objective_function, prmtr, method='TNC', options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev}) #lead to nans in prmtr
+        # optim_output = minimize(objective_function, prmtr, method='Powell', options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev}) #too slow
+        # optim_output = minimize(objective_function, prmtr, method='COBYLA', options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev})
+        # optim_output = minimize(objective_function, prmtr, method='BFGS', options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev}) #this could work but can lead to error with nan in prmtr
+        # optim_output = minimize(objective_function, prmtr, method='SLSQP', options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev}) #this could work but can lead to error with nan in prmtr
+        # optim_output = minimize(objective_function, prmtr, method='SLSQP', constraints = self.cons, options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev})# only COBYLA and SLSQP allow constraints;  #this could work but can lead to error with nan in prmtr
 
         self.Nfeval_inner = Nfeval_inner
         self.fit_path_inner = self.fit_path_inner.append(fit_path_inner)
@@ -312,109 +317,92 @@ class Rolling(Estimation):
 
 
     def em_bayesian(self, X, Y, prmtr, num_states, stationarity_assumption, US_num_maturities, US_ilbmaturities,
-                    US_nominalmaturities, dt, \
-                    Phi_prmtr, fix_Phi, setdiag_Kp):
+               US_nominalmaturities, dt, \
+               Phi_prmtr, prmtr_size_dict, X0,method='Nelder-Mead',maxiter=500,maxfev=500,ftol=0.01,xtol=0.001,
+                    priors={'a':''}, burnin=500):
         '''E-M Algorithm with Bayesian approach '''
+        print('\n\n\n\n\n\n\n\n\n\n\n')
+
+        priors
 
 
 
     def collect_results(self):
+        '''Save results are attributes'''
         prmtr, optim_output = self.prmtr, self.optim_output
 
         # Extracting filtered states:
-        if num_states == 4:
-            a_new, Kp_new, lmda_new, Phi_new, sigma11_new, sigma22_new, sigma33_new, sigma44_new, Sigma_new, thetap_new = extract_vars(
-                prmtr, self.num_states, self.prmtr_size_dict)
-        elif num_states == 6:
-            a_new, Kp_new, lmda_new, lmda2_new, Phi_new, sigma11_new, sigma22_new, sigma22_2_new, sigma33_new, sigma33_2_new, sigma44_new, Sigma_new, thetap_new = extract_vars(
-                prmtr, self.num_states, self.prmtr_size_dict)
-        A0_new, A1_new, U0_new, U1_new, Q_new = extract_mats(prmtr, self.num_states, self.US_num_maturities,
-                                                             self.US_nominalmaturities, self.US_ilbmaturities, self.dt)
-        kalman2 = Kalman(Y, A0_new, A1_new, U0_new, U1_new, Q_new, Phi_new, initV)
-        Ytt_new, Yttl_new, Xtt_new, Xttl_new, Vtt_new, Vttl_new, Gain_t_new, eta_t_new, cum_log_likelihood_new = kalman2.filter()
-        XtT_new, VtT_new, Jt_new = kalman2.smoother(Xtt_new, Xttl_new, Vtt_new, Vttl_new, Gain_t_new, eta_t_new)
+        if self.num_states == 4:
+            self.a_new, self.Kp_new, self.lmda_new, self.Phi_new, self.sigma11_new, self.sigma22_new, self.sigma33_new, \
+                self.sigma44_new, self.Sigma_new, self.thetap_new = extract_vars( prmtr, self.num_states, self.prmtr_size_dict)
+
+        elif self.num_states == 6:
+            self.a_new, self.Kp_new, self.lmda_new, self.lmda2_new, self.Phi_new, self.sigma11_new, self.sigma22_new, \
+                self.sigma22_2_new, self.sigma33_new, self.sigma33_2_new, self.sigma44_new, self.Sigma_new, \
+                self.thetap_new = extract_vars(prmtr, self.num_states, self.prmtr_size_dict)
+
+        self.A0_new, self.A1_new, self.U0_new, self.U1_new, self.Q_new, self.Phi_new = extract_mats(prmtr, self.num_states,
+                                                                      self.US_nominalmaturities, self.US_ilbmaturities,
+                                                                      self.dt, self.prmtr_size_dict, self.Phi_prmtr)
+
+        kalman2 = Kalman(self.Y, self.A0_new, self.A1_new, self.U0_new, self.U1_new, self.Q_new, self.Phi_new, self.initV)
+
+        self.Ytt_new, self.Yttl_new, self.Xtt_new, self.Xttl_new, self.Vtt_new, self.Vttl_new, \
+            self.Gain_t_new, self.eta_t_new = kalman2.filter()
+
+        self.XtT_new, self.VtT_new, self.Jt_new = kalman2.smoother(self.Xtt_new, self.Xttl_new, self.Vtt_new, self.Vttl_new, self.Gain_t_new, self.eta_t_new)
 
         # Computing Forecasts, RMSE, etc. :
-        forecast_horizon = 90 * (estim_freq == 'daily') + 12 * (estim_freq == 'weekly') + 3 * (estim_freq == 'monthly')
-        yields_forecast, yields_forecast_std, yields_forecast_cov = kalman2.forecast(Xtt_new, forecast_horizon)
-        forecast_e, forecast_se, forecast_mse, forecast_rmse, forecast_mse_all, forecast_rmse_all = kalman2.rmse(
-            yields_forecast)
+        self.forecast_horizon = 90 * (self.estim_freq == 'daily') + 12 * (self.estim_freq == 'weekly') + 3 * (self.estim_freq == 'monthly')
+
+        self.yields_forecast, self.yields_forecast_std, self.yields_forecast_cov = kalman2.forecast(self.Xtt_new, self.forecast_horizon)
+
+        self.forecast_e, self.forecast_se, self.forecast_mse, self.forecast_rmse, self.forecast_mse_all, \
+            self.forecast_rmse_all = kalman2.rmse(self.yields_forecast)
 
         # Referencing individual dataframe columns in USnominals and USilbs objecs
         for m in range(self.US_nominalmaturities.size):
-            self.USnominals[m].yields_forecast = yields_forecast.iloc[:, m]
-            self.USnominals[m].yields_forecast_std = yields_forecast_std.iloc[:, m]
-            self.USnominals[m].yields_forecast_cov = yields_forecast_cov.iloc[:, m]
-            self.USnominals[m].forecast_e, self.USnominals[m].forecast_se, self.USnominals[m].forecast_mse, self.USnominals[m].forecast_rmse \
-                , self.USnominals[m].forecast_mse_all, self.USnominals[m].forecast_rmse_all = \
-                forecast_e.iloc[:, m], forecast_se.iloc[:, m], forecast_mse.iloc[:, m], forecast_rmse.iloc[:, m], \
-                forecast_mse_all.iloc[m], forecast_rmse_all.iloc[m]
+            self.USnominals[m].yields_forecast = self.yields_forecast.iloc[:, m]
+            self.USnominals[m].yields_forecast_std = self.yields_forecast_std.iloc[:, m]
+            self.USnominals[m].yields_forecast_cov = self.yields_forecast_cov.iloc[:, m]
 
-        for m in range(US_ilbmaturities.size):
-            self.USilbs[m].yields_forecast = yields_forecast.iloc[:, US_nominalmaturities.size + m]
-            self.USilbs[m].yields_forecast_std = yields_forecast_std.iloc[:, US_nominalmaturities.size + m]
-            self.USilbs[m].yields_forecast_cov = yields_forecast_cov.iloc[:, US_nominalmaturities.size + m]
+            self.USnominals[m].forecast_e, self.USnominals[m].forecast_se, self.USnominals[m].forecast_mse, \
+            self.USnominals[m].forecast_rmse , self.USnominals[m].forecast_mse_all, \
+            self.USnominals[m].forecast_rmse_all =  self.forecast_e.iloc[:, m], self.forecast_se.iloc[:, m], \
+                                                    self.forecast_mse.iloc[:, m], self.forecast_rmse.iloc[:, m], \
+                                                    self.forecast_mse_all.iloc[m], self.forecast_rmse_all.iloc[m]
+
+        for m in range(self.US_ilbmaturities.size):
+            self.USilbs[m].yields_forecast = self.yields_forecast.iloc[:, US_nominalmaturities.size + m]
+            self.USilbs[m].yields_forecast_std = self.yields_forecast_std.iloc[:, US_nominalmaturities.size + m]
+            self.USilbs[m].yields_forecast_cov = self.yields_forecast_cov.iloc[:, US_nominalmaturities.size + m]
+
             self.USilbs[m].forecast_e, self.USilbs[m].forecast_se, self.USilbs[m].forecast_mse, self.USilbs[m].forecast_rmse \
-                , self.USilbs[m].forecast_mse_all, self.USilbs[m].forecast_rmse_all = \
-                forecast_e.iloc[:, US_nominalmaturities.size + m], forecast_se.iloc[:, US_nominalmaturities.size + m], \
-                forecast_mse.iloc[:, US_nominalmaturities.size + m], forecast_rmse.iloc[:, US_nominalmaturities.size + m], \
-                forecast_mse_all.iloc[US_nominalmaturities.size + m], forecast_rmse_all.iloc[US_nominalmaturities.size + m]
+                ,self.USilbs[m].forecast_mse_all, self.USilbs[m].forecast_rmse_all = self.forecast_e.iloc[:, US_nominalmaturities.size + m], \
+                                                                                      self.forecast_se.iloc[:, US_nominalmaturities.size + m], \
+                                                                                      self.forecast_mse.iloc[:, US_nominalmaturities.size + m], \
+                                                                                      self.forecast_rmse.iloc[:,US_nominalmaturities.size + m], \
+                                                                                      self.forecast_mse_all.iloc[US_nominalmaturities.size + m], \
+                                                                                      self.forecast_rmse_all.iloc[US_nominalmaturities.size + m]
 
         ######################################################################
-
         if self.num_states == 4:
             self.rho_n = np.mat(np.array([1, 1, 0, 0])).T
-            self.rho_r = np.mat(np.array([0, a_new, 0, 1])).T
+            self.rho_r = np.mat(np.array([0, self.a_new, 0, 1])).T
         elif num_states == 6:
             self.rho_n = np.mat(np.array([1, 1, 1, 0, 0, 0])).T
-            self.rho_r = np.mat(np.array([0, a_new, a_new, 0, 0, 1])).T
+            self.rho_r = np.mat(np.array([0, self.a_new, self.a_new, 0, 0, 1])).T
 
-            # pdb.set_trace()
-            # save results to object:
-        self.dictionary_of_allresults = dict(
-            (name, eval(name)) for name in np.unique(['prmtr', 'optim_output', 'num_states', 'Kp_new', 'rho_n', 'rho_r', \
-                                                      'Sigma_new', 'thetap_new', 'USnominals', 'USilbs', 'rho_n', 'rho_r',
-                                                      'USnominals', 'USilbs', \
-                                                      'yields_forecast', 'yields_forecast_std', 'yields_forecast_cov',
-                                                      'forecast_e', 'forecast_se', \
-                                                      'forecast_mse', 'forecast_rmse', 'forecast_mse_all',
-                                                      'forecast_rmse_all', \
-                                                      'Ytt_new', 'Yttl_new', 'Xtt_new', 'Xttl_new', 'Vtt_new', 'Vttl_new',
-                                                      'Gain_t_new', 'eta_t_new', 'cum_log_likelihood_new', \
-                                                      'a_new', 'Kp_new', 'lmda_new', 'Phi_new', 'sigma11_new',
-                                                      'sigma22_new', 'sigma33_new', 'sigma44_new', 'Sigma_new',
-                                                      'thetap_new', \
-                                                      'A0_new', 'A1_new', 'U0_new', 'U1_new', 'Q_new']).tolist())
-        if num_states == 6:
-            self.dictionary_of_allresults['lmda2_new'], self.dictionary_of_allresults['sigma22_2_new'], \
-            self.dictionary_of_allresults['sigma33_2_new'] = \
-                lmda2_new, sigma22_2_new, sigma33_2_new
+        if self.num_states == 6:
+            self.lmda2_new, self.sigma22_2_new, self.sigma33_2_new =  lmda2_new, sigma22_2_new, sigma33_2_new
 
 
 
-    # self.num_states = num_states
-    # # Compute expected inflation
-    # if getexpinf == 1:
-    #     self.bk_mats, self.exp_inf, self.irps, self.mttau, self.mttau_nn, self.prob_def, self.vttau, self.vttau_nn = \
-    #         self.expected_inflation(Kp_new, rho_n, rho_r, Sigma_new, thetap_new, Xtt_new)
-    #
-    # # Save results
-    # if save == 1:
-    #     self.save_output(self.bk_mats, self.exp_inf, self.mttau, self.mttau_nn, self.prob_def, self.vttau,
-    #                      self.vttau_nn)
-    #
-    # # Plot results
-    # if plots == 1:
-    #     self.plot_results(self.bk_mats, self.exp_inf, self.mttau, self.mttau_nn, self.prob_def, self.vttau,
-    #                       self.vttau_nn)
-    #
-    # # return
-
-
-
-    def expected_inflation(self, Kp_new, rho_n, rho_r, Sigma_new, thetap_new, Xtt_new):
+    def expected_inflation(self):
         '''Compute expected inflation'''
-        # pdb.set_trace()
+        Kp_new, rho_n, rho_r, Sigma_new, thetap_new, Xtt_new, rho_n, rho_r = self.Kp_new, self.rho_n, self.rho_r, \
+                                                                             self.Sigma_new, self.thetap_new, self.Xtt_new, self.rho_n, self.rho_r
+
         # Computing Expected Inflation:
         horizons = np.array(np.arange(100).T)  # horizon in years
         mttau = np.empty((self.Y.shape[0], self.num_states+1, horizons.size))

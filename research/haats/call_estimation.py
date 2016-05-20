@@ -57,7 +57,7 @@ US_maturities = np.hstack((US_nominalmaturities, US_ilbmaturities))
 ############################################################
 
 # Set start and end dates for estimation
-sdate, edate = '2004-01-01', '2015-11-23'#time.strftime("%Y-%m-%d") #'2010-01-01'
+sdate, edate = '2010-01-01', '2015-11-23'#time.strftime("%Y-%m-%d") #'2010-01-01'
 print("start date: %s" % sdate)
 print("end date: %s" % edate)
 
