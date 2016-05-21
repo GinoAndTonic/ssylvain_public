@@ -18,6 +18,7 @@ from scipy.optimize import minimize, fmin_slsqp
 from scipy.linalg import expm
 from scipy import integrate
 from scipy.stats import norm
+from scipy.stats import multivariate_normal
 from io import open
 import re
 from kalman import *
@@ -220,7 +221,7 @@ class Rolling(Estimation):
         return prmtr_new, optim_output
 
 
-    def em_mle(self, X, Y, prmtr, num_states, stationarity_assumption, US_num_maturities, US_ilbmaturities,
+    def em_mle(self, X, Y, prmtr_initial, num_states, stationarity_assumption, US_num_maturities, US_ilbmaturities,
                US_nominalmaturities, dt, \
                Phi_prmtr, prmtr_size_dict, X0,method='Nelder-Mead',maxiter=500,maxfev=500,ftol=0.01,xtol=0.001):
         '''E-M Algorithm with MLE '''
@@ -229,7 +230,7 @@ class Rolling(Estimation):
         Nfeval_inner = self.Nfeval_inner #let's track the number of inner iterations
 
         # Let us record the path of the parameters and objective as we iterate:
-        fit_path_inner = pd.DataFrame(np.hstack((np.mat(np.nan), np.mat(prmtr))), columns=self.fit_path_inner.columns, \
+        fit_path_inner = pd.DataFrame(np.hstack((np.mat(np.nan), np.mat(prmtr_initial))), columns=self.fit_path_inner.columns, \
                                       index=[[self.fit_path.index.values[-1]],[0]])
         fit_path_inner.index.rename(['iter','sub_iter'], inplace=1)
 
@@ -254,6 +255,18 @@ class Rolling(Estimation):
                 try:
                     A0, A1, U0, U1, Q, Phi = extract_mats(prmtr_, num_states, US_nominalmaturities, US_ilbmaturities, dt,\
                                                           prmtr_size_dict, Phi_prmtr)
+
+                    yy = np.hstack((np.mat(Y.values), np.mat(X.values)))  # staking y_t and x_t
+                    xx = np.hstack((np.mat(X.values),np.vstack((X0.T, np.mat(X.iloc[0:-1, :].values)))))  # staking x_t and x_{t-1}
+                    # define mean of stacked variables
+                    mean = (np.repeat(np.vstack((A0, U0)), Y.shape[0], axis=1) + \
+                            np.vstack((np.hstack((A1, A1 * 0)), np.hstack((U1 * 0, U1)))) * xx.T).T
+                    # define variance of stacked variables
+                    variance = np.vstack((np.hstack((Phi, np.zeros((Phi.shape[0],Q.shape[1])) )), \
+                                          np.hstack((np.zeros((Q.shape[0],Phi.shape[1])) * 0, Q))))
+                    var = multivariate_normal(cov=variance)
+                    test = np.sum(var.logpdf(yy-mean))
+
                     #Then compute cumulative log likelihood
                     cum_log_likelihood = np.mat([0])
                     #Adding likelihood for Y:
@@ -288,20 +301,20 @@ class Rolling(Estimation):
         #     0
         #See http://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html#scipy.optimize.minimize for description of optimizer
         # tic = time.clock()
-        optim_output = minimize(objective_function, prmtr, method=method, options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev, 'xtol':xtol, 'ftol':ftol}) #Nelder-Mead works well
+        optim_output = minimize(objective_function, prmtr_initial, method=method, options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev, 'xtol':xtol, 'ftol':ftol}) #Nelder-Mead works well
         # toc = time.clock()
         # print('Nelder-Mead: '+str(toc-tic))
 
-        # optim_output = minimize(objective_function, prmtr, method='trust-ncg', options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev}) #jacobian required
-        # optim_output = minimize(objective_function, prmtr, method='dogleg', options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev}) # requires the gradient and Hessian
-        # optim_output = minimize(objective_function, prmtr, method='CG', options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev}) #lead to nans in prmtr
-        # optim_output = minimize(objective_function, prmtr, method='Newton-CG', options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev}) # Jacobian is required
-        # optim_output = minimize(objective_function, prmtr, method='TNC', options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev}) #lead to nans in prmtr
-        # optim_output = minimize(objective_function, prmtr, method='Powell', options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev}) #too slow
-        # optim_output = minimize(objective_function, prmtr, method='COBYLA', options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev})
-        # optim_output = minimize(objective_function, prmtr, method='BFGS', options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev}) #this could work but can lead to error with nan in prmtr
-        # optim_output = minimize(objective_function, prmtr, method='SLSQP', options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev}) #this could work but can lead to error with nan in prmtr
-        # optim_output = minimize(objective_function, prmtr, method='SLSQP', constraints = self.cons, options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev})# only COBYLA and SLSQP allow constraints;  #this could work but can lead to error with nan in prmtr
+        # optim_output = minimize(objective_function, prmtr_initial, method='trust-ncg', options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev}) #jacobian required
+        # optim_output = minimize(objective_function, prmtr_initial, method='dogleg', options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev}) # requires the gradient and Hessian
+        # optim_output = minimize(objective_function, prmtr_initial, method='CG', options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev}) #lead to nans in prmtr
+        # optim_output = minimize(objective_function, prmtr_initial, method='Newton-CG', options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev}) # Jacobian is required
+        # optim_output = minimize(objective_function, prmtr_initial, method='TNC', options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev}) #lead to nans in prmtr
+        # optim_output = minimize(objective_function, prmtr_initial, method='Powell', options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev}) #too slow
+        # optim_output = minimize(objective_function, prmtr_initial, method='COBYLA', options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev})
+        # optim_output = minimize(objective_function, prmtr_initial, method='BFGS', options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev}) #this could work but can lead to error with nan in prmtr
+        # optim_output = minimize(objective_function, prmtr_initial, method='SLSQP', options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev}) #this could work but can lead to error with nan in prmtr
+        # optim_output = minimize(objective_function, prmtr_initial, method='SLSQP', constraints = self.cons, options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev})# only COBYLA and SLSQP allow constraints;  #this could work but can lead to error with nan in prmtr
 
         self.Nfeval_inner = Nfeval_inner
         self.fit_path_inner = self.fit_path_inner.append(fit_path_inner)
@@ -323,7 +336,7 @@ class Rolling(Estimation):
         '''E-M Algorithm with Bayesian approach '''
         print('\n\n\n\n\n\n\n\n\n\n\n')
 
-        # Set priors
+        # Define priors. If priors not provided, use flat priors with appropriate ranges and normal prior for thetap
         if priors is None:
             priors = {}
             for k in self.prmtr_size_dict.keys():
@@ -332,11 +345,44 @@ class Rolling(Estimation):
                         priors[k+'['+str(i)+']'] = pymc2.Uniform(k+'['+str(i)+']', lower=0.3, upper=0.99)
                     elif k in ['thetap']:
                         priors[k+'['+str(i)+']'] = pymc2.Normal(k+'['+str(i)+']', mu=0, tau=1/0.01)
-
                     elif k in ['Phi','sigmas']:
+                        priors[k+'['+str(i)+']'] = pymc2.Uniform(k+'['+str(i)+']', lower=0.005, upper=0.02)
+
+        yy = np.hstack((  np.mat(Y.values()), np.mat(X.values())  ))  #staking y_t and x_t
+        xx = np.hstack((  np.mat(X.values()), np.vstack(( X0.T, np.mat(X.iloc[0:-1, :].values) )) )) #staking x_t and x_{t-1}
+
+        @pymc2.deterministic    #define mean of stacked variables
+        def mean(priors=priors):
+            prmtr_ = np.array(list(itertools.chain.from_iterable(priors.values())))
+            A0, A1, U0, U1, Q, Phi = extract_mats(prmtr_, num_states, US_nominalmaturities,
+                                                  US_ilbmaturities, dt, \
+                                                  prmtr_size_dict, Phi_prmtr, skip_mapping=1)
+            mean_ = (np.repeat(np.vstack((A0, U0)), Y.shape[0], axis=1) + \
+                    np.vstack((np.hstack((A1, U1 * 0)), np.hstack((A1 * 0, U1)))) * xx.T).T
+            return mean_
+
+        @pymc2.deterministic  # define precision of stacked variables
+        def precision(priors=priors):
+            prmtr_ = np.array(list(itertools.chain.from_iterable(priors.values())))
+            A0, A1, U0, U1, Q, Phi = extract_mats(prmtr_, num_states, US_nominalmaturities,
+                                                  US_ilbmaturities, dt, \
+                                                  prmtr_size_dict, Phi_prmtr, skip_mapping=1)
+            variance = np.vstack((np.hstack((Phi, Q * 0)), np.hstack((Phi * 0, Q))))
+            precision_ = np.linalg.inv(variance)
+            return precision_
+
+        likelihood = pymc2.MvNormal('lik', mean, precision, value=yy, observed=True)
+
+        # Inference
+        m = pymc2.Model([priors, likelihood])
+        mc = pymc2.MCMC(m)
+        mc.sample(iter=11000, burn=10000)
+
+        return mc,priors
 
 
-        priors
+
+
 
 
 

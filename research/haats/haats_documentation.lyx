@@ -1452,27 +1452,6 @@ G_{k} & = & \hat{V}_{k|k-1}A_{1}^{'}(S_{k})^{-1}\qquad\text{Kalman gains (see Ap
 
 \end_layout
 
-\begin_layout Enumerate
-\paragraph_spacing onehalf
-Likelihood increment
-\begin_inset Formula 
-\begin{eqnarray*}
- &  & \forall k\in\{1,...,T\}\\
-L_{k}\left\{ \mho\right\}  & = & \left(\frac{1}{2\pi}\right)^{\left(2\sum_{i}\tau_{i}\right)/2}\frac{1}{\sqrt{|S_{k}|}}exp\left(-\frac{1}{2}\left(y_{k}-A_{0}-A_{1}\hat{X}_{k|k-1}\right)^{'}(S_{k})^{-1}\left(y_{k}-A_{0}-A_{1}\hat{X}_{k|k-1}\right)\right)\\
-\mathcal{L}_{k}\left\{ \mho\right\}  & = & -\left(\frac{\left(y_{k}-A_{0}-A_{1}\hat{X}_{k|k-1}\right)^{'}(S_{k})^{-1}\left(y_{k}-A_{0}-A_{1}\hat{X}_{k|k-1}\right)}{2}+\frac{\left(2\sum_{i}\tau_{i}\right)}{2}ln\left(2\pi\right)+\frac{1}{2}ln\left(|S_{k}|\right)\right)\\
-\mathcal{L}_{0}\left\{ \mho\right\}  & = & -\left(\frac{\left(X_{0}-X_{0,T}\right)^{'}(V_{0,T})^{-1}\left(X_{0}-X_{0,T}\right)}{2}+\frac{4}{2}ln\left(2\pi\right)+\frac{1}{2}ln\left(|V_{0,T}|\right)\right)\\
- &  & \text{where }X_{0,T}\text{ and }V_{0,T}\text{ are from the Kalman Smoother}
-\end{eqnarray*}
-
-\end_inset
-
-where 
-\begin_inset Formula $\mho$
-\end_inset
-
- is a vector containing the parameter set
-\end_layout
-
 \begin_layout Subsection
 E-M Algorithm
 \end_layout
@@ -1482,6 +1461,135 @@ To find the optimal parameters we use the EM algorithm.
  We will use two versions of the EM algorithm, the first is implemented
  with MLE and the second uses a Bayesian approach.
  
+\end_layout
+
+\begin_layout Standard
+Notice that we can stack 
+\begin_inset Formula $Y_{t}$
+\end_inset
+
+ and 
+\begin_inset Formula $X_{t}$
+\end_inset
+
+
+\begin_inset Formula 
+\begin{eqnarray*}
+\left(\begin{array}{c}
+Y_{t}\\
+X_{t}
+\end{array}\right) & = & \left(\begin{array}{c}
+A_{0}\\
+U_{0}
+\end{array}\right)+\left(\begin{array}{cc}
+A_{1} & 0\\
+0 & U_{1}
+\end{array}\right)\left(\begin{array}{c}
+X_{t}\\
+X_{t-1}
+\end{array}\right)+\left(\begin{array}{c}
+\epsilon_{t}\\
+\eta_{t}
+\end{array}\right)\\
+\\
+\left(\begin{array}{c}
+\epsilon_{t}\\
+\eta_{t}
+\end{array}\right) & \sim & N\left(\left[\left(\begin{array}{c}
+Y_{t}\\
+X_{t}
+\end{array}\right)-\left(\begin{array}{c}
+A_{0}\\
+U_{0}
+\end{array}\right)-\left(\begin{array}{cc}
+A_{1} & 0\\
+0 & U_{1}
+\end{array}\right)\left(\begin{array}{c}
+X_{t}\\
+X_{t-1}
+\end{array}\right)\right],\left[\begin{array}{cc}
+\Phi & 0\\
+0 & Q
+\end{array}\right]\right)\\
+\end{eqnarray*}
+
+\end_inset
+
+Since we assume 
+\begin_inset Formula $\epsilon_{t}$
+\end_inset
+
+ and 
+\begin_inset Formula $\eta_{t}$
+\end_inset
+
+ are independent, the joint likelihood is
+\begin_inset Formula 
+\begin{eqnarray*}
+\prod_{t=1}^{T}p\left(Y_{t},X_{t}|X_{t-1},\mho\right) & = & \left(\prod_{t=1}^{T}p\left(Y_{t}|X_{t},\mho\right)\right)\left(\prod_{t=1}^{T}p\left(X_{t}|X_{t-1},\mho\right)\right)
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+\begin_inset Formula 
+\begin{eqnarray*}
+\left(\begin{array}{c}
+Y_{t}\\
+X_{t}
+\end{array}\right) & = & \left(\begin{array}{c}
+A_{0}+A_{1}U_{0}\\
+U_{0}
+\end{array}\right)+\left(\begin{array}{cc}
+A_{1}U_{1} & 0\\
+0 & U_{1}
+\end{array}\right)\left(\begin{array}{c}
+X_{t-1}\\
+X_{t-1}
+\end{array}\right)+\left(\begin{array}{cc}
+I & A_{1}\\
+0 & I
+\end{array}\right)\left(\begin{array}{c}
+\epsilon_{t}\\
+\eta_{t}
+\end{array}\right)
+\end{eqnarray*}
+
+\end_inset
+
+Since we assume 
+\begin_inset Formula $\epsilon_{t}$
+\end_inset
+
+ and 
+\begin_inset Formula $\eta_{t}$
+\end_inset
+
+ are independent, the joint likelihood is
+\begin_inset Formula 
+\begin{eqnarray*}
+\prod_{t=1}^{T}p\left(Y_{t},X_{t}|X_{t-1},\mho\right)
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+where 
+\begin_inset Formula $\Omega$
+\end_inset
+
+ is the set of parameters
 \end_layout
 
 \begin_layout Subsubsection
