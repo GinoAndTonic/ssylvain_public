@@ -25,6 +25,7 @@ from kalman import *
 from extract_parameters import *
 from estim_constraints import *
 import pymc as pymc2
+import pymc3 as pymc3
 
 class Estimation:
 
@@ -71,14 +72,14 @@ class Rolling(Estimation):
         # storing yields time series in bond objects:
         # in Python, attributes are public: no need for get, set methods
         for m in range(US_ilbmaturities.size):
-            USilbs[m].setZeroYieldsTS(data['US_ILB'][[m]]/100)
+            USilbs[m].setZeroYieldsTS(data['US_ILB'][[m]]/100.)
             USilbs[m].setZeroYieldsDates(data['US_ILB'].index)
 
         for m in range(US_nominalmaturities.size):
-            USnominals[m].setZeroYieldsTS(data['US_NB'][[m]]/100)
+            USnominals[m].setZeroYieldsTS(data['US_NB'][[m]]/100.)
             USnominals[m].setZeroYieldsDates(data['US_NB'].index)
         # Horizontal stacking of yields data:
-        Y = pd.concat([data['US_NB'], data['US_ILB']], axis=1)/100
+        Y = pd.concat([data['US_NB'], data['US_ILB']], axis=1)/100.
         self.Y = Y
         ########################################################
 
@@ -162,7 +163,9 @@ class Rolling(Estimation):
         self.estim_freq = estim_freq
 
 
-    def fit(self, estimation_method='em_mle', tolerance=1e-4, maxiter=10 , toltype='max_abs'):
+    def fit(self, estimation_method='em_mle', tolerance=1e-4, maxiter=10 , toltype='max_abs', \
+            solver_mle='Nelder-Mead',maxiter_mle=500, maxfev_mle=500, ftol_mle=0.01, xtol_mle=0.001, \
+            priors_bayesian=None, maxiter_bayesian=1000, burnin_bayesian=500  ):
         '''Running Estimation Fit'''
 
         # print(self.str_form3.format(*tuple(self.str_form2)))
@@ -193,11 +196,13 @@ class Rolling(Estimation):
             XtT, VtT, Jt = kalman1.smoother(Xtt, Xttl, Vtt, Vttl, Gain_t, eta_t)
 
             if estimation_method=='em_mle':
-                prmtr_update, optim_output = self.em_mle(XtT, self.Y, prmtr_new, self.num_states, self.stationarity_assumption, self.US_num_maturities, self.US_ilbmaturities, \
-                                                         self.US_nominalmaturities, self.dt, self.Phi_prmtr, self.prmtr_size_dict, kalman1.X0)
+                prmtr_update, optim_output = self.em_mle(XtT, self.Y, prmtr_new, self.num_states, self.stationarity_assumption, self.US_ilbmaturities, \
+                                                         self.US_nominalmaturities, self.dt, self.Phi_prmtr, self.prmtr_size_dict, kalman1.X0 \
+                                                         , method=solver_mle, maxiter=maxiter_mle, maxfev=maxfev_mle, ftol=ftol_mle, xtol=xtol_mle)
             elif estimation_method=='em_bayesian':
-                prmtr_update, optim_output = self.em_bayesian(XtT, self.Y, prmtr_new, self.num_states, self.stationarity_assumption, self.US_num_maturities, self.US_ilbmaturities, \
-                                                         self.US_nominalmaturities, self.dt, self.Phi_prmtr, self.prmtr_size_dict, kalman1.X0)
+                prmtr_update, optim_output = self.em_bayesian(XtT, self.Y, self.num_states, self.US_ilbmaturities, self.US_nominalmaturities, \
+                                                        self.dt, self.Phi_prmtr, self.prmtr_size_dict, kalman1.X0, \
+                                                        maxiter = maxiter_bayesian, priors = priors_bayesian, burnin = burnin_bayesian )
 
             tol = np.max(np.abs(prmtr_new - prmtr_update)) if toltype=='max_abs' else np.sum(np.array(prmtr_new-prmtr_update)**2) if toltype=='l2_norm' else np.sum(np.abs(prmtr_new-prmtr_update))
             prmtr_new = prmtr_update
@@ -209,19 +214,12 @@ class Rolling(Estimation):
             iter_ +=1
 
         toc = time.clock()
-        try:
-            os.system("clear")
-        except:
-            try:
-                os.system("cls")
-            except:
-                print('')
         print('processing time for fit: ' + str(toc - tic))
         self.prmtr, self.optim_output = prmtr_new, optim_output
         return prmtr_new, optim_output
 
 
-    def em_mle(self, X, Y, prmtr_initial, num_states, stationarity_assumption, US_num_maturities, US_ilbmaturities,
+    def em_mle(self, X, Y, prmtr_initial, num_states, stationarity_assumption, US_ilbmaturities,
                US_nominalmaturities, dt, \
                Phi_prmtr, prmtr_size_dict, X0,method='Nelder-Mead',maxiter=500,maxfev=500,ftol=0.01,xtol=0.001):
         '''E-M Algorithm with MLE '''
@@ -265,23 +263,8 @@ class Rolling(Estimation):
                     variance = np.vstack((np.hstack((Phi, np.zeros((Phi.shape[0],Q.shape[1])) )), \
                                           np.hstack((np.zeros((Q.shape[0],Phi.shape[1])) * 0, Q))))
                     var = multivariate_normal(cov=variance)
-                    test = np.sum(var.logpdf(yy-mean))
-
-                    #Then compute cumulative log likelihood
-                    cum_log_likelihood = np.mat([0])
-                    #Adding likelihood for Y:
-                    increment = np.trace((-(np.mat(Y.values).T - np.repeat(A0,Y.shape[0],axis=1) - A1 * np.mat(X.values).T).T) \
-                                * np.linalg.inv(Phi) * \
-                                (np.mat(Y.values).T - A0 - A1 * np.mat(X.values).T) )/ 2 \
-                                - (Y.shape[1] / 2) * np.log(2 * np.pi) - (1 / 2) * np.log(np.linalg.det(Phi))
-                    cum_log_likelihood = cum_log_likelihood + increment
-
-                    #Adding likelihood for X:
-                    increment = np.trace((-(np.mat(X.values).T - np.repeat(U0,X.shape[0],axis=1) - U1 * np.vstack((X0.T,X.iloc[0:-1, :].values)).T).T) \
-                                * np.linalg.inv(Q) * \
-                                (np.mat(X.values).T - np.repeat(U0, X.shape[0], axis=1) - U1 * np.vstack((X0.T, X.iloc[0:-1, :].values)).T)  ) / 2 \
-                                - (X.shape[1] / 2) * np.log(2 * np.pi) - (1 / 2) * np.log(np.linalg.det(Q))
-                    cum_log_likelihood = cum_log_likelihood + increment
+                    # Then compute cumulative log likelihood
+                    cum_log_likelihood = np.mat(np.sum(var.logpdf(yy-mean)))
                 except:
                     # print("Unexpected error:", sys.exc_info()[0])
                     cum_log_likelihood =  np.mat([-np.inf])
@@ -329,10 +312,8 @@ class Rolling(Estimation):
 
 
 
-    def em_bayesian(self, X, Y, prmtr, num_states, stationarity_assumption, US_num_maturities, US_ilbmaturities,
-               US_nominalmaturities, dt, \
-               Phi_prmtr, prmtr_size_dict, X0,method='Nelder-Mead',maxiter=500,maxfev=500,ftol=0.01,xtol=0.001,
-                    priors=None, burnin=500):
+    def em_bayesian(self, X, Y, num_states, US_ilbmaturities, US_nominalmaturities, dt,  Phi_prmtr, prmtr_size_dict, \
+                    X0, maxiter=1000, priors=None, burnin=500):
         '''E-M Algorithm with Bayesian approach '''
         print('\n\n\n\n\n\n\n\n\n\n\n')
 
@@ -341,49 +322,61 @@ class Rolling(Estimation):
             priors = {}
             for k in self.prmtr_size_dict.keys():
                 for i in range(prmtr_size_dict[k]):
-                    if k in ['a','lmbda','lmbda2','Kp']:
-                        priors[k+'['+str(i)+']'] = pymc2.Uniform(k+'['+str(i)+']', lower=0.3, upper=0.99)
+                    if k in ['a','lmda','lmda2','Kp']:
+                        priors[k+'_%i' % i] = pymc2.Uniform(k+'_%i' % i, lower=0.3, upper=0.99)
                     elif k in ['thetap']:
-                        priors[k+'['+str(i)+']'] = pymc2.Normal(k+'['+str(i)+']', mu=0, tau=1/0.01)
+                        priors[k+'_%i' % i] = pymc2.Normal(k+'_%i' % i, mu=0, tau=1/0.01)
                     elif k in ['Phi','sigmas']:
-                        priors[k+'['+str(i)+']'] = pymc2.Uniform(k+'['+str(i)+']', lower=0.005, upper=0.02)
-
-        yy = np.hstack((  np.mat(Y.values()), np.mat(X.values())  ))  #staking y_t and x_t
-        xx = np.hstack((  np.mat(X.values()), np.vstack(( X0.T, np.mat(X.iloc[0:-1, :].values) )) )) #staking x_t and x_{t-1}
+                        priors[k+'_%i' % i] = pymc2.Uniform(k+'_%i' % i, lower=0.005, upper=0.02)
+        params = pymc2.Container([priors[k] for k in priors.keys()])
+        yy = np.hstack((np.mat(Y.values), np.mat(X.values)))  # staking y_t and x_t
+        xx = np.hstack((np.mat(X.values), np.vstack((X0.T, np.mat(X.iloc[0:-1, :].values)))))  # staking x_t and x_{t-1}
 
         @pymc2.deterministic    #define mean of stacked variables
-        def mean(priors=priors):
-            prmtr_ = np.array(list(itertools.chain.from_iterable(priors.values())))
+        def mean(params=params):
+            prmtr_ = np.array(params)
             A0, A1, U0, U1, Q, Phi = extract_mats(prmtr_, num_states, US_nominalmaturities,
                                                   US_ilbmaturities, dt, \
                                                   prmtr_size_dict, Phi_prmtr, skip_mapping=1)
             mean_ = (np.repeat(np.vstack((A0, U0)), Y.shape[0], axis=1) + \
-                    np.vstack((np.hstack((A1, U1 * 0)), np.hstack((A1 * 0, U1)))) * xx.T).T
+                            np.vstack((np.hstack((A1, A1 * 0)), np.hstack((U1 * 0, U1)))) * xx.T).T
             return mean_
 
         @pymc2.deterministic  # define precision of stacked variables
-        def precision(priors=priors):
-            prmtr_ = np.array(list(itertools.chain.from_iterable(priors.values())))
+        def precision(params=params):
+            prmtr_ = np.array(params)
             A0, A1, U0, U1, Q, Phi = extract_mats(prmtr_, num_states, US_nominalmaturities,
                                                   US_ilbmaturities, dt, \
                                                   prmtr_size_dict, Phi_prmtr, skip_mapping=1)
-            variance = np.vstack((np.hstack((Phi, Q * 0)), np.hstack((Phi * 0, Q))))
+            variance = np.vstack((np.hstack((Phi, np.zeros((Phi.shape[0], Q.shape[1])))), \
+                       np.hstack((np.zeros((Q.shape[0], Phi.shape[1])) * 0, Q))))
+
             precision_ = np.linalg.inv(variance)
             return precision_
 
-        likelihood = pymc2.MvNormal('lik', mean, precision, value=yy, observed=True)
+        # # @pymc2.observed # Multivariate normal log-likelihood
+        # @pymc2.stochastic(observed=True)
+        # @pymc2.observed  # Multivariate normal log-likelihood
+        # def likelihood(yy=yy, mean=mean, precision=precision):
+        #     for yy_t, mean_t, precision_t in zip(yy, mean, precision):
+        #         test = sum(pymc2.mv_normal_like(yy_t, mean_t, precision_t, observed=True))
+        #     return sum(pymc2.mv_normal_like(yy_t, mean_t, precision_t, observed=True) for yy_t, mean_t, precision_t in zip(yy, mean, precision))
+        #
+        # likelihood = sum([pymc2.mv_normal_like('likelihood', mean[t,:], precision, value=yy[t,:], observed=True) \
+        #                   for t in range(yy.shape[0])])
+
+        # likelihood = ([pymc2.MvNormal('yy_%i' % t, mean[t, :], precision, value=yy[t, :], observed=True) \
+        #                       for t in range(yy.shape[0])])
+
+        likelihood = pymc2.Container([pymc2.MvNormal('likelihood_%i' % t, mean[t, :], precision, value=yy[t, :], observed=True) \
+                       for t in range(yy.shape[0])])
 
         # Inference
-        m = pymc2.Model([priors, likelihood])
+        m = pymc2.Model([params, likelihood])
         mc = pymc2.MCMC(m)
-        mc.sample(iter=11000, burn=10000)
+        mc.sample(iter=maxiter, burn=burnin)
 
-        return mc,priors
-
-
-
-
-
+        return mc,params
 
 
     def collect_results(self):

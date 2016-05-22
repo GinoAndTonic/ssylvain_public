@@ -69,7 +69,8 @@ estimation1 =Rolling()
 estimation1.run_setup(data, US_ilbmaturities, US_nominalmaturities, \
                 estim_freq=estim_freq, num_states=num_states,\
                 fix_Phi=fix_Phi, setdiag_Kp=setdiag_Kp, initV=initV)
-estimation1.fit('em_mle')
+estimation1.fit('em_bayesian')
+#estimation1.fit('em_mle')
 estimation1.collect_results()
 estimation1.expected_inflation(estimation1.Kp_new, estimation1.rho_n, estimation1.rho_r, estimation1.Sigma_new, \
                                estimation1.thetap_new, estimation1.Xtt_new) #do not use smoother here to avoid look-ahead bias

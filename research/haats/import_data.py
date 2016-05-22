@@ -12,6 +12,7 @@ import pandas as pd
 from xml.sax import ContentHandler, parse
 import time
 import datetime as DT
+import time
 
 
 class ImportData:
@@ -30,8 +31,11 @@ class ImportData:
 
         #########################################################################################################################
         # importing US ILB data
+        tic = time.clock()
         excelHandler = ExcelHandler()#instantiate object
         parse('https://www.federalreserve.gov/econresdata/researchdata/feds200805.xls', excelHandler)
+        toc = time.clock()
+        print('processing time for importing US ILB data: ' + str(toc - tic))
 
         #create dateframe
         tips_data = pd.DataFrame(
@@ -58,8 +62,11 @@ class ImportData:
 
         #########################################################################################################################
         # importing US NB data
+        tic = time.clock()
         excelHandler = ExcelHandler()#instantiate object
         parse('http://www.federalreserve.gov/econresdata/researchdata/feds200628.xls', excelHandler)
+        toc = time.clock()
+        print('processing time for importing US NB data: ' + str(toc - tic))
 
         #create dateframe
         nominal_data = pd.DataFrame(

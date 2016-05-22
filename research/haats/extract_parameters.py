@@ -137,7 +137,7 @@ def a0(bondtype, maturity, prmtr, num_states, prmtr_size_dict,skip_mapping=0):
     if num_states == 4:
         a, Kp, lmda, Phi, sigma11, sigma22, sigma33, sigma44 , Sigma, thetap = extract_vars(prmtr, num_states, prmtr_size_dict, skip_mapping=skip_mapping)
         if bondtype == 'NominalBonds':
-            out = np.float32(np.array([(-(sigma11 ** 2 * tau ** 2) / 6
+            out = np.float32(np.array([(-(sigma11 ** 2 * tau ** 2) / 6.
                                     + (sigma22 ** 2 * (3 + np.exp(-2 * lmda * tau) - 4 / np.exp(lmda * tau) - 2 * lmda * tau)) / (
                                     4 * lmda ** 3 * tau)
                                     - (sigma33 ** 2 * (
@@ -146,7 +146,7 @@ def a0(bondtype, maturity, prmtr, num_states, prmtr_size_dict,skip_mapping=0):
                          )
 
         elif bondtype == 'InfLinkBonds':
-            out = np.float32(np.array([(-(sigma44 ** 2 * tau ** 2) / 6
+            out = np.float32(np.array([(-(sigma44 ** 2 * tau ** 2) / 6.
                                     + (a ** 2 * sigma22 ** 2 * (3 + np.exp(-2 * lmda * tau) - 4 / np.exp(lmda * tau) - 2 * lmda * tau)) / (
                                     4 * lmda ** 3 * tau)
                                     - (a ** 2 * sigma33 ** 2 * (
@@ -156,7 +156,7 @@ def a0(bondtype, maturity, prmtr, num_states, prmtr_size_dict,skip_mapping=0):
     elif num_states == 6:
         a, Kp, lmda, lmda2, Phi, sigma11, sigma22, sigma22_2, sigma33, sigma33_2, sigma44, Sigma, thetap = extract_vars(prmtr, num_states, prmtr_size_dict, skip_mapping=skip_mapping)
         if bondtype == 'NominalBonds':
-            out = np.float32(np.array([(-(sigma11 ** 2 * tau ** 2) / 6
+            out = np.float32(np.array([(-(sigma11 ** 2 * tau ** 2) / 6.
                                     + (sigma22 ** 2 * (3 + np.exp(-2 * lmda * tau) - 4 / np.exp(lmda * tau) - 2 * lmda * tau)) / (
                                     4 * lmda ** 3 * tau)
                                     + (sigma22_2 ** 2 * (3 + np.exp(-2 * lmda2 * tau) - 4 / np.exp(lmda2 * tau) - 2 * lmda2 * tau)) / (
@@ -171,7 +171,7 @@ def a0(bondtype, maturity, prmtr, num_states, prmtr_size_dict,skip_mapping=0):
                          )
 
         elif bondtype == 'InfLinkBonds':
-            out = np.float32(np.array([(-(sigma44 ** 2 * tau ** 2) / 6
+            out = np.float32(np.array([(-(sigma44 ** 2 * tau ** 2) / 6.
                                     + (a ** 2 * sigma22 ** 2 * (3 + np.exp(-2 * lmda * tau) - 4 / np.exp(lmda * tau) - 2 * lmda * tau)) / (
                                     4 * lmda ** 3 * tau)
                                     + (a ** 2 * sigma22_2 ** 2 * (3 + np.exp(-2 * lmda2 * tau) - 4 / np.exp(lmda2 * tau) - 2 * lmda2 * tau)) / (
