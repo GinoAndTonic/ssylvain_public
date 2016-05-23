@@ -26,6 +26,7 @@ from extract_parameters import *
 from estim_constraints import *
 import pymc as pymc2
 import pymc3 as pymc3
+import corner as triangle_plot
 
 class Estimation:
 
@@ -131,20 +132,7 @@ class Rolling(Estimation):
         # debug_here()
 
         # this is to display the results in the console
-        Nfeval = 1
         self.Nfeval_inner = 1
-        Nfeval_vec = np.array(Nfeval)
-        cum_log_likelihood_vec = np.array(None)
-        str_form = '{0: <9.0f}  '
-        str_form2 = np.array('Iter')
-        str_form3 = '{0: <9s}  '
-        for iv in range(prmtr_0.size):
-            str_form = str_form + '  {' + str(iv+1) + ': ^+16.10f}'
-            str_form2 = np.vstack((str_form2, 'prmtr('+str(iv+1)+')'))
-            str_form3 = str_form3 + '  {' + str(iv+1) + ': ^16s}'
-        str_form = str_form + '  {' + str(prmtr_0.size + 1) + ': >+20.10f}'    # leave more space for likelihood
-        str_form2 = np.reshape(np.vstack((str_form2, 'cumloglik')), prmtr_0.size + 2, 0)
-        str_form3 = str_form3 + '  {' + str(prmtr_0.size + 1) + ': >20s}'
 
         # These next four lines are constraints we could use in the optimization.
         self.cons = ineq_cons(num_states, prmtr_size_dict, Phi_prmtr)
@@ -153,7 +141,6 @@ class Rolling(Estimation):
         # self.bnds_exp = prmtr_bounds_exp(num_states, prmtr_size_dict, Phi_prmtr)
         # debug_here()
 
-        self.str_form, self.str_form2 , self.str_form3  = str_form, str_form2, str_form3
         self.num_states, self.US_num_maturities, self.US_nominalmaturities, self.US_ilbmaturities, self.dt, self.prmtr_size_dict = \
             num_states, US_num_maturities, US_nominalmaturities, US_ilbmaturities, dt, prmtr_size_dict
         self.Phi_prmtr, self.stationarity_assumption, self.initV = Phi_prmtr, stationarity_assumption, initV
@@ -165,10 +152,9 @@ class Rolling(Estimation):
 
     def fit(self, estimation_method='em_mle', tolerance=1e-4, maxiter=10 , toltype='max_abs', \
             solver_mle='Nelder-Mead',maxiter_mle=500, maxfev_mle=500, ftol_mle=0.01, xtol_mle=0.001, \
-            priors_bayesian=None, maxiter_bayesian=1000, burnin_bayesian=500  ):
+            priors_bayesian=None, maxiter_bayesian=250, burnin_bayesian=None  ):
         '''Running Estimation Fit'''
 
-        # print(self.str_form3.format(*tuple(self.str_form2)))
         print('new fit begins__________________________________________')
         tic = time.clock()
 
@@ -186,7 +172,7 @@ class Rolling(Estimation):
         self.fit_path.index.rename('iter', inplace=1)
         optim_output = None
 
-        while tol>tolerance and iter_<=maxiter:
+        while tol>tolerance and iter_<maxiter:
             A0_out, A1_out, U0_out, U1_out, Q_out, Phi_out = extract_mats(prmtr_new, self.num_states, self.US_nominalmaturities, self.US_ilbmaturities, self.dt, self.prmtr_size_dict, self.Phi_prmtr)
 
             kalman1 = Kalman(self.Y, A0_out, A1_out, U0_out, U1_out, Q_out, Phi_out, self.initV, statevar_names=self.statevar_names)  # default uses X0, V0 = unconditional mean and error variance
@@ -195,23 +181,67 @@ class Rolling(Estimation):
 
             XtT, VtT, Jt = kalman1.smoother(Xtt, Xttl, Vtt, Vttl, Gain_t, eta_t)
 
-            if estimation_method=='em_mle':
+            #We to double number of iterations for the last call; e.g. maxiter=maxiter*2 if tol<=tolerance or iter_>=maxiter else maxiter
+            if estimation_method=='em_mle' or estimation_method == 'em_mle_with_bayesian_final_iteration':
                 prmtr_update, optim_output = self.em_mle(XtT, self.Y, prmtr_new, self.num_states, self.stationarity_assumption, self.US_ilbmaturities, \
                                                          self.US_nominalmaturities, self.dt, self.Phi_prmtr, self.prmtr_size_dict, kalman1.X0 \
-                                                         , method=solver_mle, maxiter=maxiter_mle, maxfev=maxfev_mle, ftol=ftol_mle, xtol=xtol_mle)
+                                                         , method=solver_mle, \
+                                                         maxiter=maxiter_mle*2 if tol<=tolerance or iter_>=maxiter else maxiter_mle, \
+                                                         maxfev=maxfev_mle*2 if tol<=tolerance or iter_>=maxiter else maxfev_mle, \
+                                                         ftol=ftol_mle/2.0 if tol<=tolerance or iter_>=maxiter else ftol_mle, \
+                                                             xtol=xtol_mle/2.0 if tol<=tolerance or iter_>=maxiter else xtol_mle)
+
             elif estimation_method=='em_bayesian':
+                if iter_>0:
+                    priors, loc = {}, 0
+                    for k in self.prmtr_size_dict.keys():
+                        for i in range(self.prmtr_size_dict[k]):
+                            if k in ['a', 'lmda', 'lmda2', 'Kp']:
+                                priors[k + '_%i' % i] = pymc2.Uniform(k + '_%i' % i, lower=optim_output['mcmc_params'][loc].stats()['mean']*0.8, upper=optim_output['mcmc_params'][loc].stats()['mean']*1.2)
+                            elif k in ['thetap']:
+                                priors[k + '_%i' % i] = pymc2.Normal(k + '_%i' % i, mu=optim_output['mcmc_params'][loc].stats()['mean'],  tau=1 / optim_output['mcmc_params'][loc].stats()['standard deviation'])
+                            elif k in ['Phi', 'sigmas']:
+                                priors[k + '_%i' % i] = pymc2.Uniform(k + '_%i' % i, lower=optim_output['mcmc_params'][loc].stats()['mean']*0.8, upper=optim_output['mcmc_params'][loc].stats()['mean']*1.2)
+                            loc+=1
+                else:
+                    priors = priors_bayesian
                 prmtr_update, optim_output = self.em_bayesian(XtT, self.Y, self.num_states, self.US_ilbmaturities, self.US_nominalmaturities, \
                                                         self.dt, self.Phi_prmtr, self.prmtr_size_dict, kalman1.X0, \
-                                                        maxiter = maxiter_bayesian, priors = priors_bayesian, burnin = burnin_bayesian )
+                                                        priors=priors, \
+                                                        maxiter = maxiter_bayesian*2 if tol<=tolerance or iter_>=maxiter else maxiter_bayesian, \
+                                                        burnin = burnin_bayesian*2 if tol<=tolerance or iter_>=maxiter else burnin_bayesian )
 
-            tol = np.max(np.abs(prmtr_new - prmtr_update)) if toltype=='max_abs' else np.sum(np.array(prmtr_new-prmtr_update)**2) if toltype=='l2_norm' else np.sum(np.abs(prmtr_new-prmtr_update))
+            tol = np.max(np.abs(prmtr_new - prmtr_update)) if toltype == 'max_abs' else np.sum(np.array(prmtr_new - prmtr_update) ** 2) if toltype == 'l2_norm' else np.sum(np.abs(prmtr_new - prmtr_update))
             prmtr_new = prmtr_update
-            # out_n = np.hstack((self.Nfeval_inner, prmtr_update.tolist(), np.array(optim_output['fun']).tolist()))
-            # print(self.str_form.format(*tuple(out_n)))  # use * to unpack tuple
+            self.fit_path.loc[self.fit_path.index.values[-1] + 1] = np.hstack(
+                (np.array([optim_output['fun'], tol]).tolist(), prmtr_new.tolist()))
             self.Nfeval_inner += 1
-            self.fit_path.loc[self.fit_path.index.values[-1]+1] = np.hstack((np.array([optim_output['fun'],tol]).tolist(), prmtr_new.tolist()))
             print(self.fit_path.tail(1).to_string())
             iter_ +=1
+
+        if estimation_method == 'em_mle_with_bayesian_final_iteration':
+            prmtr_ = param_mapping(self.num_states, build_prmtr_dict(prmtr_update, self.prmtr_size_dict))
+            priors, loc = {}, 0
+            for k in self.prmtr_size_dict.keys():
+                for i in range(self.prmtr_size_dict[k]):
+                    if k in ['a', 'lmda', 'lmda2', 'Kp']:
+                        priors[k + '_%i' % i] = pymc2.Uniform(k + '_%i' % i, lower=prmtr_[loc]*0.8, upper=prmtr_[loc]*1.2)
+                    elif k in ['thetap']:
+                        priors[k + '_%i' % i] = pymc2.Normal(k + '_%i' % i, mu=prmtr_[loc],  tau=1 / (np.abs(prmtr_[loc])*0.01))
+                    elif k in ['Phi', 'sigmas']:
+                        priors[k + '_%i' % i] = pymc2.Uniform(k + '_%i' % i, lower=prmtr_[loc], upper=prmtr_[loc]*1.2)
+                    loc+=1
+            prmtr_update, optim_output = self.em_bayesian(XtT, self.Y, self.num_states, self.US_ilbmaturities,
+                                                        self.US_nominalmaturities, self.dt, self.Phi_prmtr,
+                                                        self.prmtr_size_dict, kalman1.X0, priors=priors,
+                                                        maxiter=maxiter_bayesian * 2,burnin=burnin_bayesian * 2)
+            tol = np.max(np.abs(prmtr_new - prmtr_update)) if toltype == 'max_abs' else np.sum(np.array(prmtr_new - prmtr_update) ** 2) if toltype == 'l2_norm' else np.sum(np.abs(prmtr_new - prmtr_update))
+            prmtr_new = prmtr_update
+            self.fit_path.loc[self.fit_path.index.values[-1] + 1] = np.hstack(
+                (np.array([optim_output['fun'], tol]).tolist(), prmtr_new.tolist()))
+            self.Nfeval_inner += 1
+            print(self.fit_path.tail(1).to_string())
+            iter_ += 1
 
         toc = time.clock()
         print('processing time for fit: ' + str(toc - tic))
@@ -223,7 +253,7 @@ class Rolling(Estimation):
                US_nominalmaturities, dt, \
                Phi_prmtr, prmtr_size_dict, X0,method='Nelder-Mead',maxiter=500,maxfev=500,ftol=0.01,xtol=0.001):
         '''E-M Algorithm with MLE '''
-        print('\n\n\n\n\n\n\n\n\n\n\n')
+        print('\n\n\n')
         global Nfeval_inner, fit_path_inner
         Nfeval_inner = self.Nfeval_inner #let's track the number of inner iterations
 
@@ -234,7 +264,6 @@ class Rolling(Estimation):
 
         def objective_function(prmtr_):
             '''Given vector of parameters it returns the negative cumulative log-likelihood'''
-            # os.system('clear')#clear console
             global Nfeval_inner, fit_path_inner
             #First, given parameter vector, build parameter matrices:
             if num_states == 4:
@@ -249,11 +278,9 @@ class Rolling(Estimation):
             if (min(np.real(np.linalg.eig(np.array(Kp))[0])) < 0) & ( stationarity_assumption == 'yes'):  # imposing restriction on Kp; need positive eig vals
                 cum_log_likelihood = np.mat([-np.inf])
             else:
-                1
                 try:
                     A0, A1, U0, U1, Q, Phi = extract_mats(prmtr_, num_states, US_nominalmaturities, US_ilbmaturities, dt,\
                                                           prmtr_size_dict, Phi_prmtr)
-
                     yy = np.hstack((np.mat(Y.values), np.mat(X.values)))  # staking y_t and x_t
                     xx = np.hstack((np.mat(X.values),np.vstack((X0.T, np.mat(X.iloc[0:-1, :].values)))))  # staking x_t and x_{t-1}
                     # define mean of stacked variables
@@ -270,18 +297,12 @@ class Rolling(Estimation):
                     cum_log_likelihood =  np.mat([-np.inf])
 
             Nfeval_inner += 1
-            # debug_here()
             fit_path_inner.ix[(fit_path_inner.index.values[-1][0], fit_path_inner.index.values[-1][1]+1),:] = \
                 np.hstack(( np.array((-1)*cum_log_likelihood)[0].tolist(), prmtr_.tolist() ))
-            # print(fit_path_inner.iloc[-1,:])
             print(fit_path_inner.tail(1).to_string())
 
             return (-1) * np.reshape(np.array(cum_log_likelihood), 1, 0)  #important to reshape to scalar
 
-        # try:
-        #     debug_here()
-        # except:
-        #     0
         #See http://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html#scipy.optimize.minimize for description of optimizer
         # tic = time.clock()
         optim_output = minimize(objective_function, prmtr_initial, method=method, options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev, 'xtol':xtol, 'ftol':ftol}) #Nelder-Mead works well
@@ -301,26 +322,22 @@ class Rolling(Estimation):
 
         self.Nfeval_inner = Nfeval_inner
         self.fit_path_inner = self.fit_path_inner.append(fit_path_inner)
-        try:
-            os.system("clear")
-        except:
-            try:
-                os.system("cls")
-            except:
-                print('')
-        return optim_output['x'], optim_output
 
+        return np.array(optim_output['x']), optim_output
 
 
     def em_bayesian(self, X, Y, num_states, US_ilbmaturities, US_nominalmaturities, dt,  Phi_prmtr, prmtr_size_dict, \
-                    X0, maxiter=1000, priors=None, burnin=500):
+                    X0, maxiter=250, priors=None, burnin=None, method=None):
         '''E-M Algorithm with Bayesian approach '''
-        print('\n\n\n\n\n\n\n\n\n\n\n')
+        print('\n\n\n')
+        global Nfeval_inner, fit_path_inner
+        Nfeval_inner = self.Nfeval_inner #let's track the number of inner iterations
+        burnin = maxiter/3 if burnin is None else burnin
 
         # Define priors. If priors not provided, use flat priors with appropriate ranges and normal prior for thetap
         if priors is None:
             priors = {}
-            for k in self.prmtr_size_dict.keys():
+            for k in prmtr_size_dict.keys():
                 for i in range(prmtr_size_dict[k]):
                     if k in ['a','lmda','lmda2','Kp']:
                         priors[k+'_%i' % i] = pymc2.Uniform(k+'_%i' % i, lower=0.3, upper=0.99)
@@ -328,7 +345,7 @@ class Rolling(Estimation):
                         priors[k+'_%i' % i] = pymc2.Normal(k+'_%i' % i, mu=0, tau=1/0.01)
                     elif k in ['Phi','sigmas']:
                         priors[k+'_%i' % i] = pymc2.Uniform(k+'_%i' % i, lower=0.005, upper=0.02)
-        params = pymc2.Container([priors[k] for k in priors.keys()])
+        params = pymc2.Container([priors.copy()[k] for k in priors.keys()])
         yy = np.hstack((np.mat(Y.values), np.mat(X.values)))  # staking y_t and x_t
         xx = np.hstack((np.mat(X.values), np.vstack((X0.T, np.mat(X.iloc[0:-1, :].values)))))  # staking x_t and x_{t-1}
 
@@ -354,29 +371,69 @@ class Rolling(Estimation):
             precision_ = np.linalg.inv(variance)
             return precision_
 
-        # # @pymc2.observed # Multivariate normal log-likelihood
-        # @pymc2.stochastic(observed=True)
-        # @pymc2.observed  # Multivariate normal log-likelihood
-        # def likelihood(yy=yy, mean=mean, precision=precision):
-        #     for yy_t, mean_t, precision_t in zip(yy, mean, precision):
-        #         test = sum(pymc2.mv_normal_like(yy_t, mean_t, precision_t, observed=True))
-        #     return sum(pymc2.mv_normal_like(yy_t, mean_t, precision_t, observed=True) for yy_t, mean_t, precision_t in zip(yy, mean, precision))
-        #
-        # likelihood = sum([pymc2.mv_normal_like('likelihood', mean[t,:], precision, value=yy[t,:], observed=True) \
-        #                   for t in range(yy.shape[0])])
-
-        # likelihood = ([pymc2.MvNormal('yy_%i' % t, mean[t, :], precision, value=yy[t, :], observed=True) \
-        #                       for t in range(yy.shape[0])])
-
         likelihood = pymc2.Container([pymc2.MvNormal('likelihood_%i' % t, mean[t, :], precision, value=yy[t, :], observed=True) \
                        for t in range(yy.shape[0])])
 
         # Inference
         m = pymc2.Model([params, likelihood])
         mc = pymc2.MCMC(m)
-        mc.sample(iter=maxiter, burn=burnin)
 
-        return mc,params
+        if method is not None:
+            if str.lower(method) == 'metropolis':
+                mc.use_step_method(pymc2.Metropolis,params)
+            elif str.lower(method) == 'slicer':
+                mc.use_step_method(pymc2.Slicer,params)
+            elif str.lower(method) == 'adaptivemetropolis':
+                mc.use_step_method(pymc2.AdaptiveMetropolis,params)
+            elif str.lower(method) == 'discretemetropolis':
+                mc.use_step_method(pymc2.DiscreteMetropolis,params)
+            elif str.lower(method) == 'binarymetropolis':
+                mc.use_step_method(pymc2.BinaryMetropolis,params)
+            elif str.lower(method) == 'gibbs':
+                mc.use_step_method(pymc2.Gibbs,params)
+
+        mc.sample(iter=maxiter, burn=burnin)    # this produces a single chain. to get multiple chains use loop (serially or in parallel;
+                                                # see http://stackoverflow.com/questions/27446738/how-to-sample-multiple-chains-in-pymc3)
+
+        if False:
+            # Check for convergence.
+            # See http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3097064/
+            # and https://pymc-devs.github.io/pymc/modelchecking.html
+            # https://pymc-devs.github.io/pymc/database.html
+            for v in params:
+                v.summary()
+            scores = pymc2.geweke(mc, first=33, last=33)
+            pymc2.Matplot.geweke_plot(scores)
+            pymc2.Matplot.plot(mc)
+            pymc2.raftery_lewis(mc, q=0.05, r=0.05)
+            pymc2.gelman_rubin(mc) #Gelman-Rubin diagnostic requires multiple chains of the same length
+
+            samples = np.array([v.trace() for v in params]).T
+            #samples = samples[0] #if more than 1 chain, we plot the first
+            import corner as triangle_plot
+            # tmp = triangle_plot.corner(samples[:, :], labels=priors.keys(),
+            #                       truths=[v.stats()['mean'] for v in params])
+            tmp = triangle_plot.corner(samples, labels=priors.keys(),
+                                   truths=[v.stats()['mean'] for v in params])
+
+        optim_output={} # dictionary to contain results
+        optim_output['x']=[v.stats()['mean'] for v in params]
+        optim_output['mcmc'] = mc
+        optim_output['mcmc_params'] = params
+
+        #It will be convenient to also return the likelihood evaluated at the mean of the parameters. Although this is not needed
+        A0, A1, U0, U1, Q, Phi = extract_mats(np.array(optim_output['x']), num_states, US_nominalmaturities,
+                                              US_ilbmaturities, dt, \
+                                              prmtr_size_dict, Phi_prmtr, skip_mapping=1)
+        mean = (np.repeat(np.vstack((A0, U0)), Y.shape[0], axis=1) + \
+                        np.vstack((np.hstack((A1, A1 * 0)), np.hstack((U1 * 0, U1)))) * xx.T).T
+        variance = np.vstack((np.hstack((Phi, np.zeros((Phi.shape[0], Q.shape[1])))), \
+                   np.hstack((np.zeros((Q.shape[0], Phi.shape[1])) * 0, Q))))
+        var = multivariate_normal(cov=variance)
+        cum_log_likelihood = np.mat(np.sum(var.logpdf(yy - mean)))
+        optim_output['fun'] = ((-1) * np.reshape(np.array(cum_log_likelihood), 1, 0))[0]
+
+        return np.array(optim_output['x']), optim_output
 
 
     def collect_results(self):
@@ -516,52 +573,6 @@ class Rolling(Estimation):
             bk_mats, exp_inf, irps, mttau, mttau_nn, prob_def, vttau, vttau_nn
 
         return bk_mats, exp_inf, irps, mttau, mttau_nn, prob_def, vttau, vttau_nn
-
-    # if estimation_method == 'naive_test':
-    #     # objective function:
-    #     def neg_cum_log_likelihood(prmtr):
-    #         # try:
-    #         if num_states == 4:
-    #             a_out, Kp_out, lmda_out, Phi_out, sigma11_out, sigma22_out, sigma33_out, sigma44_out, Sigma_out, thetap_out = extract_vars(
-    #                 prmtr, num_states, prmtr_size_dict)
-    #         elif num_states == 6:
-    #             a_out, Kp_out, lmda_out, lmda2_out, Phi_out, sigma11_out, sigma22_out, sigma22_2_out, sigma33_out, sigma33_2_out, sigma44_out, Sigma_out, thetap_out = extract_vars(
-    #                 prmtr, num_states, prmtr_size_dict)
-    #         if (min(np.real(np.linalg.eig(np.array(Kp_out))[0])) < 0) & (stationarity_assumption == 'yes'):
-    #             cum_log_likelihood = -np.inf
-    #         else:
-    #             try:
-    #                 A0_out, A1_out, U0_out, U1_out, Q_out = extract_mats(prmtr_ext(prmtr), num_states,
-    #                                                                      US_num_maturities, US_nominalmaturities,
-    #                                                                      US_ilbmaturities, dt)
-    #                 kalman1 = Kalman(Y, A0_out, A1_out, U0_out, U1_out, Q_out, Phi_out, initV,
-    #                                  statevar_names=statevar_names)  # default uses X0, V0 = unconditional mean and error variance
-    #                 Ytt, Yttl, Xtt, Xttl, Vtt, Vttl, Gain_t, eta_t, cum_log_likelihood = kalman1.filter()
-    #                 # pdb.set_trace()
-    #                 plt.close("all")
-    #             except:
-    #                 # print("Unexpected error:", sys.exc_info()[0])
-    #                 cum_log_likelihood = -np.inf
-    #         out_n = np.hstack((self.Nfeval_inner, prmtr, cum_log_likelihood))
-    #         print(str_form.format(*tuple(out_n)))  # use * to unpack tuple
-    #         self.Nfeval_inner += 1
-    #         return (-1) * cum_log_likelihood  # we will minimize the negative of the likelihood
-    #
-    #     ######################################################################
-    #     # Running optimization:
-    #     print('\n\n\n')
-    #     print(str_form3.format(*tuple(str_form2)))
-    #     print('new iterations begins__________________________________________')
-    #     tic = time.clock()
-    #     optim_output = minimize(neg_cum_log_likelihood, prmtr_0, method='Powell', options={'disp': 1})
-    #     toc = time.clock()
-    #     print('processing time: ' + str(toc - tic))
-    #     # if stationarity_assumption == 'no':
-    #     #    optim_output = minimize(neg_cum_log_likelihood, prmtr_0,  method='Powell', options={'disp': 1})
-    #     # elif stationarity_assumption == 'yes':
-    #     #    optim_output = minimize(neg_cum_log_likelihood, prmtr_0, method='Powell', options={'disp': 1})
-    #     ######################################################################
-
 
 
     def save_output(self, bk_mats, prmtr_new, exp_inf, mttau, mttau_nn, prob_def, vttau, vttau_nn):
