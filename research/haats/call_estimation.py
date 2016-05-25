@@ -69,9 +69,9 @@ estimation1 =Rolling()
 estimation1.run_setup(data, US_ilbmaturities, US_nominalmaturities, \
                 estim_freq=estim_freq, num_states=num_states,\
                 fix_Phi=fix_Phi, setdiag_Kp=setdiag_Kp, initV=initV)
-estimation1.fit('em_mle_with_bayesian_final_iteration', tolerance=1e-4, maxiter=50 , toltype='max_abs', \
-            solver_mle='Nelder-Mead',maxiter_mle=500, maxfev_mle=500, ftol_mle=0.01, xtol_mle=0.001, \
-            priors_bayesian=None, maxiter_bayesian=1000, burnin_bayesian=300 )
+estimation1.fit('em_mle_with_bayesian_final_iteration', tolerance=1e-4, maxiter=10 , toltype='max_abs', \
+            solver_mle='Nelder-Mead',maxiter_mle=10, maxfev_mle=10, ftol_mle=0.01, xtol_mle=0.001, \
+            priors_bayesian=None, maxiter_bayesian=5, burnin_bayesian=2 )
 # estimation1.fit('em_mle_with_bayesian_final_iteration', tolerance=1e-4, maxiter=100 , toltype='max_abs', \
 #             solver_mle='Nelder-Mead',maxiter_mle=1000, maxfev_mle=1000, ftol_mle=0.01, xtol_mle=0.001, \
 #             priors_bayesian=None, maxiter_bayesian=1000, burnin_bayesian=300 )
@@ -79,8 +79,7 @@ estimation1.fit('em_mle_with_bayesian_final_iteration', tolerance=1e-4, maxiter=
 # estimation1.fit('em_bayesian')
 # estimation1.fit('em_mle')
 estimation1.collect_results()
-estimation1.expected_inflation(estimation1.Kp_new, estimation1.rho_n, estimation1.rho_r, estimation1.Sigma_new, \
-                               estimation1.thetap_new, estimation1.Xtt_new) #do not use smoother here to avoid look-ahead bias
+estimation1.expected_inflation() #do not use smoother here to avoid look-ahead bias
 estimation1.save_output()
 estimation1.plot_results()
 

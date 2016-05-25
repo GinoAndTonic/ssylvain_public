@@ -158,7 +158,9 @@ class Rolling(Estimation):
         print('new fit begins__________________________________________')
         tic = time.clock()
 
-        tol, prmtr_new, iter_ = np.inf, self.prmtr_0, 0
+        tol, prmtr_new_raw, iter_ = np.inf, self.prmtr_0, 0
+        #We map parameters back to un-transformed parameters before saving results
+        prmtr_new = param_mapping(self.num_states, build_prmtr_dict(prmtr_new_raw, self.prmtr_size_dict))
 
         #Let us record the path of the parameters and objective as we iterate:
         fit_path_cols = [[k+'['+str(ki) +']' for ki in range(self.prmtr_size_dict[k])] for k in self.prmtr_size_dict.keys()]
@@ -173,7 +175,7 @@ class Rolling(Estimation):
         optim_output = None
 
         while tol>tolerance and iter_<maxiter:
-            A0_out, A1_out, U0_out, U1_out, Q_out, Phi_out = extract_mats(prmtr_new, self.num_states, self.US_nominalmaturities, self.US_ilbmaturities, self.dt, self.prmtr_size_dict, self.Phi_prmtr)
+            A0_out, A1_out, U0_out, U1_out, Q_out, Phi_out = extract_mats(prmtr_new_raw, self.num_states, self.US_nominalmaturities, self.US_ilbmaturities, self.dt, self.prmtr_size_dict, self.Phi_prmtr)
 
             kalman1 = Kalman(self.Y, A0_out, A1_out, U0_out, U1_out, Q_out, Phi_out, self.initV, statevar_names=self.statevar_names)  # default uses X0, V0 = unconditional mean and error variance
 
@@ -183,13 +185,14 @@ class Rolling(Estimation):
 
             #We to double number of iterations for the last call; e.g. maxiter=maxiter*2 if tol<=tolerance or iter_>=maxiter else maxiter
             if estimation_method=='em_mle' or estimation_method == 'em_mle_with_bayesian_final_iteration':
-                prmtr_update, optim_output = self.em_mle(XtT, self.Y, prmtr_new, self.num_states, self.stationarity_assumption, self.US_ilbmaturities, \
+                prmtr_update_raw, optim_output = self.em_mle(XtT, self.Y, prmtr_new_raw, self.num_states, self.stationarity_assumption, self.US_ilbmaturities, \
                                                          self.US_nominalmaturities, self.dt, self.Phi_prmtr, self.prmtr_size_dict, kalman1.X0 \
                                                          , method=solver_mle, \
                                                          maxiter=maxiter_mle*2 if tol<=tolerance or iter_>=maxiter else maxiter_mle, \
                                                          maxfev=maxfev_mle*2 if tol<=tolerance or iter_>=maxiter else maxfev_mle, \
                                                          ftol=ftol_mle/2.0 if tol<=tolerance or iter_>=maxiter else ftol_mle, \
                                                              xtol=xtol_mle/2.0 if tol<=tolerance or iter_>=maxiter else xtol_mle)
+                prmtr_update = param_mapping(self.num_states, build_prmtr_dict(prmtr_update_raw, self.prmtr_size_dict))
 
             elif estimation_method=='em_bayesian':
                 if iter_>0:
@@ -210,9 +213,11 @@ class Rolling(Estimation):
                                                         priors=priors, \
                                                         maxiter = maxiter_bayesian*2 if tol<=tolerance or iter_>=maxiter else maxiter_bayesian, \
                                                         burnin = burnin_bayesian*2 if tol<=tolerance or iter_>=maxiter else burnin_bayesian )
+                prmtr_update_raw = prmtr_update
+                print('\n')
 
             tol = np.max(np.abs(prmtr_new - prmtr_update)) if toltype == 'max_abs' else np.sum(np.array(prmtr_new - prmtr_update) ** 2) if toltype == 'l2_norm' else np.sum(np.abs(prmtr_new - prmtr_update))
-            prmtr_new = prmtr_update
+            prmtr_new, prmtr_new_raw = prmtr_update, prmtr_update_raw
             self.fit_path.loc[self.fit_path.index.values[-1] + 1] = np.hstack(
                 (np.array([optim_output['fun'], tol]).tolist(), prmtr_new.tolist()))
             self.Nfeval_inner += 1
@@ -220,26 +225,26 @@ class Rolling(Estimation):
             iter_ +=1
 
         if estimation_method == 'em_mle_with_bayesian_final_iteration':
-            prmtr_ = param_mapping(self.num_states, build_prmtr_dict(prmtr_update, self.prmtr_size_dict))
             priors, loc = {}, 0
             for k in self.prmtr_size_dict.keys():
                 for i in range(self.prmtr_size_dict[k]):
                     if k in ['a', 'lmda', 'lmda2', 'Kp']:
-                        priors[k + '_%i' % i] = pymc2.Uniform(k + '_%i' % i, lower=prmtr_[loc]*0.8, upper=prmtr_[loc]*1.2)
+                        priors[k + '_%i' % i] = pymc2.Uniform(k + '_%i' % i, lower=prmtr_new[loc]*0.8, upper=prmtr_new[loc]*1.2)
                     elif k in ['thetap']:
-                        priors[k + '_%i' % i] = pymc2.Normal(k + '_%i' % i, mu=prmtr_[loc],  tau=1 / (np.abs(prmtr_[loc])*0.01))
+                        priors[k + '_%i' % i] = pymc2.Normal(k + '_%i' % i, mu=prmtr_new[loc],  tau=1 / (np.abs(prmtr_new[loc])*0.01))
                     elif k in ['Phi', 'sigmas']:
-                        priors[k + '_%i' % i] = pymc2.Uniform(k + '_%i' % i, lower=prmtr_[loc], upper=prmtr_[loc]*1.2)
+                        priors[k + '_%i' % i] = pymc2.Uniform(k + '_%i' % i, lower=prmtr_new[loc], upper=prmtr_new[loc]*1.2)
                     loc+=1
             prmtr_update, optim_output = self.em_bayesian(XtT, self.Y, self.num_states, self.US_ilbmaturities,
                                                         self.US_nominalmaturities, self.dt, self.Phi_prmtr,
                                                         self.prmtr_size_dict, kalman1.X0, priors=priors,
-                                                        maxiter=maxiter_bayesian * 2,burnin=burnin_bayesian * 2)
+                                                        maxiter=maxiter_bayesian ,burnin=burnin_bayesian )
             tol = np.max(np.abs(prmtr_new - prmtr_update)) if toltype == 'max_abs' else np.sum(np.array(prmtr_new - prmtr_update) ** 2) if toltype == 'l2_norm' else np.sum(np.abs(prmtr_new - prmtr_update))
             prmtr_new = prmtr_update
             self.fit_path.loc[self.fit_path.index.values[-1] + 1] = np.hstack(
                 (np.array([optim_output['fun'], tol]).tolist(), prmtr_new.tolist()))
             self.Nfeval_inner += 1
+            print('\n')
             print(self.fit_path.tail(1).to_string())
             iter_ += 1
 
@@ -482,17 +487,17 @@ class Rolling(Estimation):
                                                     self.forecast_mse_all.iloc[m], self.forecast_rmse_all.iloc[m]
 
         for m in range(self.US_ilbmaturities.size):
-            self.USilbs[m].yields_forecast = self.yields_forecast.iloc[:, US_nominalmaturities.size + m]
-            self.USilbs[m].yields_forecast_std = self.yields_forecast_std.iloc[:, US_nominalmaturities.size + m]
-            self.USilbs[m].yields_forecast_cov = self.yields_forecast_cov.iloc[:, US_nominalmaturities.size + m]
+            self.USilbs[m].yields_forecast = self.yields_forecast.iloc[:, self.US_nominalmaturities.size + m]
+            self.USilbs[m].yields_forecast_std = self.yields_forecast_std.iloc[:, self.US_nominalmaturities.size + m]
+            self.USilbs[m].yields_forecast_cov = self.yields_forecast_cov.iloc[:, self.US_nominalmaturities.size + m]
 
             self.USilbs[m].forecast_e, self.USilbs[m].forecast_se, self.USilbs[m].forecast_mse, self.USilbs[m].forecast_rmse \
-                ,self.USilbs[m].forecast_mse_all, self.USilbs[m].forecast_rmse_all = self.forecast_e.iloc[:, US_nominalmaturities.size + m], \
-                                                                                      self.forecast_se.iloc[:, US_nominalmaturities.size + m], \
-                                                                                      self.forecast_mse.iloc[:, US_nominalmaturities.size + m], \
-                                                                                      self.forecast_rmse.iloc[:,US_nominalmaturities.size + m], \
-                                                                                      self.forecast_mse_all.iloc[US_nominalmaturities.size + m], \
-                                                                                      self.forecast_rmse_all.iloc[US_nominalmaturities.size + m]
+                ,self.USilbs[m].forecast_mse_all, self.USilbs[m].forecast_rmse_all = self.forecast_e.iloc[:, self.US_nominalmaturities.size + m], \
+                                                                                      self.forecast_se.iloc[:, self.US_nominalmaturities.size + m], \
+                                                                                      self.forecast_mse.iloc[:, self.US_nominalmaturities.size + m], \
+                                                                                      self.forecast_rmse.iloc[:,self.US_nominalmaturities.size + m], \
+                                                                                      self.forecast_mse_all.iloc[self.US_nominalmaturities.size + m], \
+                                                                                      self.forecast_rmse_all.iloc[self.US_nominalmaturities.size + m]
 
         ######################################################################
         if self.num_states == 4:
@@ -507,6 +512,7 @@ class Rolling(Estimation):
 
     def expected_inflation(self):
         '''Compute expected inflation'''
+        # Do not use smoother here to avoid look-ahead bias
         Kp_new, rho_n, rho_r, Sigma_new, thetap_new, Xtt_new, rho_n, rho_r = self.Kp_new, self.rho_n, self.rho_r, \
                                                                              self.Sigma_new, self.thetap_new, self.Xtt_new, self.rho_n, self.rho_r
 

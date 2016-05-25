@@ -2192,7 +2192,7 @@ status open
 \begin_layout Plain Layout
 \align center
 \begin_inset Graphics
-	filename ../../../../Downloads/ns_pic1.eps
+	filename ns_pic1.eps
 	scale 40
 
 \end_inset
@@ -2206,10 +2206,6 @@ status open
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Plain Layout
 
 \end_layout
 
@@ -2239,7 +2235,7 @@ y_{t}\{\tau\} & = & -\frac{1}{\tau}B_{t}\left\{ \tau\right\} \cdot X_{t}-\frac{1
 \nonumber \\
 y_{t}^{N}\{\tau\} & = & L_{t}^{N}+S_{t}\left(\frac{1-e^{-\lambda\tau}}{\lambda\tau}\right)+C_{t}\left(\frac{1-e^{-\lambda\tau}}{\lambda\tau}-e^{-\lambda\tau}\right)-\frac{1}{\tau}G_{t}^{N}\left\{ \tau\right\} \nonumber \\
 \nonumber \\
-y_{t}^{R}\{\tau\} & = & L_{t}^{N}+\alpha^{R}S_{t}\left(\frac{1-e^{-\lambda\tau}}{\lambda\tau}\right)+\alpha^{R}C_{t}\left(\frac{1-e^{-\lambda\tau}}{\lambda\tau}-e^{-\lambda\tau}\right)-\frac{1}{\tau}G_{t}^{R}\left\{ \tau\right\} \nonumber 
+y_{t}^{R}\{\tau\} & = & L_{t}^{R}+\alpha^{R}S_{t}\left(\frac{1-e^{-\lambda\tau}}{\lambda\tau}\right)+\alpha^{R}C_{t}\left(\frac{1-e^{-\lambda\tau}}{\lambda\tau}-e^{-\lambda\tau}\right)-\frac{1}{\tau}G_{t}^{R}\left\{ \tau\right\} \nonumber 
 \end{eqnarray}
 
 \end_inset
@@ -2310,6 +2306,12 @@ imply
 0\\
 1
 \end{array}\right)\\
+K_{t}^{Q^{'}} & = & \left(\begin{array}{cccc}
+0 & 0 & 0 & 0\\
+0 & \lambda & 0 & 0\\
+0 & -\lambda & \lambda & 0\\
+0 & 0 & 0 & 0
+\end{array}\right)\\
 K_{t}^{Q} & = & \left(\begin{array}{cccc}
 0 & 0 & 0 & 0\\
 0 & \lambda & -\lambda & 0\\
@@ -2321,12 +2323,7 @@ K_{t}^{Q} & = & \left(\begin{array}{cccc}
 \end_inset
 
 We set 
-\begin_inset Formula $\rho_{0}^{R}=\rho_{0}^{N}=\left(\begin{array}{c}
-0\\
-0\\
-0\\
-0
-\end{array}\right)$
+\begin_inset Formula $\rho_{0}^{R}=\rho_{0}^{N}=0$
 \end_inset
 
  for identification.
