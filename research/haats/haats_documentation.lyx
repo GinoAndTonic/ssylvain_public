@@ -1649,6 +1649,20 @@ MLE
 \end_layout
 
 \begin_layout Standard
+Below is a version of the EM algorithm
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+See slide 152 of http://www.ssc.upenn.edu/~fdiebold/Teaching706/TimeSeriesSlides.pdf
+\end_layout
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
 First, note that 
 \begin_inset Formula 
 \begin{eqnarray*}
@@ -1746,6 +1760,20 @@ repeat steps 2-5 until change in
 
 \begin_layout Subsubsection
 Bayesian estimation
+\end_layout
+
+\begin_layout Standard
+Below is a version of the Variational Bayesian EM algorithm
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+See http://www.cse.buffalo.edu/faculty/mbeal/thesis/beal03_2.pdf
+\end_layout
+
+\end_inset
+
+.
 \end_layout
 
 \begin_layout Standard
