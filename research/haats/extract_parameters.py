@@ -4,6 +4,7 @@ from scipy import integrate
 from math import exp
 from scipy.linalg import expm
 import numpy as np
+from numpy import exp
 import itertools
 # from IPython.core.debugger import Tracer; debug_here = Tracer()
 # import pdb
@@ -97,36 +98,36 @@ def a1(bondtype, maturity, prmtr, num_states, prmtr_size_dict,skip_mapping=0):
     if num_states == 4:
         a, Kp, lmda, Phi, sigma11, sigma22, sigma33, sigma44, Sigma, thetap = extract_vars(prmtr, num_states, prmtr_size_dict, skip_mapping=skip_mapping)
         if bondtype == 'NominalBonds':
-            out = np.float32(-(1 / tau) * np.array([-tau,
-                                                -((1 - np.exp(-(lmda * tau))) / lmda),
-                                                -((1 - np.exp(-(lmda * tau))) / lmda) + tau / np.exp(lmda * tau),
-                                                0])
+            out = np.float32(-(1.0 / tau) * np.array([-tau,
+                                                    -1/lmda + exp(-lmda*tau)/lmda,
+                                                    (lmda*tau - exp(lmda*tau) + 1)*exp(-lmda*tau)/lmda,
+                                                    0])
                          )
 
         elif bondtype == 'InfLinkBonds':
-            out = np.float32(-(a / tau) * np.array([0,
-                                                -((1 - np.exp(-(lmda * tau))) / lmda),
-                                                -((1 - np.exp(-(lmda * tau))) / lmda) + tau / np.exp(lmda * tau),
-                                                -tau / a])
+            out = np.float32(-(1.0 / tau) * np.array([0,
+                                                    -a/lmda + a*exp(-lmda*tau)/lmda,
+                                                    a*(lmda*tau - exp(lmda*tau) + 1)*exp(-lmda*tau)/lmda,
+                                                    -tau])
                          )
     elif num_states == 6:
         a, Kp, lmda, lmda2, Phi, sigma11, sigma22, sigma22_2, sigma33, sigma33_2, sigma44, Sigma, thetap = extract_vars(prmtr, num_states, prmtr_size_dict, skip_mapping=skip_mapping)
         if bondtype == 'NominalBonds':
-            out = np.float32(-(1 / tau) * np.array([-tau,
-                                                -((1 - np.exp(-(lmda * tau))) / lmda),
-                                                -((1 - np.exp(-(lmda2 * tau))) / lmda2),
-                                                -((1 - np.exp(-(lmda * tau))) / lmda) + tau / np.exp(lmda * tau),
-                                                -((1 - np.exp(-(lmda2 * tau))) / lmda2) + tau / np.exp(lmda2 * tau),
-                                                0])
+            out = np.float32(-(1.0 / tau) * np.array([-tau,
+                                                    -1/lmda + exp(-lmda*tau)/lmda,
+                                                    -1/lmda2 + exp(-lmda2*tau)/lmda2,
+                                                    (lmda*tau - exp(lmda*tau) + 1)*exp(-lmda*tau)/lmda,
+                                                    (lmda2*tau - exp(lmda2*tau) + 1)*exp(-lmda*tau)/lmda2,
+                                                    0])
                          )
 
         elif bondtype == 'InfLinkBonds':
-            out = np.float32(-(a / tau) * np.array([0,
-                                                -((1 - np.exp(-(lmda * tau))) / lmda),
-                                                -((1 - np.exp(-(lmda2 * tau))) / lmda2),
-                                                -((1 - np.exp(-(lmda * tau))) / lmda) + tau / np.exp(lmda * tau),
-                                                -((1 - np.exp(-(lmda2 * tau))) / lmda2) + tau / np.exp(lmda2 * tau),
-                                                -tau / a])
+            out = np.float32(-(1.0 / tau) * np.array([0,
+                                                    -a/lmda + a*exp(-lmda*tau)/lmda,
+                                                    -a/lmda2 + a*exp(-lmda2*tau)/lmda2,
+                                                    a*(lmda*tau - exp(lmda*tau) + 1)*exp(-lmda*tau)/lmda,
+                                                    a*(lmda2*tau - exp(lmda2*tau) + 1)*exp(-lmda2*tau)/lmda2,
+                                                    -tau])
                          )
     return out
 
@@ -137,53 +138,75 @@ def a0(bondtype, maturity, prmtr, num_states, prmtr_size_dict,skip_mapping=0):
     if num_states == 4:
         a, Kp, lmda, Phi, sigma11, sigma22, sigma33, sigma44 , Sigma, thetap = extract_vars(prmtr, num_states, prmtr_size_dict, skip_mapping=skip_mapping)
         if bondtype == 'NominalBonds':
-            out = np.float32(np.array([(-(sigma11 ** 2 * tau ** 2) / 6.
-                                    + (sigma22 ** 2 * (3 + np.exp(-2 * lmda * tau) - 4 / np.exp(lmda * tau) - 2 * lmda * tau)) / (
-                                    4 * lmda ** 3 * tau)
-                                    - (sigma33 ** 2 * (
-                                    -5 - 6 * lmda * tau - 2 * lmda ** 2 * tau ** 2 + 8 * np.exp(lmda * tau) * (2 + lmda * tau) + np.exp(
-                                    2 * lmda * tau) * (-11 + 4 * lmda * tau))) / (8 * np.exp(2 * lmda * tau) * lmda ** 3 * tau) )])
-                         )
+            out = np.float32(-(1.0 / tau) * np.array([sigma11**2*tau**3/6
+                                                      + sigma22**2*(tau/(2*lmda**2)
+                                                                    + exp(-lmda*tau)/lmda**3
+                                                                    - exp(-2*lmda*tau)/(4*lmda**3))
+                                                      + sigma33**2*(-tau**2*exp(-2*lmda*tau)/(4*lmda)
+                                                                    + tau/(2*lmda**2)
+                                                                    + tau*exp(-lmda*tau)/lmda**2
+                                                                    - 3*tau*exp(-2*lmda*tau)/(4*lmda**2)
+                                                                    + 2*exp(-lmda*tau)/lmda**3
+                                                                    - 5*exp(-2*lmda*tau)/(8*lmda**3))
+                                                      ])
+                             )
 
         elif bondtype == 'InfLinkBonds':
-            out = np.float32(np.array([(-(sigma44 ** 2 * tau ** 2) / 6.
-                                    + (a ** 2 * sigma22 ** 2 * (3 + np.exp(-2 * lmda * tau) - 4 / np.exp(lmda * tau) - 2 * lmda * tau)) / (
-                                    4 * lmda ** 3 * tau)
-                                    - (a ** 2 * sigma33 ** 2 * (
-                                    -5 - 6 * lmda * tau - 2 * lmda ** 2 * tau ** 2 + 8 * np.exp(lmda * tau) * (2 + lmda * tau) + np.exp(
-                                     2 * lmda * tau) * (-11 + 4 * lmda * tau))) / (8 * np.exp(2 * lmda * tau) * lmda ** 3 * tau))])
-                         )
+            out = np.float32(-(1.0 / tau) * np.array([sigma22**2*(a**2*tau/(2*lmda**2)
+                                                                  + a**2*exp(-lmda*tau)/lmda**3
+                                                                  - a**2*exp(-2*lmda*tau)/(4*lmda**3))
+                                                      + sigma33**2*(-a**2*tau**2*exp(-2*lmda*tau)/(4*lmda)
+                                                                    + a**2*tau/(2*lmda**2)
+                                                                    + a**2*tau*exp(-lmda*tau)/lmda**2
+                                                                    - 3*a**2*tau*exp(-2*lmda*tau)/(4*lmda**2)
+                                                                    + 2*a**2*exp(-lmda*tau)/lmda**3
+                                                                    - 5*a**2*exp(-2*lmda*tau)/(8*lmda**3))
+                                                      + sigma44**2*tau**3/6])
+                             )
     elif num_states == 6:
         a, Kp, lmda, lmda2, Phi, sigma11, sigma22, sigma22_2, sigma33, sigma33_2, sigma44, Sigma, thetap = extract_vars(prmtr, num_states, prmtr_size_dict, skip_mapping=skip_mapping)
         if bondtype == 'NominalBonds':
-            out = np.float32(np.array([(-(sigma11 ** 2 * tau ** 2) / 6.
-                                    + (sigma22 ** 2 * (3 + np.exp(-2 * lmda * tau) - 4 / np.exp(lmda * tau) - 2 * lmda * tau)) / (
-                                    4 * lmda ** 3 * tau)
-                                    + (sigma22_2 ** 2 * (3 + np.exp(-2 * lmda2 * tau) - 4 / np.exp(lmda2 * tau) - 2 * lmda2 * tau)) / (
-                                    4 * lmda2 ** 3 * tau)
-                                    - (sigma33 ** 2 * (
-                                    -5 - 6 * lmda * tau - 2 * lmda ** 2 * tau ** 2 + 8 * np.exp(lmda * tau) * (2 + lmda * tau) + np.exp(
-                                    2 * lmda * tau) * (-11 + 4 * lmda * tau))) / (8 * np.exp(2 * lmda * tau) * lmda ** 3 * tau)
-                                    - (sigma33_2 ** 2 * (
-                                    -5 - 6 * lmda2 * tau - 2 * lmda2 ** 2 * tau ** 2 + 8 * np.exp(lmda2 * tau) * (2 + lmda2 * tau) + np.exp(
-                                    2 * lmda2 * tau) * (-11 + 4 * lmda2 * tau))) / (8 * np.exp(2 * lmda2 * tau) * lmda2 ** 3 * tau)
-                                       )])
-                         )
+            out = np.float32(-(1.0 / tau) * np.array([sigma11**2*tau**3/6
+                                                      + sigma22**2*(tau/(2*lmda**2)
+                                                                    + exp(-lmda*tau)/lmda**3
+                                                                    - exp(-2*lmda*tau)/(4*lmda**3))
+                                                      + sigma22_2**2*(tau/(2*lmda2**2)
+                                                                      + exp(-lmda2*tau)/lmda2**3
+                                                                      - exp(-2*lmda2*tau)/(4*lmda2**3))
+                                                      + sigma33**2*(-tau**2*exp(-2*lmda*tau)/(4*lmda) + tau/(2*lmda**2)
+                                                                    + tau*exp(-lmda*tau)/lmda**2
+                                                                    - 3*tau*exp(-2*lmda*tau)/(4*lmda**2)
+                                                                    + 2*exp(-lmda*tau)/lmda**3
+                                                                    - 5*exp(-2*lmda*tau)/(8*lmda**3))
+                                                      + sigma33_2**2*(-tau**2*exp(-2*lmda2*tau)/(4*lmda2)
+                                                                      + tau/(2*lmda2**2) + tau*exp(-lmda2*tau)/lmda2**2
+                                                                    - 3*tau*exp(-2*lmda2*tau)/(4*lmda2**2)
+                                                                      + 2*exp(-lmda2*tau)/lmda2**3
+                                                                      - 5*exp(-2*lmda2*tau)/(8*lmda2**3))
+                                                      ])
+                             )
 
         elif bondtype == 'InfLinkBonds':
-            out = np.float32(np.array([(-(sigma44 ** 2 * tau ** 2) / 6.
-                                    + (a ** 2 * sigma22 ** 2 * (3 + np.exp(-2 * lmda * tau) - 4 / np.exp(lmda * tau) - 2 * lmda * tau)) / (
-                                    4 * lmda ** 3 * tau)
-                                    + (a ** 2 * sigma22_2 ** 2 * (3 + np.exp(-2 * lmda2 * tau) - 4 / np.exp(lmda2 * tau) - 2 * lmda2 * tau)) / (
-                                    4 * lmda2 ** 3 * tau)
-                                    - (a ** 2 * sigma33 ** 2 * (
-                                    -5 - 6 * lmda * tau - 2 * lmda ** 2 * tau ** 2 + 8 * np.exp(lmda * tau) * (2 + lmda * tau) + np.exp(
-                                     2 * lmda * tau) * (-11 + 4 * lmda * tau))) / (8 * np.exp(2 * lmda * tau) * lmda ** 3 * tau)
-                                    - (a ** 2 * sigma33_2 ** 2 * (
-                                    -5 - 6 * lmda2 * tau - 2 * lmda2 ** 2 * tau ** 2 + 8 * np.exp(lmda2 * tau) * (2 + lmda2 * tau) + np.exp(
-                                     2 * lmda2 * tau) * (-11 + 4 * lmda2 * tau))) / (8 * np.exp(2 * lmda2 * tau) * lmda2 ** 3 * tau)
-                                       )])
-                         )
+            out = np.float32(-(1.0 / tau) * np.array([sigma22**2*(a**2*tau/(2*lmda**2)
+                                                                  + a**2*exp(-lmda*tau)/lmda**3
+                                                                  - a**2*exp(-2*lmda*tau)/(4*lmda**3))
+                                                      + sigma22_2**2*(a**2*tau/(2*lmda2**2)
+                                                                      + a**2*exp(-lmda2*tau)/lmda2**3
+                                                                      - a**2*exp(-2*lmda2*tau)/(4*lmda2**3))
+                                                      + sigma33**2*(-a**2*tau**2*exp(-2*lmda*tau)/(4*lmda)
+                                                                    + a**2*tau/(2*lmda**2)
+                                                                    + a**2*tau*exp(-lmda*tau)/lmda**2
+                                                                    - 3*a**2*tau*exp(-2*lmda*tau)/(4*lmda**2)
+                                                                    + 2*a**2*exp(-lmda*tau)/lmda**3
+                                                                    - 5*a**2*exp(-2*lmda*tau)/(8*lmda**3))
+                                                      + sigma33_2**2*(-a**2*tau**2*exp(-2*lmda2*tau)/(4*lmda2)
+                                                                      + a**2*tau/(2*lmda2**2)
+                                                                    + a**2*tau*exp(-lmda2*tau)/lmda2**2
+                                                                      - 3*a**2*tau*exp(-2*lmda2*tau)/(4*lmda2**2)
+                                                                    + 2*a**2*exp(-lmda2*tau)/lmda2**3
+                                                                      - 5*a**2*exp(-2*lmda2*tau)/(8*lmda2**3))
+                                                      + sigma44**2*tau**3/6])
+                             )
     return out
 
 

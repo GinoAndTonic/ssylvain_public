@@ -173,6 +173,7 @@ class Rolling(Estimation):
         self.fit_path = pd.DataFrame(np.hstack((np.mat([np.nan,np.nan]), np.mat(prmtr_new))),columns=fit_path_cols)
         self.fit_path.index.rename('iter', inplace=1)
         optim_output = None
+        latest_obj = self.fit_path.objective.iloc[-1]
 
         while tol>tolerance and iter_<maxiter:
             A0_out, A1_out, U0_out, U1_out, Q_out, Phi_out = extract_mats(prmtr_new_raw, self.num_states, self.US_nominalmaturities, self.US_ilbmaturities, self.dt, self.prmtr_size_dict, self.Phi_prmtr)
@@ -223,6 +224,10 @@ class Rolling(Estimation):
             self.Nfeval_inner += 1
             print(self.fit_path.tail(1).to_string())
             iter_ +=1
+            if np.array(optim_output['fun'])>latest_obj:
+                print('bad iteration')
+                print('latest obj (%f) is larger than starting obj (%f)' %(np.array(optim_output['fun']),latest_obj))
+            latest_obj = optim_output['fun']
 
         if estimation_method == 'em_mle_with_bayesian_final_iteration':
             priors, loc = {}, 0
@@ -266,6 +271,7 @@ class Rolling(Estimation):
         fit_path_inner = pd.DataFrame(np.hstack((np.mat(np.nan), np.mat(prmtr_initial))), columns=self.fit_path_inner.columns, \
                                       index=[[self.fit_path.index.values[-1]],[0]])
         fit_path_inner.index.rename(['iter','sub_iter'], inplace=1)
+        latest_obj = fit_path_inner.sub_objective.iloc[-1]
 
         def objective_function(prmtr_):
             '''Given vector of parameters it returns the negative cumulative log-likelihood'''
@@ -327,7 +333,9 @@ class Rolling(Estimation):
 
         self.Nfeval_inner = Nfeval_inner
         self.fit_path_inner = self.fit_path_inner.append(fit_path_inner)
-
+        if np.array(optim_output['fun'])>latest_obj:
+            print('bad iteration')
+            print('latest obj (%f) is larger than starting obj (%f)' %(np.array(optim_output['fun']),latest_obj))
         return np.array(optim_output['x']), optim_output
 
 
@@ -555,16 +563,15 @@ class Rolling(Estimation):
         exp_inf = -mttau_nn + 0.5 * vttau_nn
         exp_inf = np.array(np.tile(-1.0 / horizons.T, (Xtt_new.shape[0], 1))) * np.array(exp_inf)
         exp_inf[:, 0] = np.array(((rho_n - rho_r).T) * (np.mat(thetap_new)))[0, 0]
-        exp_inf = pd.DataFrame(np.mat(exp_inf), index=self.Y.index)
+        exp_inf = pd.DataFrame(np.mat(exp_inf), index=self.Y.index, columns=['horizon_%iyr' %i for i in range(exp_inf.shape[1])] )
 
         # Now we can compute the break-evens
         bk_mats = np.unique(np.vstack((self.US_nominalmaturities, self.US_ilbmaturities)))
         bk_evens = pd.DataFrame(
-            (np.array([self.Y[:, np.in1d(self.US_nominalmaturities, m)].values  # Nominal bond with maturity = m
-                       - (self.Y[:, self.US_nominalmaturities.size:].values)[:, np.in1d(self.US_ilbmaturities, m)]
-                       # ILB with maturity = m
+            (np.array([self.Y.iloc[:, np.in1d(self.US_nominalmaturities, m)].values  # Nominal bond with maturity = m
+                       - (self.Y.iloc[:, self.US_nominalmaturities.size:].values)[:, np.in1d(self.US_ilbmaturities, m)]  # ILB with maturity = m
                        for m in bk_mats])[:, :, 0]).T
-            , index=self.Y.index, columns=bk_mats)
+            , index=self.Y.index, columns=['horizon_%iyr' %i for i in bk_mats] )
 
         # %now we can compute the IRPs
         irps = bk_evens - exp_inf.iloc[:, bk_mats - 1]
@@ -573,7 +580,7 @@ class Rolling(Estimation):
         prob_def = -np.array(mttau_nn) / (np.array(vttau_nn) ** 0.5)
         prob_def = norm.cdf(prob_def)
         prob_def[:, 0] = 0
-        prob_def = pd.DataFrame(np.mat(prob_def), index=self.Y.index)
+        prob_def = pd.DataFrame(np.mat(prob_def), index=self.Y.index, columns=['horizon_%iyr' %i for i in range(prob_def.shape[1])] )
 
         self.bk_mats, self.exp_inf, self.irps, self.mttau, self.mttau_nn, self.prob_def, self.vttau, self.vttau_nn = \
             bk_mats, exp_inf, irps, mttau, mttau_nn, prob_def, vttau, vttau_nn
@@ -603,7 +610,7 @@ class Rolling(Estimation):
     #             header_Xtt_new,  header_Xttl_new, header_thetap_new, header_X0  = (tuple(['dates,Ln,S1,S2,C1,C2,Lr'])+tuple(['\n']) for vvv in range(4))
     #         header_Vtt_new,  header_Vttl_new, header_V0 = (((tuple(['dates'])+tuple(np.reshape([[',V('+str(vv)+';'+str(vv2)+')'  for vv in range(num_states)] for vv2 in range(num_states)],(num_states**2)))+tuple(['\n']) )) for vvv in range(3))
     #         header_prmtr_new = tuple(['dates'])+tuple([',prmtr('+str(vv)+')' for vv in range(prmtr_new.size)])+tuple(['\n'])
-    #         header_Kp_new = tuple(['dates'])+tuple(np.reshape([[',Kp('+str(vv)+';'+str(vv2)+')'  for vv in range(num_states)] for vv2 in range(num_states)],(num_states**2)))+tuple(['\n'])
+    #       exp_inf  header_Kp_new = tuple(['dates'])+tuple(np.reshape([[',Kp('+str(vv)+';'+str(vv2)+')'  for vv in range(num_states)] for vv2 in range(num_states)],(num_states**2)))+tuple(['\n'])
     #         header_Sigma_new = tuple(['dates'])+tuple(np.reshape([[',Sigma('+str(vv)+';'+str(vv2)+')'  for vv in range(num_states)] for vv2 in range(num_states)],(num_states**2)))+tuple(['\n'])
     #         header_a_new, header_lmda_new, header_lmda2_new  = tuple(['dates,a'])+tuple(['\n']), tuple(['dates,lmda'])+tuple(['\n']), tuple(['dates,lmda2'])+tuple(['\n'])
     #         header_Phi_new = tuple(['dates'])+tuple(np.reshape([[',Sigma('+str(vv)+';'+str(vv2)+')'  for vv in range(US_num_maturities)] for vv2 in range(US_num_maturities)],(US_num_maturities**2)))+tuple(['\n'])
