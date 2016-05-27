@@ -11,7 +11,7 @@ import pylab as plab
 import sys
 print(sys.argv)
 import itertools
-# from IPython.core.debugger import Tracer; debug_here = Tracer() #this is the approach that works for ipython debugging
+from IPython.core.debugger import Tracer; debug_here = Tracer() #this is the approach that works for ipython debugging
 import pdb
 from math import exp
 from scipy.optimize import minimize, fmin_slsqp
@@ -150,15 +150,15 @@ class Rolling(Estimation):
         self.estim_freq = estim_freq
 
 
-    def fit(self, estimation_method='em_mle', tolerance=1e-4, maxiter=10 , toltype='max_abs', \
-            solver_mle='Nelder-Mead',maxiter_mle=500, maxfev_mle=500, ftol_mle=0.01, xtol_mle=0.001, \
-            priors_bayesian=None, maxiter_bayesian=250, burnin_bayesian=None  ):
+    def fit(self, estimation_method='em_mle', tolerance=1e-6, maxiter=50 , toltype='max_abs', \
+            solver_mle='Nelder-Mead',maxiter_mle=1000, maxfev_mle=1000, ftol_mle=1e-6, xtol_mle=1e-6, \
+            priors_bayesian=None, maxiter_bayesian=1000, burnin_bayesian=None  ):
         '''Running Estimation Fit'''
 
         print('new fit begins__________________________________________')
         tic = time.clock()
 
-        tol, prmtr_new_raw, iter_ = np.inf, self.prmtr_0, 0
+        tol, prmtr_new_raw, self.Nfeval = np.inf, self.prmtr_0, 0
         #We map parameters back to un-transformed parameters before saving results
         prmtr_new = param_mapping(self.num_states, build_prmtr_dict(prmtr_new_raw, self.prmtr_size_dict))
 
@@ -175,7 +175,7 @@ class Rolling(Estimation):
         optim_output = None
         latest_obj = self.fit_path.objective.iloc[-1]
 
-        while tol>tolerance and iter_<maxiter:
+        while tol>tolerance and self.Nfeval<maxiter:
             A0_out, A1_out, U0_out, U1_out, Q_out, Phi_out = extract_mats(prmtr_new_raw, self.num_states, self.US_nominalmaturities, self.US_ilbmaturities, self.dt, self.prmtr_size_dict, self.Phi_prmtr)
 
             kalman1 = Kalman(self.Y, A0_out, A1_out, U0_out, U1_out, Q_out, Phi_out, self.initV, statevar_names=self.statevar_names)  # default uses X0, V0 = unconditional mean and error variance
@@ -184,19 +184,19 @@ class Rolling(Estimation):
 
             XtT, VtT, Jt = kalman1.smoother(Xtt, Xttl, Vtt, Vttl, Gain_t, eta_t)
 
-            #We to double number of iterations for the last call; e.g. maxiter=maxiter*2 if tol<=tolerance or iter_>=maxiter else maxiter
+            #We to double number of iterations for the last call; e.g. maxiter=maxiter*2 if tol<=tolerance or self.Nfeval>=maxiter else maxiter
             if estimation_method=='em_mle' or estimation_method == 'em_mle_with_bayesian_final_iteration':
                 prmtr_update_raw, optim_output = self.em_mle(XtT, self.Y, prmtr_new_raw, self.num_states, self.stationarity_assumption, self.US_ilbmaturities, \
                                                          self.US_nominalmaturities, self.dt, self.Phi_prmtr, self.prmtr_size_dict, kalman1.X0 \
                                                          , method=solver_mle, \
-                                                         maxiter=maxiter_mle*2 if tol<=tolerance or iter_>=maxiter else maxiter_mle, \
-                                                         maxfev=maxfev_mle*2 if tol<=tolerance or iter_>=maxiter else maxfev_mle, \
-                                                         ftol=ftol_mle/2.0 if tol<=tolerance or iter_>=maxiter else ftol_mle, \
-                                                             xtol=xtol_mle/2.0 if tol<=tolerance or iter_>=maxiter else xtol_mle)
+                                                         maxiter=maxiter_mle*2 if tol<=tolerance or self.Nfeval>=maxiter else maxiter_mle, \
+                                                         maxfev=maxfev_mle*2 if tol<=tolerance or self.Nfeval>=maxiter else maxfev_mle, \
+                                                         ftol=ftol_mle/2.0 if tol<=tolerance or self.Nfeval>=maxiter else ftol_mle, \
+                                                             xtol=xtol_mle/2.0 if tol<=tolerance or self.Nfeval>=maxiter else xtol_mle)
                 prmtr_update = param_mapping(self.num_states, build_prmtr_dict(prmtr_update_raw, self.prmtr_size_dict))
 
             elif estimation_method=='em_bayesian':
-                if iter_>0:
+                if self.Nfeval>0:
                     priors, loc = {}, 0
                     for k in self.prmtr_size_dict.keys():
                         for i in range(self.prmtr_size_dict[k]):
@@ -212,21 +212,21 @@ class Rolling(Estimation):
                 prmtr_update, optim_output = self.em_bayesian(XtT, self.Y, self.num_states, self.US_ilbmaturities, self.US_nominalmaturities, \
                                                         self.dt, self.Phi_prmtr, self.prmtr_size_dict, kalman1.X0, \
                                                         priors=priors, \
-                                                        maxiter = maxiter_bayesian*2 if tol<=tolerance or iter_>=maxiter else maxiter_bayesian, \
-                                                        burnin = burnin_bayesian*2 if tol<=tolerance or iter_>=maxiter else burnin_bayesian )
+                                                        maxiter = maxiter_bayesian*2 if tol<=tolerance or self.Nfeval>=maxiter else maxiter_bayesian, \
+                                                        burnin = burnin_bayesian*2 if tol<=tolerance or self.Nfeval>=maxiter else burnin_bayesian )
                 prmtr_update_raw = prmtr_update
                 print('\n')
 
+            if np.array(optim_output['fun'])>latest_obj:
+                print('bad iteration')
+                print('latest obj (%f) is larger than starting obj (%f)' %(np.array(optim_output['fun']),latest_obj))
             tol = np.max(np.abs(prmtr_new - prmtr_update)) if toltype == 'max_abs' else np.sum(np.array(prmtr_new - prmtr_update) ** 2) if toltype == 'l2_norm' else np.sum(np.abs(prmtr_new - prmtr_update))
             prmtr_new, prmtr_new_raw = prmtr_update, prmtr_update_raw
             self.fit_path.loc[self.fit_path.index.values[-1] + 1] = np.hstack(
                 (np.array([optim_output['fun'], tol]).tolist(), prmtr_new.tolist()))
             self.Nfeval_inner += 1
             print(self.fit_path.tail(1).to_string())
-            iter_ +=1
-            if np.array(optim_output['fun'])>latest_obj:
-                print('bad iteration')
-                print('latest obj (%f) is larger than starting obj (%f)' %(np.array(optim_output['fun']),latest_obj))
+            self.Nfeval +=1
             latest_obj = optim_output['fun']
 
         if estimation_method == 'em_mle_with_bayesian_final_iteration':
@@ -251,7 +251,7 @@ class Rolling(Estimation):
             self.Nfeval_inner += 1
             print('\n')
             print(self.fit_path.tail(1).to_string())
-            iter_ += 1
+            self.Nfeval += 1
 
         toc = time.clock()
         print('processing time for fit: ' + str(toc - tic))
@@ -261,21 +261,14 @@ class Rolling(Estimation):
 
     def em_mle(self, X, Y, prmtr_initial, num_states, stationarity_assumption, US_ilbmaturities,
                US_nominalmaturities, dt, \
-               Phi_prmtr, prmtr_size_dict, X0,method='Nelder-Mead',maxiter=500,maxfev=500,ftol=0.01,xtol=0.001):
+               Phi_prmtr, prmtr_size_dict, X0,method='Nelder-Mead',maxiter=1000,maxfev=1000,ftol=1e-6,xtol=1e-6):
         '''E-M Algorithm with MLE '''
         print('\n\n\n')
-        global Nfeval_inner, fit_path_inner
-        Nfeval_inner = self.Nfeval_inner #let's track the number of inner iterations
 
-        # Let us record the path of the parameters and objective as we iterate:
-        fit_path_inner = pd.DataFrame(np.hstack((np.mat(np.nan), np.mat(prmtr_initial))), columns=self.fit_path_inner.columns, \
-                                      index=[[self.fit_path.index.values[-1]],[0]])
-        fit_path_inner.index.rename(['iter','sub_iter'], inplace=1)
-        latest_obj = fit_path_inner.sub_objective.iloc[-1]
+        latest_obj = self.fit_path_inner.sub_objective.iloc[-1]
 
         def objective_function(prmtr_):
             '''Given vector of parameters it returns the negative cumulative log-likelihood'''
-            global Nfeval_inner, fit_path_inner
             #First, given parameter vector, build parameter matrices:
             if num_states == 4:
                 a, Kp, lmda, Phi, sigma11, sigma22, sigma33, sigma44, Sigma, thetap = extract_vars(prmtr_, num_states, prmtr_size_dict, Phi_prmtr)
@@ -307,10 +300,11 @@ class Rolling(Estimation):
                     # print("Unexpected error:", sys.exc_info()[0])
                     cum_log_likelihood =  np.mat([-np.inf])
 
-            Nfeval_inner += 1
-            fit_path_inner.ix[(fit_path_inner.index.values[-1][0], fit_path_inner.index.values[-1][1]+1),:] = \
-                np.hstack(( np.array((-1)*cum_log_likelihood)[0].tolist(), prmtr_.tolist() ))
-            print(fit_path_inner.tail(1).to_string())
+            self.Nfeval_inner += 1
+            self.fit_path_inner.ix[(self.fit_path.index.values[-1], self.fit_path_inner.index.values[-1][1]+1),:] = \
+                np.hstack(( np.array((-1)*cum_log_likelihood)[0].tolist(),
+                            param_mapping(self.num_states, build_prmtr_dict(prmtr_, self.prmtr_size_dict)).tolist() ))
+            print(self.fit_path_inner.tail(1).to_string())
 
             return (-1) * np.reshape(np.array(cum_log_likelihood), 1, 0)  #important to reshape to scalar
 
@@ -331,16 +325,24 @@ class Rolling(Estimation):
         # optim_output = minimize(objective_function, prmtr_initial, method='SLSQP', options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev}) #this could work but can lead to error with nan in prmtr
         # optim_output = minimize(objective_function, prmtr_initial, method='SLSQP', constraints = self.cons, options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev})# only COBYLA and SLSQP allow constraints;  #this could work but can lead to error with nan in prmtr
 
-        self.Nfeval_inner = Nfeval_inner
-        self.fit_path_inner = self.fit_path_inner.append(fit_path_inner)
+        #Let's make sure that we have (weakly) improved on the previous iteration otherwise, return the previous optimal results
+        count_=0
+        while np.array(optim_output['fun'])>latest_obj  and count_<=10:
+            print('bad iteration')
+            print('latest obj (%f) is larger than starting obj (%f)' %(np.array(optim_output['fun']),latest_obj))
+            optim_output = minimize(objective_function, prmtr_initial, method=method, options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev}) #Nelder-Mead works well
         if np.array(optim_output['fun'])>latest_obj:
             print('bad iteration')
             print('latest obj (%f) is larger than starting obj (%f)' %(np.array(optim_output['fun']),latest_obj))
+            print('resetting iteration')
+            optim_output['x']=np.array(prmtr_initial)
+            optim_output['fun']=latest_obj
+
         return np.array(optim_output['x']), optim_output
 
 
     def em_bayesian(self, X, Y, num_states, US_ilbmaturities, US_nominalmaturities, dt,  Phi_prmtr, prmtr_size_dict, \
-                    X0, maxiter=250, priors=None, burnin=None, method=None):
+                    X0, maxiter=1000, priors=None, burnin=None, method=None):
         '''E-M Algorithm with Bayesian approach '''
         print('\n\n\n')
         global Nfeval_inner, fit_path_inner
@@ -451,12 +453,13 @@ class Rolling(Estimation):
 
     def collect_results(self):
         '''Save results are attributes'''
+        # debug_here()
         prmtr, optim_output = self.prmtr, self.optim_output
-
+        print(prmtr)
         # Extracting filtered states:
         if self.num_states == 4:
             self.a_new, self.Kp_new, self.lmda_new, self.Phi_new, self.sigma11_new, self.sigma22_new, self.sigma33_new, \
-                self.sigma44_new, self.Sigma_new, self.thetap_new = extract_vars( prmtr, self.num_states, self.prmtr_size_dict)
+                self.sigma44_new, self.Sigma_new, self.thetap_new = extract_vars( prmtr, self.num_states, self.prmtr_size_dict, skip_mapping=1)
 
         elif self.num_states == 6:
             self.a_new, self.Kp_new, self.lmda_new, self.lmda2_new, self.Phi_new, self.sigma11_new, self.sigma22_new, \
@@ -465,9 +468,9 @@ class Rolling(Estimation):
 
         self.A0_new, self.A1_new, self.U0_new, self.U1_new, self.Q_new, self.Phi_new = extract_mats(prmtr, self.num_states,
                                                                       self.US_nominalmaturities, self.US_ilbmaturities,
-                                                                      self.dt, self.prmtr_size_dict, self.Phi_prmtr)
+                                                                      self.dt, self.prmtr_size_dict, self.Phi_prmtr, skip_mapping=1)
 
-        kalman2 = Kalman(self.Y, self.A0_new, self.A1_new, self.U0_new, self.U1_new, self.Q_new, self.Phi_new, self.initV)
+        kalman2 = Kalman(self.Y, self.A0_new, self.A1_new, self.U0_new, self.U1_new, self.Q_new, self.Phi_new, self.initV, statevar_names=self.statevar_names)
 
         self.Ytt_new, self.Yttl_new, self.Xtt_new, self.Xttl_new, self.Vtt_new, self.Vttl_new, \
             self.Gain_t_new, self.eta_t_new = kalman2.filter()
@@ -517,6 +520,7 @@ class Rolling(Estimation):
 
         if self.num_states == 6:
             self.lmda2_new, self.sigma22_2_new, self.sigma33_2_new =  lmda2_new, sigma22_2_new, sigma33_2_new
+
 
     def expected_inflation(self):
         '''Compute expected inflation'''

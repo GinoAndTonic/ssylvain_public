@@ -1263,8 +1263,8 @@ y_{t}\\
 \\
 A_{1} & = & \left(\begin{array}{c}
 A_{1}^{N}\\
-A_{1}^{R}\\
-{}[0,0,0,0,1]
+A_{1}^{R}\\{}
+[0,0,0,0,1]
 \end{array}\right),\quad\quad A_{0}=\left(\begin{array}{c}
 A_{0}^{N}\\
 A_{0}^{R}\\
@@ -1742,7 +1742,7 @@ Solve for
 
 \begin_inset Formula 
 \begin{eqnarray*}
-\hat{\Omega} & = & arg\max_{\Omega}\mathcal{L}\left\{ \Omega\right\} 
+\hat{\Omega} & = & arg\max_{\Omega}\mathcal{\tilde{L}}\left\{ \Omega\right\} 
 \end{eqnarray*}
 
 \end_inset
