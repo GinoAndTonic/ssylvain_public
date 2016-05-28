@@ -307,7 +307,7 @@ class Rolling(Estimation):
             print(self.fit_path_inner.tail(1).to_string())
 
             return (-1) * np.reshape(np.array(cum_log_likelihood), 1, 0)  #important to reshape to scalar
-
+        # debug_here()
         #See http://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html#scipy.optimize.minimize for description of optimizer
         if method == 'COBYLA':
             tic = time.clock()
@@ -319,6 +319,7 @@ class Rolling(Estimation):
             optim_output = minimize(objective_function, prmtr_initial, method=method, options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev, 'xtol':xtol, 'ftol':ftol}) #Nelder-Mead works well
             toc = time.clock()
             print(method+': '+str(toc-tic))
+        # debug_here()
 
         # tic = time.clock()
         # optim_output = minimize(objective_function, prmtr_initial, method='Nelder-Mead', options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev})
@@ -340,11 +341,16 @@ class Rolling(Estimation):
 
         #Let's make sure that we have (weakly) improved on the previous iteration otherwise, return the previous optimal results
         count_=0
-        while np.array(optim_output['fun'])>latest_obj  and count_<=10:
+        while np.array(optim_output['fun'])>latest_obj  and count_<=4:
+            #repeat optimization at most 5 times with slight noise to guess parameters
             print('bad iteration')
             print('latest obj (%f) is larger than starting obj (%f)' %(np.array(optim_output['fun']),latest_obj))
-            optim_output = minimize(objective_function, prmtr_initial, method=method, options={'disp': 1}) #Nelder-Mead works well
+            if method == 'COBYLA':
+                optim_output = minimize(objective_function, prmtr_initial*(1+np.random.rand(prmtr_initial.shape)/100000000), method=method, options={'disp': 1, 'maxiter':maxiter*2})
+            else:
+                optim_output = minimize(objective_function, prmtr_initial*(1+np.random.rand(prmtr_initial.shape)/100000000), method=method, options={'disp': 1, 'maxiter':maxiter*2, 'maxfev':maxfev*2})
         if np.array(optim_output['fun'])>latest_obj:
+            #Still unable to improve optimization, so just return original optimum
             print('bad iteration')
             print('latest obj (%f) is larger than starting obj (%f)' %(np.array(optim_output['fun']),latest_obj))
             print('resetting iteration')
