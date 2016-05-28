@@ -70,7 +70,7 @@ estimation1.run_setup(data, US_ilbmaturities, US_nominalmaturities, \
                 estim_freq=estim_freq, num_states=num_states,\
                 fix_Phi=fix_Phi, setdiag_Kp=setdiag_Kp, initV=initV)
 estimation1.fit('em_mle', tolerance=1e-4, maxiter=50 , toltype='max_abs', \
-            solver_mle='Powell',maxiter_mle=1000, maxfev_mle=1000, ftol_mle=1e-6, xtol_mle=1e-6)
+            solver_mle='COBYLA',maxiter_mle=1000, maxfev_mle=1000, ftol_mle=1e-4, xtol_mle=1e-4)
 # estimation1.fit('em_mle_with_bayesian_final_iteration', tolerance=1e-4, maxiter=10 , toltype='max_abs', \
 #             solver_mle='Nelder-Mead',maxiter_mle=10, maxfev_mle=10, ftol_mle=0.01, xtol_mle=0.001, \
 #             priors_bayesian=None, maxiter_bayesian=5, burnin_bayesian=2 )

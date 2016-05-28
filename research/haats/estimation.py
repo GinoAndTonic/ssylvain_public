@@ -309,28 +309,41 @@ class Rolling(Estimation):
             return (-1) * np.reshape(np.array(cum_log_likelihood), 1, 0)  #important to reshape to scalar
 
         #See http://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html#scipy.optimize.minimize for description of optimizer
-        # tic = time.clock()
-        optim_output = minimize(objective_function, prmtr_initial, method=method, options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev, 'xtol':xtol, 'ftol':ftol}) #Nelder-Mead works well
-        # toc = time.clock()
-        # print('Nelder-Mead: '+str(toc-tic))
+        if method == 'COBYLA':
+            tic = time.clock()
+            optim_output = minimize(objective_function, prmtr_initial, method='COBYLA', tol=ftol,  options={'iprint': 1, 'disp': True, 'maxiter': maxiter, 'catol': ftol, 'rhobeg': 1.0})
+            toc = time.clock()
+            print(method+': '+str(toc-tic))
+        else:
+            tic = time.clock()
+            optim_output = minimize(objective_function, prmtr_initial, method=method, options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev, 'xtol':xtol, 'ftol':ftol}) #Nelder-Mead works well
+            toc = time.clock()
+            print(method+': '+str(toc-tic))
 
+        # tic = time.clock()
+        # optim_output = minimize(objective_function, prmtr_initial, method='Nelder-Mead', options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev})
+        # toc = time.clock()
+        # print('opt: '+str(toc-tic))
         # optim_output = minimize(objective_function, prmtr_initial, method='trust-ncg', options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev}) #jacobian required
         # optim_output = minimize(objective_function, prmtr_initial, method='dogleg', options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev}) # requires the gradient and Hessian
         # optim_output = minimize(objective_function, prmtr_initial, method='CG', options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev}) #lead to nans in prmtr
         # optim_output = minimize(objective_function, prmtr_initial, method='Newton-CG', options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev}) # Jacobian is required
-        # optim_output = minimize(objective_function, prmtr_initial, method='TNC', options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev}) #lead to nans in prmtr
+        # optim_output = minimize(objective_function, prmtr_initial, method='TNC', options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev}) #lead to nans in prmtr, too slow, steps too small
         # optim_output = minimize(objective_function, prmtr_initial, method='Powell', options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev}) #too slow
-        # optim_output = minimize(objective_function, prmtr_initial, method='COBYLA', options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev})
+        # optim_output = minimize(objective_function, prmtr_initial, method='COBYLA', options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev}) #this could work
         # optim_output = minimize(objective_function, prmtr_initial, method='BFGS', options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev}) #this could work but can lead to error with nan in prmtr
+        # optim_output = minimize(objective_function, prmtr_initial, method='L-BFGS-B', options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev}) #this could work but can take too long
         # optim_output = minimize(objective_function, prmtr_initial, method='SLSQP', options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev}) #this could work but can lead to error with nan in prmtr
         # optim_output = minimize(objective_function, prmtr_initial, method='SLSQP', constraints = self.cons, options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev})# only COBYLA and SLSQP allow constraints;  #this could work but can lead to error with nan in prmtr
+        # optim_output = minimize(objective_function, prmtr_initial, method='Nelder-Mead', options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev}) #this could work
+
 
         #Let's make sure that we have (weakly) improved on the previous iteration otherwise, return the previous optimal results
         count_=0
         while np.array(optim_output['fun'])>latest_obj  and count_<=10:
             print('bad iteration')
             print('latest obj (%f) is larger than starting obj (%f)' %(np.array(optim_output['fun']),latest_obj))
-            optim_output = minimize(objective_function, prmtr_initial, method=method, options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev}) #Nelder-Mead works well
+            optim_output = minimize(objective_function, prmtr_initial, method=method, options={'disp': 1}) #Nelder-Mead works well
         if np.array(optim_output['fun'])>latest_obj:
             print('bad iteration')
             print('latest obj (%f) is larger than starting obj (%f)' %(np.array(optim_output['fun']),latest_obj))
