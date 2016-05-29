@@ -1,4 +1,5 @@
 from __future__ import division
+from IPython.core.debugger import Tracer; debug_here = Tracer() #this is the approach that works for ipython debugging
 import os
 import numpy as np
 # import seaborn as sns
@@ -117,11 +118,11 @@ class ImportData:
                 tips_data, nominal_data = ImportData.update_us_data()
         else:
             tips_data, nominal_data = ImportData.update_us_data()
-
+        # debug_here()
         if US_ilbmaturities is None:
-            US_ilbmaturities = np.array([str.replace(i,'TIPSY','') for i in tips_data.columns.values], dtype=int)
+            US_ilbmaturities = np.array([i.replace('TIPSY','') for i in tips_data.columns.values], dtype=int)
         if US_nominalmaturities is None:
-            US_nominalmaturities = np.array([str.replace(i,'SVENY','') for i in nominal_data.columns.values], dtype=int)
+            US_nominalmaturities = np.array([i.replace('SVENY','') for i in nominal_data.columns.values], dtype=int)
 
         if plots == 1:
             #########################################################################################################################

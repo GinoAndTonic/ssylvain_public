@@ -80,7 +80,7 @@ def ineq_cons(num_states, prmtr_size_dict, Phi_prmtr): #constraint for Kp
     return const_temp
 
 
-def ineq_cons_ls(num_states, prmtr_size_dict, Phi_prmtr): #constraint for Kp for ls optimizer
+def ineq_cons_ls(num_states, prmtr_size_dict, Phi_prmtr): #constraint for Kp for ls (least-square) optimizer
     const_temp = []
     const_temp.append(lambda prmtr:  np.array(eigvalConstraint(prmtr, 0, num_states, prmtr_size_dict, Phi_prmtr)))
     const_temp.append(lambda prmtr:  np.array(eigvalConstraint(prmtr, 1, num_states, prmtr_size_dict, Phi_prmtr)))

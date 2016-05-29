@@ -151,7 +151,7 @@ class Rolling(Estimation):
 
 
     def fit(self, estimation_method='em_mle', tolerance=1e-6, maxiter=50 , toltype='max_abs', \
-            solver_mle='Nelder-Mead',maxiter_mle=1000, maxfev_mle=1000, ftol_mle=1e-6, xtol_mle=1e-6, \
+            solver_mle='Nelder-Mead',maxiter_mle=1000, maxfev_mle=1000, ftol_mle=1e-6, xtol_mle=1e-6, constraints_mle='off', \
             priors_bayesian=None, maxiter_bayesian=1000, burnin_bayesian=None  ):
         '''Running Estimation Fit'''
 
@@ -192,7 +192,8 @@ class Rolling(Estimation):
                                                          maxiter=maxiter_mle*2 if tol<=tolerance or self.Nfeval>=maxiter else maxiter_mle, \
                                                          maxfev=maxfev_mle*2 if tol<=tolerance or self.Nfeval>=maxiter else maxfev_mle, \
                                                          ftol=ftol_mle/2.0 if tol<=tolerance or self.Nfeval>=maxiter else ftol_mle, \
-                                                             xtol=xtol_mle/2.0 if tol<=tolerance or self.Nfeval>=maxiter else xtol_mle)
+                                                             xtol=xtol_mle/2.0 if tol<=tolerance or self.Nfeval>=maxiter else xtol_mle\
+                                                         , constraints= constraints_mle  )
                 prmtr_update = param_mapping(self.num_states, build_prmtr_dict(prmtr_update_raw, self.prmtr_size_dict))
 
             elif estimation_method=='em_bayesian':
@@ -261,7 +262,7 @@ class Rolling(Estimation):
 
     def em_mle(self, X, Y, prmtr_initial, num_states, stationarity_assumption, US_ilbmaturities,
                US_nominalmaturities, dt, \
-               Phi_prmtr, prmtr_size_dict, X0,method='Nelder-Mead',maxiter=1000,maxfev=1000,ftol=1e-6,xtol=1e-6):
+               Phi_prmtr, prmtr_size_dict, X0,method='Nelder-Mead',maxiter=1000,maxfev=1000,ftol=1e-6,xtol=1e-6, constraints='off'):
         '''E-M Algorithm with MLE '''
         print('\n\n\n')
 
@@ -311,12 +312,18 @@ class Rolling(Estimation):
         #See http://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html#scipy.optimize.minimize for description of optimizer
         if method == 'COBYLA':
             tic = time.clock()
-            optim_output = minimize(objective_function, prmtr_initial, method='COBYLA', tol=ftol,  options={'iprint': 1, 'disp': True, 'maxiter': maxiter, 'catol': ftol, 'rhobeg': 1.0})
+            if constraints=='off':
+                optim_output = minimize(objective_function, prmtr_initial, method='COBYLA', tol=ftol,  options={'iprint': 1, 'disp': True, 'maxiter': maxiter, 'catol': ftol, 'rhobeg': 1.0})
+            else:
+                optim_output = minimize(objective_function, prmtr_initial, method='COBYLA', tol=ftol, constraints=self.cons, options={'iprint': 1, 'disp': True, 'maxiter': maxiter, 'catol': ftol, 'rhobeg': 1.0})
             toc = time.clock()
             print(method+': '+str(toc-tic))
         else:
             tic = time.clock()
-            optim_output = minimize(objective_function, prmtr_initial, method=method, options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev, 'xtol':xtol, 'ftol':ftol}) #Nelder-Mead works well
+            if constraints=='off':
+                optim_output = minimize(objective_function, prmtr_initial, method=method, options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev, 'xtol':xtol, 'ftol':ftol}) #Nelder-Mead works well
+            else:
+                optim_output = minimize(objective_function, prmtr_initial, method=method, constraints=self.cons, options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev, 'xtol':xtol, 'ftol':ftol}) #Nelder-Mead works well
             toc = time.clock()
             print(method+': '+str(toc-tic))
         # debug_here()
@@ -331,7 +338,7 @@ class Rolling(Estimation):
         # optim_output = minimize(objective_function, prmtr_initial, method='Newton-CG', options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev}) # Jacobian is required
         # optim_output = minimize(objective_function, prmtr_initial, method='TNC', options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev}) #lead to nans in prmtr, too slow, steps too small
         # optim_output = minimize(objective_function, prmtr_initial, method='Powell', options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev}) #too slow
-        # optim_output = minimize(objective_function, prmtr_initial, method='COBYLA', options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev}) #this could work
+        # optim_output = minimize(objective_function, prmtr_initial, method='COBYLA', options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev}) #this could work. but can get stuck
         # optim_output = minimize(objective_function, prmtr_initial, method='BFGS', options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev}) #this could work but can lead to error with nan in prmtr
         # optim_output = minimize(objective_function, prmtr_initial, method='L-BFGS-B', options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev}) #this could work but can take too long
         # optim_output = minimize(objective_function, prmtr_initial, method='SLSQP', options={'disp': 1, 'maxiter':maxiter, 'maxfev':maxfev}) #this could work but can lead to error with nan in prmtr
@@ -346,9 +353,16 @@ class Rolling(Estimation):
             print('bad iteration')
             print('latest obj (%f) is larger than starting obj (%f)' %(np.array(optim_output['fun']),latest_obj))
             if method == 'COBYLA':
-                optim_output = minimize(objective_function, prmtr_initial*(1+np.random.rand(prmtr_initial.shape)/100000000), method=method, options={'disp': 1, 'maxiter':maxiter*2})
+                if constraints=='off':
+                    optim_output = minimize(objective_function, prmtr_initial*(1+np.random.normal(size=prmtr_initial.shape[0])*1e-5), method=method, options={'iprint': 1, 'disp': True, 'maxiter':maxiter*2})
+                else:
+                    optim_output = minimize(objective_function, prmtr_initial*(1+np.random.normal(size=prmtr_initial.shape[0])*1e-5), method=method, constraints=self.cons, options={'iprint': 1, 'disp': True, 'maxiter':maxiter*2})
             else:
-                optim_output = minimize(objective_function, prmtr_initial*(1+np.random.rand(prmtr_initial.shape)/100000000), method=method, options={'disp': 1, 'maxiter':maxiter*2, 'maxfev':maxfev*2})
+                if constraints=='off':
+                    optim_output = minimize(objective_function, prmtr_initial*(1+np.random.normal(size=prmtr_initial.shape[0])*1e-5), method=method, options={'disp': 1, 'maxiter':maxiter*2, 'maxfev':maxfev*2})
+                else:
+                    optim_output = minimize(objective_function, prmtr_initial*(1+np.random.normal(size=prmtr_initial.shape[0])*1e-5), method=method, constraints=self.cons, options={'disp': 1, 'maxiter':maxiter*2, 'maxfev':maxfev*2})
+            count_+=1
         if np.array(optim_output['fun'])>latest_obj:
             #Still unable to improve optimization, so just return original optimum
             print('bad iteration')
@@ -364,6 +378,9 @@ class Rolling(Estimation):
                     X0, maxiter=1000, priors=None, burnin=None, method=None):
         '''E-M Algorithm with Bayesian approach '''
         print('\n\n\n')
+
+        latest_obj = self.fit_path.objective.iloc[-1]
+
         global Nfeval_inner, fit_path_inner
         Nfeval_inner = self.Nfeval_inner #let's track the number of inner iterations
         burnin = maxiter/3 if burnin is None else burnin
@@ -466,6 +483,22 @@ class Rolling(Estimation):
         var = multivariate_normal(cov=variance)
         cum_log_likelihood = np.mat(np.sum(var.logpdf(yy - mean)))
         optim_output['fun'] = ((-1) * np.reshape(np.array(cum_log_likelihood), 1, 0))[0]
+
+        #Let's make sure that we have (weakly) improved on the previous iteration otherwise, return the previous optimal results
+        count_=0
+        while np.array(optim_output['fun'])>latest_obj  and count_<=4:
+            #repeat optimization at most 5 times with slight noise to guess parameters
+            print('bad iteration')
+            print('latest obj (%f) is larger than starting obj (%f)' %(np.array(optim_output['fun']),latest_obj))
+            mc.sample(iter=maxiter*2, burn=burnin*2)
+            count_+=1
+        if np.array(optim_output['fun'])>latest_obj:
+            #Still unable to improve optimization, so just return original optimum
+            print('bad iteration')
+            print('latest obj (%f) is larger than starting obj (%f)' %(np.array(optim_output['fun']),latest_obj))
+            print('resetting iteration')
+            optim_output['x']=np.array(prmtr_initial)
+            optim_output['fun']=latest_obj
 
         return np.array(optim_output['x']), optim_output
 
