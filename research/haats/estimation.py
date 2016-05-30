@@ -158,7 +158,7 @@ class Rolling(Estimation):
 
     def fit(self, estimation_method='em_mle', tolerance=1e-6, maxiter=50 , toltype='max_abs', \
             solver_mle='Nelder-Mead',maxiter_mle=1000, maxfev_mle=1000, ftol_mle=1e-6, xtol_mle=1e-6, constraints_mle='off', \
-            priors_bayesian=None, maxiter_bayesian=1000, burnin_bayesian=None  ):
+            priors_bayesian=None, maxiter_bayesian=1000, burnin_bayesian=None, multistart=0  ):
         '''Running Estimation Fit'''
 
         print('new fit begins__________________________________________')
@@ -268,7 +268,7 @@ class Rolling(Estimation):
 
     def em_mle(self, X, Y, prmtr_initial, num_states, stationarity_assumption, US_ilbmaturities,
                US_nominalmaturities, dt, \
-               Phi_prmtr, prmtr_size_dict, X0,method='Nelder-Mead',maxiter=1000,maxfev=1000,ftol=1e-6,xtol=1e-6, constraints='off'):
+               Phi_prmtr, prmtr_size_dict, X0,method='Nelder-Mead',maxiter=1000,maxfev=1000,ftol=1e-6,xtol=1e-6, constraints='off', multistart=0 ):
         '''E-M Algorithm with MLE '''
         print('\n\n\n')
 
@@ -382,7 +382,7 @@ class Rolling(Estimation):
 
 
     def em_bayesian(self, X, Y, num_states, US_ilbmaturities, US_nominalmaturities, dt,  Phi_prmtr, prmtr_size_dict, \
-                    X0, maxiter=1000, priors=None, burnin=None, method=None):
+                    X0, maxiter=1000, priors=None, burnin=None, method=None, multistart=0 ):
         '''E-M Algorithm with Bayesian approach '''
         print('\n\n\n')
 
