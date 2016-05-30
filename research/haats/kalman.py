@@ -190,7 +190,6 @@ class Kalman:  # define super-class
                 x = self.U0 + self.U1 * x
                 # note that we will not yet fill in values for horizon=0; hence the h+1 on the next line
                 loc_th = ( self.Y.index[t], (self.Y.index[t]+pd.TimedeltaIndex([h+1], unit=self.Y.index.freq._prefix))[0] ) # tuple for dual-index location
-                size_th = y_avgfcst.loc[loc_th, :].shape # size of output at iteration t, h
                 y_avgfcst.loc[loc_th, :] = np.reshape(self.A0 + self.A1 * x , m)
                 y_stdfcst.loc[loc_th, :] = np.reshape(np.diag(varsigma)**(0.5), m)
                 y_covfcst.loc[loc_th, :] = (varsigma.T).reshape(1,m**2)
@@ -229,7 +228,7 @@ class Kalman:  # define super-class
         '''Returns error, squared error, mse(rmse): time series of mean(root-mean) squared,
         mse(rmse): scalars for mean(root-mean) squared error over all dates'''
         #compute error of fit
-        debug_here()
+        # debug_here()
         fit_e = self.Y-Ytt
         # compute squared fit error:
         fit_se = fit_e ** 2
