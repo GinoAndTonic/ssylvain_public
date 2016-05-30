@@ -186,6 +186,9 @@ class ImportData:
         tips_data = tips_data[np.array(['TIPSY' + str(c).zfill(2) for c in US_ilbmaturities]) ]  # need to padd column names with a zero before converting to string
         nominal_data = nominal_data[np.array(['SVENY' + str(c).zfill(2) for c in US_nominalmaturities]) ] # need to padd column names with a zero before converting to string
 
+        tips_data.rename(columns={i:i.replace('TIPSY','TIPS_y')  for i in tips_data.columns.values}, inplace=True)
+        nominal_data.rename(columns={i:i.replace('SVENY','Nominals_y')  for i in nominal_data.columns.values}, inplace=True)
+
         return tips_data, nominal_data
 
     @staticmethod

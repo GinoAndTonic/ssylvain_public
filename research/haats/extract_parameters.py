@@ -9,6 +9,7 @@ import itertools
 # from IPython.core.debugger import Tracer; debug_here = Tracer()
 # import pdb
 # import ipdb
+import collections
 __author__ = 'ssylvain'
 
 
@@ -19,6 +20,7 @@ def build_prmtr_dict(prmtr, prmtr_size_dict):
     for k in prmtr_size_dict.keys():
         prmtr_dict[k] = prmtr[loc:loc+prmtr_size_dict[k]]
         loc = loc+prmtr_size_dict[k]
+    prmtr_dict = collections.OrderedDict(sorted(prmtr_dict.items()))
     return prmtr_dict
 
 

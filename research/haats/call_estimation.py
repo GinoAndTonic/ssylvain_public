@@ -37,9 +37,9 @@ allow_missing_data = 0
 # set frequency of the data: daily, monthly, quarterly, yearly
 estim_freq = 'weekly'
 
-fix_Phi = 1     # "1" if you want to fix the volatility of observed yields using covar of historical data
+fix_Phi = 0     # "1" if you want to fix the volatility of observed yields using covar of historical data
                 # "0" if you want to jointly estimate it with other model parameters
-setdiag_Kp = 1  # "1" if you want to Kp to be diagonal so the state variables are assumed independent
+setdiag_Kp = 0  # "1" if you want to Kp to be diagonal so the state variables are assumed independent
                 # "0" if you want to Kp to be unrestricted
 
 # options for initializing the Kalman filter error variance:
@@ -69,8 +69,8 @@ estimation1 =Rolling()
 estimation1.run_setup(data, US_ilbmaturities, US_nominalmaturities, \
                 estim_freq=estim_freq, num_states=num_states,\
                 fix_Phi=fix_Phi, setdiag_Kp=setdiag_Kp, initV=initV)
-estimation1.fit('em_mle', tolerance=1e-4, maxiter=50 , toltype='max_abs', \
-            solver_mle='COBYLA',maxiter_mle=1000, maxfev_mle=1000, ftol_mle=1e-4, xtol_mle=1e-4)
+estimation1.fit('em_mle', tolerance=1e-4, maxiter=30 , toltype='max_abs', \
+            solver_mle='Nelder-Mead',maxiter_mle=1000, maxfev_mle=1000, ftol_mle=0.0001, xtol_mle=0.0001)
 # estimation1.fit('em_mle_with_bayesian_final_iteration', tolerance=1e-4, maxiter=10 , toltype='max_abs', \
 #             solver_mle='Nelder-Mead',maxiter_mle=10, maxfev_mle=10, ftol_mle=0.01, xtol_mle=0.001, \
 #             priors_bayesian=None, maxiter_bayesian=5, burnin_bayesian=2 )

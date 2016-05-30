@@ -27,6 +27,7 @@ from estim_constraints import *
 import pymc as pymc2
 import pymc3 as pymc3
 import corner as triangle_plot
+import collections
 
 class Estimation:
 
@@ -124,11 +125,16 @@ class Rolling(Estimation):
 
         prmtr_dict['sigmas'] = np.log(sigmas)  # to impose non-negativity
         prmtr_dict['thetap'] = thetap
+
         # debug_here()
 
-        prmtr_0 = np.array(  list(itertools.chain.from_iterable(prmtr_dict.values()))  )#notice that the the values are sorted according the alphabetic order of the keys
         for k in prmtr_dict.keys():
             prmtr_size_dict[k] = len(prmtr_dict[k])
+
+        prmtr_dict = collections.OrderedDict(sorted(prmtr_dict.items()))
+        prmtr_size_dict = collections.OrderedDict(sorted(prmtr_size_dict.items()))
+        prmtr_0 = np.array(  list(itertools.chain.from_iterable(prmtr_dict.values()))  )#notice that the the values are sorted according the alphabetic order of the keys
+
         # debug_here()
 
         # this is to display the results in the console
@@ -182,7 +188,7 @@ class Rolling(Estimation):
 
             Ytt, Yttl, Xtt, Xttl, Vtt, Vttl, Gain_t, eta_t = kalman1.filter()
 
-            XtT, VtT, Jt = kalman1.smoother(Xtt, Xttl, Vtt, Vttl, Gain_t, eta_t)
+            XtT, VtT, Jt = kalman1.smoother(Xtt, Xttl, Vtt)
 
             #We to double number of iterations for the last call; e.g. maxiter=maxiter*2 if tol<=tolerance or self.Nfeval>=maxiter else maxiter
             if estimation_method=='em_mle' or estimation_method == 'em_mle_with_bayesian_final_iteration':
@@ -354,12 +360,13 @@ class Rolling(Estimation):
             print('latest obj (%f) is larger than starting obj (%f)' %(np.array(optim_output['fun']),latest_obj))
             if method == 'COBYLA':
                 if constraints=='off':
-                    optim_output = minimize(objective_function, prmtr_initial*(1+np.random.normal(size=prmtr_initial.shape[0])*1e-5), method=method, options={'iprint': 1, 'disp': True, 'maxiter':maxiter*2})
+                    optim_output = minimize(objective_function, prmtr_initial*(1+np.random.normal(size=prmtr_initial.shape[0])*1e-5), method='Nelder-Mead', options={'disp': 1, 'maxiter':maxiter*2, 'maxfev':maxfev*2})
+                    # optim_output = minimize(objective_function, prmtr_initial*(1+np.random.normal(size=prmtr_initial.shape[0])*1e-5), method=method, options={'iprint': 1, 'disp': True, 'maxiter':maxiter*2})
                 else:
                     optim_output = minimize(objective_function, prmtr_initial*(1+np.random.normal(size=prmtr_initial.shape[0])*1e-5), method=method, constraints=self.cons, options={'iprint': 1, 'disp': True, 'maxiter':maxiter*2})
             else:
                 if constraints=='off':
-                    optim_output = minimize(objective_function, prmtr_initial*(1+np.random.normal(size=prmtr_initial.shape[0])*1e-5), method=method, options={'disp': 1, 'maxiter':maxiter*2, 'maxfev':maxfev*2})
+                    optim_output = minimize(objective_function, prmtr_initial*(1+np.random.normal(size=prmtr_initial.shape[0])*1e-5), method='Nelder-Mead', options={'disp': 1, 'maxiter':maxiter*2, 'maxfev':maxfev*2})
                 else:
                     optim_output = minimize(objective_function, prmtr_initial*(1+np.random.normal(size=prmtr_initial.shape[0])*1e-5), method=method, constraints=self.cons, options={'disp': 1, 'maxiter':maxiter*2, 'maxfev':maxfev*2})
             count_+=1
@@ -507,7 +514,7 @@ class Rolling(Estimation):
         '''Save results are attributes'''
         # debug_here()
         prmtr, optim_output = self.prmtr, self.optim_output
-        print(prmtr)
+        # print(prmtr)
         # Extracting filtered states:
         if self.num_states == 4:
             self.a_new, self.Kp_new, self.lmda_new, self.Phi_new, self.sigma11_new, self.sigma22_new, self.sigma33_new, \
@@ -523,19 +530,16 @@ class Rolling(Estimation):
                                                                       self.dt, self.prmtr_size_dict, self.Phi_prmtr, skip_mapping=1)
 
         kalman2 = Kalman(self.Y, self.A0_new, self.A1_new, self.U0_new, self.U1_new, self.Q_new, self.Phi_new, self.initV, statevar_names=self.statevar_names)
-
-        self.Ytt_new, self.Yttl_new, self.Xtt_new, self.Xttl_new, self.Vtt_new, self.Vttl_new, \
-            self.Gain_t_new, self.eta_t_new = kalman2.filter()
-
-        self.XtT_new, self.VtT_new, self.Jt_new = kalman2.smoother(self.Xtt_new, self.Xttl_new, self.Vtt_new, self.Vttl_new, self.Gain_t_new, self.eta_t_new)
+        self.Ytt_new, self.Yttl_new, self.Xtt_new, self.Xttl_new, self.Vtt_new, self.Vttl_new, self.Gain_t_new, self.eta_t_new = kalman2.filter()
+        self.XtT_new, self.VtT_new, self.Jt_new = kalman2.smoother(self.Xtt_new, self.Xttl_new, self.Vtt_new)
 
         # Computing Forecasts, RMSE, etc. :
         self.forecast_horizon = 90 * (self.estim_freq == 'daily') + 12 * (self.estim_freq == 'weekly') + 3 * (self.estim_freq == 'monthly')
+        # debug_here()
+        self.yields_forecast, self.yields_forecast_std, self.yields_forecast_cov = kalman2.forecast(self.XtT_new, self.forecast_horizon)
 
-        self.yields_forecast, self.yields_forecast_std, self.yields_forecast_cov = kalman2.forecast(self.Xtt_new, self.forecast_horizon)
-
-        self.forecast_e, self.forecast_se, self.forecast_mse, self.forecast_rmse, self.forecast_mse_all, \
-            self.forecast_rmse_all = kalman2.rmse(self.yields_forecast)
+        self.forecast_e, self.forecast_se, self.forecast_mse, self.forecast_rmse, self.forecast_mse_all, self.forecast_rmse_all = kalman2.forecast_rmse(self.yields_forecast)
+        self.fit_e, self.fit_se, self.fit_mse_all, self.fit_rmse_all = kalman2.fit_rmse(self.Ytt_new)
 
         # Referencing individual dataframe columns in USnominals and USilbs objecs
         for m in range(self.US_nominalmaturities.size):

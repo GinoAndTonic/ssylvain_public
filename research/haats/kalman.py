@@ -13,6 +13,7 @@ import multiprocessing as multiprocessing
 from joblib import Parallel, delayed
 from functools import partial
 import time
+from IPython.core.debugger import Tracer; debug_here = Tracer() #this is the approach that works for ipython debugging
 # plt.rc('text', usetex=True)   #need to install miktex
 plt.close("all")
 plt.close()
@@ -165,8 +166,7 @@ class Kalman:  # define super-class
 
     def forecast(self, X, horizon=90):
         '''Given state variable X, return predicted measurement Y. For each t we forecast out for h=0,...,H.
-        h=0 is the current (known) Y value. Since the covar matrix of errors for the state variables is generally
-        not diagonal, we need to simulate many paths and then take the average'''
+        h=0 is the current (known) Y value.'''
         tic = time.clock()
         #pre-allocating space for mean and std of forecast paths. we use 2 index columns for the dataframe: date and horizon. For each date
         #there is a corresponding horizon
@@ -191,7 +191,7 @@ class Kalman:  # define super-class
                 # note that we will not yet fill in values for horizon=0; hence the h+1 on the next line
                 loc_th = ( self.Y.index[t], (self.Y.index[t]+pd.TimedeltaIndex([h+1], unit=self.Y.index.freq._prefix))[0] ) # tuple for dual-index location
                 size_th = y_avgfcst.loc[loc_th, :].shape # size of output at iteration t, h
-                y_avgfcst.loc[loc_th, :] = np.reshape(self.A0 + self.A1 * x + self.Phi * np.random.randn(m,1), m)
+                y_avgfcst.loc[loc_th, :] = np.reshape(self.A0 + self.A1 * x , m)
                 y_stdfcst.loc[loc_th, :] = np.reshape(np.diag(varsigma)**(0.5), m)
                 y_covfcst.loc[loc_th, :] = (varsigma.T).reshape(1,m**2)
             # print('done with date t='+str(t)+' forecasts')
@@ -205,14 +205,9 @@ class Kalman:  # define super-class
         return y_avgfcst, y_stdfcst, y_covfcst
 
 
-    def rmse(self, y_fcst):  #RMSE calculations
+    def forecast_rmse(self, y_fcst):  #RMSE calculations
         '''Returns error, squared error, mse(rmse): time series of mean(root-mean) squared error over horizons,
         mse(rmse): scalars for mean(root-mean) squared error over all dates and horizons'''
-        T = self.Y.shape[0]
-        horizon = int(y_fcst.shape[0]/self.Y.shape[0]-1)
-        #Pre-allocate space for squared-error and error dataframes:
-        forecast_e ,forecast_se ,forecast_mse ,forecast_rmse ,forecast_mse_all ,forecast_rmse_all= \
-            y_fcst*np.nan, y_fcst*np.nan, self.Y*np.nan, self.Y*np.nan, self.Y.iloc[0,:]*np.nan, self.Y.iloc[0,:]*np.nan,   #Square Error and #Error
         # compute forecast error:  difference between y(h) and forecast(h).
         forecast_e = pd.DataFrame(\
             (self.Y.reindex(y_fcst.index.get_level_values('horizon')) - y_fcst.reset_index('date', drop=True)).reset_index())
@@ -224,18 +219,32 @@ class Kalman:  # define super-class
         forecast_mse = forecast_se.reset_index().groupby('date').mean()
         forecast_rmse = forecast_mse ** 0.5
         # compute rmse across all dates and horizons
-        forecast_mse_all = forecast_se.mean()
-        forecast_rmse_all = forecast_mse_all ** 0.5
+        forecast_mse_all = pd.DataFrame(forecast_se.mean(),columns=['MSE'])
+        forecast_rmse_all = pd.DataFrame(forecast_mse_all ** 0.5,columns=['RMSE'])
+
         return forecast_e, forecast_se, forecast_mse, forecast_rmse, forecast_mse_all, forecast_rmse_all
 
 
-    def smoother(self, Xtt, Xttl, Vtt, Vttl, Gain_t, eta_t):
+    def fit_rmse(self, Ytt):  #RMSE calculations
+        '''Returns error, squared error, mse(rmse): time series of mean(root-mean) squared,
+        mse(rmse): scalars for mean(root-mean) squared error over all dates'''
+        #compute error of fit
+        debug_here()
+        fit_e = self.Y-Ytt
+        # compute squared fit error:
+        fit_se = fit_e ** 2
+        # compute rmse across all dates
+        fit_mse_all = pd.DataFrame(fit_se.mean(),columns=['MSE'])
+        fit_rmse_all = pd.DataFrame(fit_mse_all ** 0.5,columns=['RMSE'])
+
+        return fit_e, fit_se, fit_mse_all, fit_rmse_all
+
+
+    def smoother(self, Xtt, Xttl, Vtt):
         '''Kalman smoother'''
         n = self.U0.shape[0]
-        T = Xtt.shape[0]
         XtT = Xtt * np.nan
         VtT = Vtt * np.nan
-        VtlT = Vtt * np.nan
         Jt = Vtt * np.nan
         XtT.iloc[-1,:] = Xtt.iloc[-1,:];
         VtT.iloc[-1,:] = Vtt.iloc[-1,:];
