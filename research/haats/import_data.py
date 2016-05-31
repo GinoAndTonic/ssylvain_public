@@ -1,5 +1,5 @@
 from __future__ import division
-from IPython.core.debugger import Tracer; debug_here = Tracer() #this is the approach that works for ipython debugging
+# from IPython.core.debugger import Tracer; debug_here = Tracer() #this is the approach that works for ipython debugging
 import os
 import numpy as np
 # import seaborn as sns

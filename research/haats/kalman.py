@@ -13,7 +13,7 @@ import multiprocessing as multiprocessing
 from joblib import Parallel, delayed
 from functools import partial
 import time
-from IPython.core.debugger import Tracer; debug_here = Tracer() #this is the approach that works for ipython debugging
+# from IPython.core.debugger import Tracer; debug_here = Tracer() #this is the approach that works for ipython debugging
 # plt.rc('text', usetex=True)   #need to install miktex
 plt.close("all")
 plt.close()
@@ -160,7 +160,7 @@ class Kalman:  # define super-class
                 eta_t.iloc[t, :] = (U0 + U1 * X0 - X0).T
             else:
                 eta_t.iloc[t, :] = (U0 + U1 * xtt - np.mat(Xtt.iloc[t-1, :].values).T).T
-
+        # debug_here()
         return Ytt, Yttl, Xtt, Xttl, Vtt, Vttl, Gain_t, eta_t
 
 
@@ -219,7 +219,7 @@ class Kalman:  # define super-class
         forecast_rmse = forecast_mse ** 0.5
         # compute rmse across all dates and horizons
         forecast_mse_all = pd.DataFrame(forecast_se.mean(),columns=['MSE'])
-        forecast_rmse_all = pd.DataFrame(forecast_mse_all ** 0.5,columns=['RMSE'])
+        forecast_rmse_all = pd.DataFrame(forecast_mse_all.values ** 0.5,columns=['RMSE'],index=forecast_mse_all.index)
 
         return forecast_e, forecast_se, forecast_mse, forecast_rmse, forecast_mse_all, forecast_rmse_all
 
@@ -234,7 +234,7 @@ class Kalman:  # define super-class
         fit_se = fit_e ** 2
         # compute rmse across all dates
         fit_mse_all = pd.DataFrame(fit_se.mean(),columns=['MSE'])
-        fit_rmse_all = pd.DataFrame(fit_mse_all ** 0.5,columns=['RMSE'])
+        fit_rmse_all = pd.DataFrame(fit_mse_all.values ** 0.5,columns=['RMSE'],index=fit_mse_all.index)
 
         return fit_e, fit_se, fit_mse_all, fit_rmse_all
 
@@ -264,4 +264,7 @@ class Kalman:  # define super-class
             Jt.iloc[t-1, :] = (j.T).reshape(1,j.size)
             XtT.iloc[t-1, :] = xtT.T
 
-        return XtT, VtT, Jt
+        YtT = self.Y * np.nan
+        for t in range(YtT.shape[0]):
+            YtT.iloc[t, :] = (self.A0 + self.A1 * XtT.iloc[t, :].T).T
+        return XtT, VtT, Jt, YtT

@@ -11,8 +11,8 @@ import pylab as plab
 import sys
 print(sys.argv)
 import itertools
-from IPython.core.debugger import Tracer; debug_here = Tracer() #this is the approach that works for ipython debugging
-import pdb
+# from IPython.core.debugger import Tracer; debug_here = Tracer() #this is the approach that works for ipython debugging
+# import pdb
 from math import exp
 from scipy.optimize import minimize, fmin_slsqp
 from scipy.linalg import expm
@@ -46,7 +46,8 @@ class Rolling(Estimation):
         Estimation.__init__(self)
 
     def run_setup(self, data, US_ilbmaturities, US_nominalmaturities, \
-            estim_freq='daily', num_states=4, fix_Phi=1, setdiag_Kp=1, initV='unconditional', stationarity_assumption='yes'):
+            estim_freq='daily', num_states=4, fix_Phi=1, setdiag_Kp=1, initV='unconditional', \
+                  stationarity_assumption='no',multistart=0):
         '''Set up initial guess parameters and other ingredients needed for estimation'''
         US_num_maturities = len(US_ilbmaturities) + len(US_nominalmaturities)
 
@@ -64,8 +65,6 @@ class Rolling(Estimation):
 
         if ((initV == 'steady_state') | (initV == 'unconditional')):
             stationarity_assumption = 'yes'
-        else:
-            stationarity_assumption = 'no'
 
         # creating ILBs and Nominal Bond objects
         USilbs = np.array([InfLinkBonds(m, 'USA') for m in US_ilbmaturities])
@@ -126,6 +125,9 @@ class Rolling(Estimation):
         prmtr_dict['sigmas'] = np.log(sigmas)  # to impose non-negativity
         prmtr_dict['thetap'] = thetap
 
+        if multistart==1: #adding some random noise to guess parameters
+            for k in prmtr_dict.keys():
+                prmtr_dict[k] = prmtr_dict[k] *(1 + np.random.normal(size=1)/10)
         # debug_here()
 
         for k in prmtr_dict.keys():
@@ -188,7 +190,7 @@ class Rolling(Estimation):
 
             Ytt, Yttl, Xtt, Xttl, Vtt, Vttl, Gain_t, eta_t = kalman1.filter()
 
-            XtT, VtT, Jt = kalman1.smoother(Xtt, Xttl, Vtt)
+            XtT, VtT, Jt, YtT = kalman1.smoother(Xtt, Xttl, Vtt)
 
             #We to double number of iterations for the last call; e.g. maxiter=maxiter*2 if tol<=tolerance or self.Nfeval>=maxiter else maxiter
             if estimation_method=='em_mle' or estimation_method == 'em_mle_with_bayesian_final_iteration':
@@ -531,7 +533,7 @@ class Rolling(Estimation):
 
         kalman2 = Kalman(self.Y, self.A0_new, self.A1_new, self.U0_new, self.U1_new, self.Q_new, self.Phi_new, self.initV, statevar_names=self.statevar_names)
         self.Ytt_new, self.Yttl_new, self.Xtt_new, self.Xttl_new, self.Vtt_new, self.Vttl_new, self.Gain_t_new, self.eta_t_new = kalman2.filter()
-        self.XtT_new, self.VtT_new, self.Jt_new = kalman2.smoother(self.Xtt_new, self.Xttl_new, self.Vtt_new)
+        self.XtT_new, self.VtT_new, self.Jt_new, self.YtT_new = kalman2.smoother(self.Xtt_new, self.Xttl_new, self.Vtt_new)
 
         # Computing Forecasts, RMSE, etc. :
         self.forecast_horizon = 90 * (self.estim_freq == 'daily') + 12 * (self.estim_freq == 'weekly') + 3 * (self.estim_freq == 'monthly')
