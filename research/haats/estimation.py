@@ -647,7 +647,7 @@ class Rolling(Estimation):
         self.bk_mats, self.exp_inf, self.irps, self.mttau, self.mttau_nn, self.prob_def, self.vttau, self.vttau_nn = \
             bk_mats, exp_inf, irps, mttau, mttau_nn, prob_def, vttau, vttau_nn
 
-        return bk_mats, exp_inf, irps, mttau, mttau_nn, prob_def, vttau, vttau_nn
+        #return bk_mats, exp_inf, irps, mttau, mttau_nn, prob_def, vttau, vttau_nn
 
 
     def save_output(self, bk_mats, prmtr_new, exp_inf, mttau, mttau_nn, prob_def, vttau, vttau_nn):
