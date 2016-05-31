@@ -266,5 +266,5 @@ class Kalman:  # define super-class
 
         YtT = self.Y * np.nan
         for t in range(YtT.shape[0]):
-            YtT.iloc[t, :] = (self.A0 + self.A1 * XtT.iloc[t, :].T).T
+            YtT.iloc[t, :] = (self.A0 + self.A1 * np.mat(XtT.iloc[t, :].values).T).T
         return XtT, VtT, Jt, YtT
