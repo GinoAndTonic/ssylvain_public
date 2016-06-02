@@ -8,7 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import sys
-print(sys.argv)
+#print(sys.argv)
 import pandas as pd
 from xml.sax import ContentHandler, parse
 import time

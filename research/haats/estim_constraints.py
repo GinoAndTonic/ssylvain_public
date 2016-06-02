@@ -6,7 +6,7 @@ import numpy as np
 # import numpy.ma as ma
 import matplotlib.pyplot as plt
 import sys
-print(sys.argv)
+#print(sys.argv)
 from asset_class import *
 from kalman import *
 from extract_parameters import *

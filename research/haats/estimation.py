@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import matplotlib as mplt
 import pylab as plab
 import sys
-print(sys.argv)
+#print(sys.argv)
 import itertools
 # from IPython.core.debugger import Tracer; debug_here = Tracer() #this is the approach that works for ipython debugging
 # import pdb

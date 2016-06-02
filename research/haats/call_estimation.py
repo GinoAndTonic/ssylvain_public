@@ -1,6 +1,6 @@
 from __future__ import division
 import sys
-print(sys.argv)
+#print(sys.argv)
 from import_data import *
 from estimation import *
 np.random.seed(222)
