@@ -1,7 +1,9 @@
-#LyX 2.1 created this file. For more info see http://www.lyx.org/
-\lyxformat 474
+#LyX 2.2 created this file. For more info see http://www.lyx.org/
+\lyxformat 508
 \begin_document
 \begin_header
+\save_transient_properties true
+\origin unavailable
 \textclass article
 \begin_preamble
 \date{Current Draft: January, 2015\\ First Draft: January, 2015}
@@ -40,16 +42,16 @@
 \language_package default
 \inputencoding auto
 \fontencoding global
-\font_roman times
-\font_sans default
-\font_typewriter default
-\font_math auto
+\font_roman "times" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "auto" "auto"
 \font_default_family rmdefault
 \use_non_tex_fonts false
 \font_sc false
 \font_osf false
-\font_sf_scale 100
-\font_tt_scale 100
+\font_sf_scale 100 100
+\font_tt_scale 100 100
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -125,6 +127,11 @@ width "100col%"
 special "none"
 height "1in"
 height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
 status open
 
 \begin_layout Title
@@ -321,9 +328,9 @@ y_{t}^{R}\{\tau\} & = & -\frac{1}{\tau}ln\left(P_{t}^{R}\{\tau\}\right)\\
 \\
 y_{t}^{N}\{\tau\}-y_{t}^{R}\{\tau\} & = & \frac{1}{\tau}ln\left(\frac{P_{t}^{R}\{\tau\}}{P_{t}^{N}\{\tau\}}\right)\\
 \\
-\frac{dM_{t}^{R}}{M_{t}^{R}} & = & -r_{t}^{R}dt-\Gamma_{t}\cdot dW_{t}\\
+\frac{dM_{t}^{R}}{M_{t}^{R}} & = & -r_{t}^{R}dt-\Gamma_{t}\cdot dW_{t}^{Q}\\
 \\
-\frac{dM_{t}^{N}}{M_{t}^{N}} & = & -r_{t}^{N}dt-\Gamma_{t}\cdot dW_{t}\\
+\frac{dM_{t}^{N}}{M_{t}^{N}} & = & -r_{t}^{N}dt-\Gamma_{t}\cdot dW_{t}^{Q}\\
 \\
 \text{Price level} & = & \text{nominal consumption/real consumption}=\Pi_{t}\\
 \Pi_{t} & = & \frac{M_{t}^{R}}{M_{t}^{N}}\\
@@ -365,7 +372,7 @@ Notice that
 We observe positive inflation risk premiums [IRPs] if the real discount
  factor tends to be high (i.e., in a structural model, marginal utility is
  high) at the same time that price inflation is high (i.e., purchasing power
- is low) -- Christensen, Lopez, Rudebusch (2010)
+ is low) – Christensen, Lopez, Rudebusch (2010)
 \end_layout
 
 \begin_layout Standard
@@ -675,7 +682,7 @@ As shown in
 Section 
 \begin_inset CommandInset ref
 LatexCommand ref
-reference "sub:pmeas-processes"
+reference "subsec:pmeas-processes"
 
 \end_inset
 
@@ -876,7 +883,7 @@ Notice that
  are unrestricted (see Section 
 \begin_inset CommandInset ref
 LatexCommand ref
-reference "sub:pmeas-processes"
+reference "subsec:pmeas-processes"
 
 \end_inset
 
@@ -1046,7 +1053,7 @@ Implications
 In Section 
 \begin_inset CommandInset ref
 LatexCommand ref
-reference "sub:inflation-moments"
+reference "subsec:inflation-moments"
 
 \end_inset
 
@@ -1362,7 +1369,7 @@ Indeed since each yield at each maturity has its own iid error, we can simply
 From Section 
 \begin_inset CommandInset ref
 LatexCommand ref
-reference "sub:Kalman-filter-details"
+reference "subsec:Kalman-filter-details"
 
 \end_inset
 
@@ -1914,7 +1921,7 @@ The zero-coupon yield is the equal-weighted mean of the forward rates.
 
 \end_inset
 
- -- 
+ – 
 \begin_inset Quotes eld
 \end_inset
 
@@ -2181,7 +2188,7 @@ Deriving ODEs for
 
 \begin_inset CommandInset label
 LatexCommand label
-name "sub:Deriving-ODEs-for"
+name "subsec:Deriving-ODEs-for"
 
 \end_inset
 
@@ -2219,7 +2226,7 @@ P_{t}\{0\}=1 & \Rightarrow & B_{t}\left\{ 0\right\} =G_{t}\left\{ 0\right\} =0\l
 Original Nelson-Seigel (1987) model
 \begin_inset CommandInset label
 LatexCommand label
-name "sub:Original-Nelson-Seigel-(1987)"
+name "subsec:Original-Nelson-Seigel-(1987)"
 
 \end_inset
 
@@ -2259,7 +2266,7 @@ status open
 \begin_layout Plain Layout
 \align center
 \begin_inset Graphics
-	filename ns_pic1.eps
+	filename output/figures/ns_pic1.eps
 	scale 40
 
 \end_inset
@@ -2430,7 +2437,7 @@ Deriving the processes under the
  measure
 \begin_inset CommandInset label
 LatexCommand label
-name "sub:pmeas-processes"
+name "subsec:pmeas-processes"
 
 \end_inset
 
@@ -2666,7 +2673,7 @@ G_{t}^{R} & = & \frac{\sigma_{22}^{2}}{2}(\alpha^{R})^{2}\left(\int_{t}^{T}\left
 Kalman filter details
 \begin_inset CommandInset label
 LatexCommand label
-name "sub:Kalman-filter-details"
+name "subsec:Kalman-filter-details"
 
 \end_inset
 
@@ -3456,7 +3463,7 @@ we would then use MLE.
 Finding moments of inflation
 \begin_inset CommandInset label
 LatexCommand label
-name "sub:inflation-moments"
+name "subsec:inflation-moments"
 
 \end_inset
 
