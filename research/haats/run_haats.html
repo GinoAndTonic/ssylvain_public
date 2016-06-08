@@ -11748,21 +11748,26 @@ div#notebook {
 
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[2]:</div>
+<div class="prompt input_prompt">In&nbsp;[1]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython2"><pre><span></span><span class="kn">from</span> <span class="nn">IPython.core.debugger</span> <span class="kn">import</span> <span class="n">Tracer</span><span class="p">;</span> <span class="n">debug_here</span> <span class="o">=</span> <span class="n">Tracer</span><span class="p">()</span> <span class="c1">#this is the approach that works for ipython debugging</span>
 <span class="o">%</span><span class="k">matplotlib</span> inline
 <span class="kn">from</span> <span class="nn">IPython.display</span> <span class="kn">import</span> <span class="n">Image</span>
 <span class="o">%</span><span class="k">config</span> InlineBackend.figure_format = &#39;svg&#39;
-<span class="c1"># export slides with terminal command: </span>
+
+<span class="c1"># Export slides with terminal command: </span>
 <span class="c1"># jupyter nbconvert run_haats.ipynb --to slides --post serve --reveal-prefix http://cdn.bootcss.com/reveal.js/3.3.0</span>
-<span class="c1"># or export html using  </span>
+<span class="c1"># To hide code input cells use</span>
+<span class="c1"># jupyter nbconvert run_haats.ipynb --to slides --post serve --reveal-prefix http://cdn.bootcss.com/reveal.js/3.3.0 --template output_toggle</span>
+
+<span class="c1"># Export html using  </span>
 <span class="c1"># jupyter nbconvert run_haats.ipynb --to html</span>
 <span class="c1">#then type &quot;ctrl-c&quot; in terminal and then go to html location to re-open slides directly</span>
 <span class="c1">#Change theme using jupyter-themes</span>
 <span class="c1">#$ pip install git+https://github.com/dunovank/jupyter-themes.git</span>
 <span class="c1">#jupyter-theme -f 8</span>
+<span class="c1">#http://127.0.0.1:8000/run_haats.slides.html#/</span>
 <span class="kn">import</span> <span class="nn">bs4</span>
 <span class="kn">from</span> <span class="nn">import_data</span> <span class="kn">import</span> <span class="o">*</span>
 <span class="kn">from</span> <span class="nn">estimation</span> <span class="kn">import</span><span class="o">*</span>
@@ -11773,6 +11778,20 @@ div#notebook {
 </pre></div>
 
 </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area"><div class="prompt"></div>
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>WARNING (theano.configdefaults): g++ not detected ! Theano will be unable to execute optimized C-implementations (for both CPU and GPU) and will default to Python implementations. Performance will be severely degraded. To remove this warning, set Theano flags cxx to an empty string.
+</pre>
+</div>
+</div>
+
 </div>
 </div>
 
@@ -11873,7 +11892,7 @@ $M_{t}^{N}$  and $M_{t}^{N}$ are the nominal and real state price densities.</p>
 <div class="text_cell_render border-box-sizing rendered_html">
 <p>The SPDs follow</p>
 \begin{eqnarray*}
-\frac{dM_{t}^{R}}{M_{t}^{R}}&=&-r_{t}^{R}dt-\Gamma_{t}\cdot dW_{t}\\&&\\\frac{dM_{t}^{N}}{M_{t}^{N}}&=&-r_{t}^{N}dt-\Gamma_{t}\cdot dW_{t}
+\frac{dM_{t}^{R}}{M_{t}^{R}}&=&-r_{t}^{R}dt-\Gamma_{t}\cdot dW_{t}^{Q}\\&&\\\frac{dM_{t}^{N}}{M_{t}^{N}}&=&-r_{t}^{N}dt-\Gamma_{t}\cdot dW_{t}^{Q}
 \end{eqnarray*}<p>For what follows, to simplify the notation, let us suppress the <em>N</em>  and <em>R</em>  superscripts.</p>
 <p>The short rates and risk prices are assumed to be affined in the state variables. This is where we put the rabbit inside the hat...</p>
 \begin{eqnarray*}
