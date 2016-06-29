@@ -131,6 +131,7 @@ class Kalman:  # define super-class
             except:
                 err_invS = sys.exc_info()[0]
                 print(err_invS)
+                sys.stdout.flush()
                 cum_log_likelihood = - np.inf
                 # return np.mat(Ytt), np.mat(Yttl), np.mat(Xtt), np.mat(Xttl), np.mat(Vtt), np.mat(Vttl), np.mat(Gain_t), cum_log_likelihood
                 break
@@ -201,6 +202,7 @@ class Kalman:  # define super-class
         y_covfcst.iloc[np.arange(0, y_avgfcst.shape[0], horizon+1)] = 0
         toc = time.clock()
         print('processing time for forecast: '+str(toc-tic))
+        sys.stdout.flush()
         return y_avgfcst, y_stdfcst, y_covfcst
 
 
