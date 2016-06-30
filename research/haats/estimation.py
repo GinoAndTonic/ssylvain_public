@@ -28,6 +28,22 @@ import pymc as pymc2
 # import pymc3 as pymc3
 import corner as triangle_plot
 import collections
+from pathos.parallel import ParallelPool as PPool
+import copy
+
+
+def par_fit(obj_tuple):
+    obj, estimation_method, tolerance, maxiter, toltype, solver_mle, maxiter_mle, maxfev_mle, ftol_mle, xtol_mle, constraints_mle, \
+    priors_bayesian, maxiter_bayesian, burnin_bayesian, multistart = obj_tuple
+    print('Calling par_fit')
+    sys.stdout.flush()
+    return obj.fit(estimation_method=estimation_method, tolerance=tolerance, maxiter=maxiter, toltype=toltype, \
+                   solver_mle=solver_mle, maxiter_mle=maxiter_mle, maxfev_mle=maxfev_mle, ftol_mle=ftol_mle,
+                   xtol_mle=xtol_mle, constraints_mle=constraints_mle, \
+                   priors_bayesian=priors_bayesian, maxiter_bayesian=maxiter_bayesian, burnin_bayesian=burnin_bayesian,
+                   multistart=multistart)
+
+
 
 class Estimation:
 
@@ -162,6 +178,37 @@ class Rolling(Estimation):
             solver_mle='Nelder-Mead',maxiter_mle=1000, maxfev_mle=1000, ftol_mle=1e-6, xtol_mle=1e-6, constraints_mle='off', \
             priors_bayesian=None, maxiter_bayesian=1000, burnin_bayesian=None, multistart=0  ):
         '''Running Estimation Fit'''
+
+        #################### Recursively run fit() for each parallel worker #######################
+        if multistart > 0:
+            multistart0 = multistart
+            multistart = 0  # prevent launching additional workers
+            worker_obj_array = []
+            for w in range(multistart0):
+                # Creating new object for each worker and new starting guess for parameters
+                worker_obj = copy.deepcopy(self)
+                worker_prmtr_size_dict = self.prmtr_size_dict
+                worker_prmtr_dict = build_prmtr_dict(self.prmtr_0, worker_prmtr_size_dict)
+                for k in worker_prmtr_dict.keys():
+                    worker_prmtr_dict[k] = worker_prmtr_dict[k] * (1 + np.random.normal(size=1) * 0.3)
+                worker_prmtr_dict = collections.OrderedDict(sorted(worker_prmtr_dict.items()))
+                worker_prmtr_size_dict = collections.OrderedDict(sorted(worker_prmtr_size_dict.items()))
+                worker_obj.prmtr_0 = np.array(list(itertools.chain.from_iterable(worker_prmtr_dict.values())))
+                worker_obj_array.append((worker_obj, estimation_method, tolerance, maxiter, toltype, \
+                                         solver_mle, maxiter_mle, maxfev_mle, ftol_mle, xtol_mle, constraints_mle, \
+                                         priors_bayesian, maxiter_bayesian, burnin_bayesian, 0))
+            pool = PPool()
+            pool.ncpus = min(multistart0, multiprocessing.cpu_count())
+            pool.servers = ('localhost:5848',)
+            par_results = list(pool.imap(par_fit, worker_obj_array, \
+                                         chunksize=len(worker_obj_array) / min(multistart0,
+                                                                               multiprocessing.cpu_count())))
+            pool.close()
+            pool.join()
+            best_result = [par_results[i][1]['fun'] for i in range(multistart0)]
+            loc = best_result.index(min(best_result))
+            return par_results[loc][0], par_results[loc][1], par_results[loc][2]
+        ###########################################################################################
 
         print('new fit begins__________________________________________')
         sys.stdout.flush()
