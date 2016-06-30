@@ -1,7 +1,9 @@
 from __future__ import division
 import sys
+import glob
 #print(sys.argv)
 from pathos.parallel import ParallelPool as PPool
+import multiprocessing as multiprocessing
 import copy
 #easy_install -f . pathos
 # pip install git+https://github.com/uqfoundation/pathos
@@ -92,6 +94,10 @@ estimation1.collect_results()
 estimation1.expected_inflation() #do not use smoother here to avoid look-ahead bias
 estimation1.save_output()
 estimation1.plot_results()
+
+# Delete temporary files:
+map(os.remove, glob.glob(r""+str.replace(os.getcwd(), '\\', '/')+"/output/parallel_worker_output"+"*.txt"))
+
 
 end_time = time.time()
 

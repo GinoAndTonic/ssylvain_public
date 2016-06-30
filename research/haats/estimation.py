@@ -29,13 +29,19 @@ import pymc as pymc2
 import corner as triangle_plot
 import collections
 from pathos.parallel import ParallelPool as PPool
+import multiprocessing as multiprocessing
+from pathos import multiprocessing as pathos_multiprocessing
 import copy
+import logging
+
 
 
 def par_fit(obj_tuple):
     obj, estimation_method, tolerance, maxiter, toltype, solver_mle, maxiter_mle, maxfev_mle, ftol_mle, xtol_mle, constraints_mle, \
     priors_bayesian, maxiter_bayesian, burnin_bayesian, multistart = obj_tuple
-    print('Calling par_fit')
+    worker_pid = multiprocessing.current_process().pid
+    sys.stdout = open('./output/parallel_worker_output_'+str(worker_pid)+'.txt', 'wb')
+    print('Calling par_fit of worker with PID: %i and name: %s' %(worker_pid, multiprocessing.current_process().name))
     sys.stdout.flush()
     return obj.fit(estimation_method=estimation_method, tolerance=tolerance, maxiter=maxiter, toltype=toltype, \
                    solver_mle=solver_mle, maxiter_mle=maxiter_mle, maxfev_mle=maxfev_mle, ftol_mle=ftol_mle,
@@ -181,6 +187,7 @@ class Rolling(Estimation):
 
         #################### Recursively run fit() for each parallel worker #######################
         if multistart > 0:
+            main_stdout = sys.stdout
             multistart0 = multistart
             multistart = 0  # prevent launching additional workers
             worker_obj_array = []
@@ -207,6 +214,8 @@ class Rolling(Estimation):
             pool.join()
             best_result = [par_results[i][1]['fun'] for i in range(multistart0)]
             loc = best_result.index(min(best_result))
+            sys.stdout = main_stdout  # reset output setting
+            print('done running parallel workers')
             return par_results[loc][0], par_results[loc][1], par_results[loc][2]
         ###########################################################################################
 
