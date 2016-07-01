@@ -40,8 +40,9 @@ def par_fit(obj_tuple):
     obj, estimation_method, tolerance, maxiter, toltype, solver_mle, maxiter_mle, maxfev_mle, ftol_mle, xtol_mle, constraints_mle, \
     priors_bayesian, maxiter_bayesian, burnin_bayesian, multistart = obj_tuple
     worker_pid = multiprocessing.current_process().pid
-    sys.stdout = open('./output/parallel_worker_output_'+str(worker_pid)+'.txt', 'wb')
-    print('Calling par_fit of worker with PID: %i and name: %s' %(worker_pid, multiprocessing.current_process().name))
+    sys.stdout = open('./output/parallel_worker_output_'+str(worker_pid)+'.txt', 'ab')
+    print('\n_________________________________________________________________________________________________________________________________________________________________________________________________________________\n')
+    print('\n\nCalling par_fit of worker with PID: %i and name: %s' %(worker_pid, multiprocessing.current_process().name))
     sys.stdout.flush()
     return obj.fit(estimation_method=estimation_method, tolerance=tolerance, maxiter=maxiter, toltype=toltype, \
                    solver_mle=solver_mle, maxiter_mle=maxiter_mle, maxfev_mle=maxfev_mle, ftol_mle=ftol_mle,
@@ -184,11 +185,11 @@ class Rolling(Estimation):
             solver_mle='Nelder-Mead',maxiter_mle=1000, maxfev_mle=1000, ftol_mle=1e-6, xtol_mle=1e-6, constraints_mle='off', \
             priors_bayesian=None, maxiter_bayesian=1000, burnin_bayesian=None, multistart=0  ):
         '''Running Estimation Fit'''
+        multistart0 = multistart
 
         #################### Recursively run fit() for each parallel worker #######################
         if multistart > 0:
             main_stdout = sys.stdout
-            multistart0 = multistart
             multistart = 0  # prevent launching additional workers
             worker_obj_array = []
             for w in range(multistart0):
@@ -327,6 +328,7 @@ class Rolling(Estimation):
         print('processing time for fit: ' + str(toc - tic))
         sys.stdout.flush()
         self.prmtr, self.optim_output = prmtr_new, optim_output
+        if multistart0>0: sys.stdout.close() #close the output file for each parallel worker
         return prmtr_new, optim_output, self
 
 

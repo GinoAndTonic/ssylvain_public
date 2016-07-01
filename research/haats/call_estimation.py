@@ -78,7 +78,7 @@ estimation1.run_setup(data, US_ilbmaturities, US_nominalmaturities, \
 
 estimation_method,tolerance, maxiter ,toltype,solver_mle,maxiter_mle, maxfev_mle, ftol_mle, xtol_mle, \
     constraints_mle, priors_bayesian, maxiter_bayesian, burnin_bayesian, multistart = 'em_mle', 1e-4, 2 , 'max_abs', \
-    'Nelder-Mead', 5, 5, 0.0001, 0.0001, 'off', None, 1000, None, 2
+    'Nelder-Mead', 5, 5, 0.0001, 0.0001, 'off', None, 1000, None, 25
 
 estimation1.fit(estimation_method=estimation_method, tolerance=tolerance, maxiter=maxiter, toltype=toltype, \
                 solver_mle=solver_mle, maxiter_mle=maxiter_mle, maxfev_mle=maxfev_mle, ftol_mle=ftol_mle,
