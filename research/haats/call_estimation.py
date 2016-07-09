@@ -4,6 +4,7 @@ import glob
 #print(sys.argv)
 from pathos.parallel import ParallelPool as PPool
 import multiprocessing as multiprocessing
+import multiprocess
 import copy
 #easy_install -f . pathos
 # pip install git+https://github.com/uqfoundation/pathos
@@ -77,18 +78,18 @@ estimation1.run_setup(data, US_ilbmaturities, US_nominalmaturities, \
                 fix_Phi=fix_Phi, setdiag_Kp=setdiag_Kp, initV=initV)
 
 estimation_method,tolerance, maxiter ,toltype,solver_mle,maxiter_mle, maxfev_mle, ftol_mle, xtol_mle, \
-    constraints_mle, priors_bayesian, maxiter_bayesian, burnin_bayesian, multistart = 'em_mle', 1e-4, 2 , 'max_abs', \
-    'Nelder-Mead', 5, 5, 0.0001, 0.0001, 'off', None, 1000, None, 25
+    constraints_mle, priors_bayesian, maxiter_bayesian, burnin_bayesian, multistart, ncpus = 'em_mle', 1e-4, 2 , 'max_abs', \
+    'Nelder-Mead', 5, 5, 0.0001, 0.0001, 'off', None, 1000, None, 2, 2
+
+# estimation_method,tolerance, maxiter ,toltype,solver_mle,maxiter_mle, maxfev_mle, ftol_mle, xtol_mle, \
+#     constraints_mle, priors_bayesian, maxiter_bayesian, burnin_bayesian, multistart, ncpus = 'em_mle', 1e-6, 15 , \
+#     'max_abs', 'Powell', 10000, 10000, 0.01, 0.01, 'off', None, 1000, None, 25, 8
 
 estimation1.fit(estimation_method=estimation_method, tolerance=tolerance, maxiter=maxiter, toltype=toltype, \
                 solver_mle=solver_mle, maxiter_mle=maxiter_mle, maxfev_mle=maxfev_mle, ftol_mle=ftol_mle,
                 xtol_mle=xtol_mle, constraints_mle=constraints_mle, \
                 priors_bayesian=priors_bayesian, maxiter_bayesian=maxiter_bayesian, burnin_bayesian=burnin_bayesian,
-                multistart=multistart)
-
-# estimation_method,tolerance, maxiter ,toltype,solver_mle,maxiter_mle, maxfev_mle, ftol_mle, xtol_mle, \
-#     constraints_mle, priors_bayesian, maxiter_bayesian, burnin_bayesian, multistart = 'em_mle', 1e-6, 15 , \
-#     'max_abs', 'Powell', 10000, 10000, 0.01, 0.01, 'off', None, 1000, None, 25
+                multistart=multistart, ncpus=ncpus)
 
 estimation1.collect_results()
 estimation1.expected_inflation() #do not use smoother here to avoid look-ahead bias

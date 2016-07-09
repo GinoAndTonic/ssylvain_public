@@ -1,6 +1,7 @@
 from __future__ import division
 from asset_class import *
 import os
+import psutil
 import datetime as DT
 import matplotlib.dates as mdates
 import time
@@ -29,26 +30,30 @@ import pymc as pymc2
 import corner as triangle_plot
 import collections
 from pathos.parallel import ParallelPool as PPool
+from pathos.parallel import stats as pathos_stats
 import multiprocessing as multiprocessing
 from pathos import multiprocessing as pathos_multiprocessing
+import multiprocess
 import copy
 import logging
 
 
+def worker_pid(i):
+    return multiprocessing.current_process().pid
 
 def par_fit(obj_tuple):
     obj, estimation_method, tolerance, maxiter, toltype, solver_mle, maxiter_mle, maxfev_mle, ftol_mle, xtol_mle, constraints_mle, \
-    priors_bayesian, maxiter_bayesian, burnin_bayesian, multistart = obj_tuple
+    priors_bayesian, maxiter_bayesian, burnin_bayesian, multistart, ncpus = obj_tuple
     worker_pid = multiprocessing.current_process().pid
     sys.stdout = open('./output/parallel_worker_output_'+str(worker_pid)+'.txt', 'ab')
     print('\n_________________________________________________________________________________________________________________________________________________________________________________________________________________\n')
-    print('\n\nCalling par_fit of worker with PID: %i and name: %s' %(worker_pid, multiprocessing.current_process().name))
+    print('\n\nCalling par_fit of worker with PID: %i and name: %s at time: %s' %(worker_pid, multiprocessing.current_process().name, DT.datetime.fromtimestamp(time.time()).strftime('%Y%m%d %H:%H:%S')))
     sys.stdout.flush()
     return obj.fit(estimation_method=estimation_method, tolerance=tolerance, maxiter=maxiter, toltype=toltype, \
                    solver_mle=solver_mle, maxiter_mle=maxiter_mle, maxfev_mle=maxfev_mle, ftol_mle=ftol_mle,
                    xtol_mle=xtol_mle, constraints_mle=constraints_mle, \
                    priors_bayesian=priors_bayesian, maxiter_bayesian=maxiter_bayesian, burnin_bayesian=burnin_bayesian,
-                   multistart=multistart)
+                   multistart=multistart, ncpus=ncpus)
 
 
 
@@ -183,12 +188,13 @@ class Rolling(Estimation):
 
     def fit(self, estimation_method='em_mle', tolerance=1e-6, maxiter=50 , toltype='max_abs', \
             solver_mle='Nelder-Mead',maxiter_mle=1000, maxfev_mle=1000, ftol_mle=1e-6, xtol_mle=1e-6, constraints_mle='off', \
-            priors_bayesian=None, maxiter_bayesian=1000, burnin_bayesian=None, multistart=0  ):
+            priors_bayesian=None, maxiter_bayesian=1000, burnin_bayesian=None, multistart=0, ncpus=1  ):
         '''Running Estimation Fit'''
         multistart0 = multistart
 
         #################### Recursively run fit() for each parallel worker #######################
         if multistart > 0:
+            ncpus = min(ncpus, multiprocessing.cpu_count(), multistart0)
             main_stdout = sys.stdout
             multistart = 0  # prevent launching additional workers
             worker_obj_array = []
@@ -204,20 +210,29 @@ class Rolling(Estimation):
                 worker_obj.prmtr_0 = np.array(list(itertools.chain.from_iterable(worker_prmtr_dict.values())))
                 worker_obj_array.append((worker_obj, estimation_method, tolerance, maxiter, toltype, \
                                          solver_mle, maxiter_mle, maxfev_mle, ftol_mle, xtol_mle, constraints_mle, \
-                                         priors_bayesian, maxiter_bayesian, burnin_bayesian, 0))
+                                         priors_bayesian, maxiter_bayesian, burnin_bayesian, 0, 1))
             pool = PPool()
-            pool.ncpus = min(multistart0, multiprocessing.cpu_count())
+            pool.ncpus = ncpus
             pool.servers = ('localhost:5848',)
-            par_results = list(pool.imap(par_fit, worker_obj_array, \
-                                         chunksize=len(worker_obj_array) / min(multistart0,
-                                                                               multiprocessing.cpu_count())))
+            worker_pids = pool.map(worker_pid, range(ncpus))  # get list of work PID's
+            par_results = list( pool.imap(par_fit, worker_obj_array, chunksize=len(worker_obj_array)/ncpus ) )
             pool.close()
             pool.join()
             best_result = [par_results[i][1]['fun'] for i in range(multistart0)]
             loc = best_result.index(min(best_result))
             sys.stdout = main_stdout  # reset output setting
             print('done running parallel workers')
-            return par_results[loc][0], par_results[loc][1], par_results[loc][2]
+            self.Nfeval, self.fit_path_inner, self.fit_path, self.Nfeval_inner, self.prmtr, self.optim_output = \
+                par_results[loc][2].Nfeval, par_results[loc][2].fit_path_inner, par_results[loc][2].fit_path, \
+                par_results[loc][2].Nfeval_inner, par_results[loc][2].prmtr, par_results[loc][2].optim_output
+            for i in range(ncpus):  # force kill the parallel workers
+                try:
+                    psutil.Process(worker_pids[i]).kill()
+                except:
+                    print('Cannot kill worker with PID: %i' % worker_pids[i])
+                    print('Produced error:', sys.exc_info()[0])
+            print pathos_stats()
+            return par_results[loc][0], par_results[loc][1], self
         ###########################################################################################
 
         print('new fit begins__________________________________________')
